@@ -111,6 +111,34 @@ function bindDealAutoTotal(edit = false, id = "") {
   calcTotal();
 }
 
+function monthSuffix(dateStr = "") {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  const m = d.getMonth() + 1;
+  return String(m).padStart(2, "0");
+}
+
+function nextDocNumber(prefix, fieldName, invoiceDate = "") {
+  const mm = monthSuffix(invoiceDate);
+  const nums = state.deals
+    .map((d) => String(d[fieldName] || "").match(new RegExp(`^${prefix}\\s(\\d+)\\/(\\d{2})$`)))
+    .filter(Boolean)
+    .map((m) => Number(m[1] || 0));
+
+  const next = (nums.length ? Math.max(...nums) : 0) + 1;
+  return `${prefix} ${String(next).padStart(5, "0")}/${mm}`;
+}
+
+function ensureDocNumbers(payload, existing = null) {
+  const invoiceDate = payload.invoice_date || existing?.invoice_date || "";
+
+  payload.pi_no = cleanText(payload.pi_no) || existing?.pi_no || nextDocNumber("PI", "pi_no", invoiceDate);
+  payload.ci_no = cleanText(payload.ci_no) || existing?.ci_no || nextDocNumber("CI", "ci_no", invoiceDate);
+  payload.pl_no = cleanText(payload.pl_no) || existing?.pl_no || nextDocNumber("PL", "pl_no", invoiceDate);
+  payload.coo_no = cleanText(payload.coo_no) || existing?.coo_no || nextDocNumber("COO", "coo_no", invoiceDate);
+
+  return payload;
+}
+
 function dashboardView() {
   const totalDeals = state.deals.length;
   const totalBuyers = state.buyers.length;
@@ -409,6 +437,10 @@ function dealDetailView() {
         <div class="item"><div class="item-title">BL No</div><div class="item-sub">${esc(d.bl_no || "—")}</div></div>
         <div class="item"><div class="item-title">Vessel / Voyage</div><div class="item-sub">${esc(d.vessel_voyage || d.vessel || "—")}</div></div>
         <div class="item"><div class="item-title">Origin</div><div class="item-sub">${esc(d.country_of_origin || "—")}</div></div>
+        <div class="item"><div class="item-title">PI No</div><div class="item-sub">${esc(d.pi_no || "—")}</div></div>
+        <div class="item"><div class="item-title">CI No</div><div class="item-sub">${esc(d.ci_no || "—")}</div></div>
+        <div class="item"><div class="item-title">PL No</div><div class="item-sub">${esc(d.pl_no || "—")}</div></div>
+        <div class="item"><div class="item-title">COO No</div><div class="item-sub">${esc(d.coo_no || "—")}</div></div>
         <div class="item"><div class="item-title">Buyer</div><div class="item-sub">${esc(buyer?.name || "—")}</div></div>
         <div class="item">
           <div class="item-title">Supplier</div>
@@ -1342,9 +1374,12 @@ async function saveDeal(e) {
   const fd = new FormData(e.target);
 
   try {
-    const payload = validateDeal(fd);
+    let payload = validateDeal(fd);
+    payload = ensureDocNumbers(payload);
+
     const { error } = await supabase.from("deals").insert(payload);
     if (error) throw error;
+
     await loadSupabaseData();
     setPage("deals");
   } catch (err) {
@@ -1357,9 +1392,13 @@ async function updateDeal(e, id) {
   const fd = new FormData(e.target);
 
   try {
-    const payload = validateDeal(fd);
+    const existing = state.deals.find((d) => String(d.id) === String(id));
+    let payload = validateDeal(fd);
+    payload = ensureDocNumbers(payload, existing);
+
     const { error } = await supabase.from("deals").update(payload).eq("id", id);
     if (error) throw error;
+
     await loadSupabaseData();
     setPage("deals");
   } catch (err) {
