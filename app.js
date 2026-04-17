@@ -16,7 +16,9 @@ const state = {
     id: 1,
     name: "JK PETROCHEM INTERNATIONAL FZE",
     address: "OFFICE NO:E2-110G-02, HAMARIYA FREE ZONE, SHARJAH, UAE",
-    bankAccounts: []
+    bankAccounts: [],
+    mobile: "+971524396170",
+    email: "info@jkpetrochem.com"
   },
   error: "",
   ready: false
@@ -157,10 +159,9 @@ function dashboardView() {
       <div class="list" style="margin-top:14px">
         ${
           recentDeals.length
-            ? recentDeals
-                .map((d) => {
-                  const s = paymentSummary(d.id, d.total_amount, d.type);
-                  return `
+            ? recentDeals.map((d) => {
+                const s = paymentSummary(d.id, d.total_amount, d.type);
+                return `
               <div class="item" style="padding:14px">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
                   <div style="min-width:0;flex:1">
@@ -176,8 +177,7 @@ function dashboardView() {
                 </div>
               </div>
             `;
-                })
-                .join("")
+              }).join("")
             : `<div class="empty">No deals available.</div>`
         }
       </div>
@@ -189,7 +189,7 @@ function buyersView() {
   const q = state.buyerSearch.trim().toLowerCase();
   const filteredBuyers = state.buyers.filter((b) => {
     if (!q) return true;
-    const text = [b.name, b.address, b.gst, b.iec, b.customer_id].join(" ").toLowerCase();
+    const text = [b.name, b.address, b.gst, b.iec, b.customer_id, b.phone].join(" ").toLowerCase();
     return text.includes(q);
   });
 
@@ -209,22 +209,19 @@ function buyersView() {
       <div class="list" style="margin-top:12px">
         ${
           filteredBuyers.length
-            ? filteredBuyers
-                .map(
-                  (b) => `
+            ? filteredBuyers.map((b) => `
           <div class="item">
             <div class="item-title">${esc(b.name || "—")}</div>
             <div class="item-sub">${esc(b.address || "—")}</div>
             <div class="item-sub">GST: ${esc(b.gst || "—")} · IEC: ${esc(b.iec || "—")}</div>
+            <div class="item-sub">Phone: ${esc(b.phone || "—")}</div>
             <div style="margin-top:8px;display:flex;gap:8px">
               <button data-edit-buyer="${b.id}">Edit</button>
               <button data-delete-buyer="${b.id}">Delete</button>
             </div>
             <div id="buyer-edit-wrap-${b.id}" style="margin-top:10px"></div>
           </div>
-        `
-                )
-                .join("")
+        `).join("")
             : `<div class="empty">No matching buyers found.</div>`
         }
       </div>
@@ -246,9 +243,7 @@ function suppliersView() {
       s.bank_account,
       s.bank_iban,
       s.bank_swift
-    ]
-      .join(" ")
-      .toLowerCase();
+    ].join(" ").toLowerCase();
     return text.includes(q);
   });
 
@@ -268,9 +263,7 @@ function suppliersView() {
       <div class="list" style="margin-top:12px">
         ${
           filteredSuppliers.length
-            ? filteredSuppliers
-                .map(
-                  (s) => `
+            ? filteredSuppliers.map((s) => `
           <div class="item">
             <div class="item-title">${esc(s.name || "—")}</div>
             <div class="item-sub">Company: ${esc(s.company_name || "—")}</div>
@@ -286,9 +279,7 @@ function suppliersView() {
             </div>
             <div id="supplier-edit-wrap-${s.id}" style="margin-top:10px"></div>
           </div>
-        `
-                )
-                .join("")
+        `).join("")
             : `<div class="empty">No matching suppliers found.</div>`
         }
       </div>
@@ -312,9 +303,7 @@ function dealsView() {
       d.type,
       buyer,
       supplier
-    ]
-      .join(" ")
-      .toLowerCase();
+    ].join(" ").toLowerCase();
     return text.includes(q);
   });
 
@@ -337,11 +326,10 @@ function dealsView() {
       <div class="list" style="margin-top:12px">
         ${
           filteredDeals.length
-            ? filteredDeals
-                .map((d) => {
-                  const s = paymentSummary(d.id, d.total_amount, d.type);
-                  const payments = paymentsForDeal(d.id);
-                  return `
+            ? filteredDeals.map((d) => {
+                const s = paymentSummary(d.id, d.total_amount, d.type);
+                const payments = paymentsForDeal(d.id);
+                return `
             <div class="item">
               <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
               <div class="item-sub">HSN: ${esc(d.hsn_code || "—")}</div>
@@ -370,9 +358,7 @@ function dealsView() {
               <div class="list" style="margin-top:10px">
                 ${
                   payments.length
-                    ? payments
-                        .map(
-                          (p) => `
+                    ? payments.map((p) => `
                   <div class="item" style="padding:10px">
                     <div class="item-title">${esc(p.currency || d.currency || "AED")} ${Number(p.amount || 0).toLocaleString("en-IN")}</div>
                     <div class="item-sub">${esc(p.direction || "in")} · ${esc(p.method || "—")} · ${esc(p.status || "pending")}</div>
@@ -381,16 +367,13 @@ function dealsView() {
                       <button data-delete-payment="${d.id}:${p.id}">Delete Payment</button>
                     </div>
                   </div>
-                `
-                        )
-                        .join("")
+                `).join("")
                     : `<div class="item-sub">No payments yet.</div>`
                 }
               </div>
             </div>
           `;
-                })
-                .join("")
+              }).join("")
             : `<div class="empty">No matching deals found.</div>`
         }
       </div>
@@ -423,6 +406,9 @@ function dealDetailView() {
         <div class="item"><div class="item-title">Value</div><div class="item-sub">${esc(d.currency || "AED")} ${Number(d.total_amount || 0).toLocaleString("en-IN")}</div></div>
         <div class="item"><div class="item-title">Shipment Out Date</div><div class="item-sub">${esc(d.shipment_out_date || "—")}</div></div>
         <div class="item"><div class="item-title">ETA</div><div class="item-sub">${esc(d.eta || "—")}</div></div>
+        <div class="item"><div class="item-title">BL No</div><div class="item-sub">${esc(d.bl_no || "—")}</div></div>
+        <div class="item"><div class="item-title">Vessel / Voyage</div><div class="item-sub">${esc(d.vessel_voyage || d.vessel || "—")}</div></div>
+        <div class="item"><div class="item-title">Origin</div><div class="item-sub">${esc(d.country_of_origin || "—")}</div></div>
         <div class="item"><div class="item-title">Buyer</div><div class="item-sub">${esc(buyer?.name || "—")}</div></div>
         <div class="item">
           <div class="item-title">Supplier</div>
@@ -478,9 +464,7 @@ function dealDetailView() {
         <div class="list" style="margin-top:12px">
           ${
             documents.length
-              ? documents
-                  .map(
-                    (doc, idx) => `
+              ? documents.map((doc, idx) => `
             <div class="item" style="padding:10px">
               <div class="item-title">${esc(doc.type || "Document")}</div>
               <div class="item-sub">${esc(doc.file_name || doc.fileName || "No file selected")}</div>
@@ -491,9 +475,7 @@ function dealDetailView() {
                 <button data-delete-placeholder-doc="${d.id}:${idx}" type="button">Delete</button>
               </div>
             </div>
-          `
-                  )
-                  .join("")
+          `).join("")
               : `<div class="item-sub">No documents added yet.</div>`
           }
         </div>
@@ -508,9 +490,7 @@ function dealDetailView() {
         <div class="list" style="margin-top:10px">
           ${
             payments.length
-              ? payments
-                  .map(
-                    (p) => `
+              ? payments.map((p) => `
             <div class="item" style="padding:10px">
               <div class="item-title">${esc(p.currency || d.currency || "AED")} ${Number(p.amount || 0).toLocaleString("en-IN")}</div>
               <div class="item-sub">${esc(p.direction || "in")} · ${esc(p.method || "—")} · ${esc(p.status || "pending")}</div>
@@ -519,9 +499,7 @@ function dealDetailView() {
                 <button data-delete-payment="${d.id}:${p.id}">Delete Payment</button>
               </div>
             </div>
-          `
-                  )
-                  .join("")
+          `).join("")
               : `<div class="item-sub">No payments yet.</div>`
           }
         </div>
@@ -545,9 +523,7 @@ function settingsView() {
           <div>
             <div style="font-weight:800;margin-bottom:10px;color:#d4a646">Bank Accounts</div>
             <div id="bank-list">
-              ${(c.bankAccounts || [])
-                .map(
-                  (b, i) => `
+              ${(c.bankAccounts || []).map((b, i) => `
                 <div class="item" style="margin-bottom:10px">
                   <div><b>${esc(b.bankName)}</b></div>
                   <div>A/C: ${esc(b.account)}</div>
@@ -555,9 +531,7 @@ function settingsView() {
                   <div>SWIFT: ${esc(b.swift || "-")}</div>
                   <button type="button" data-delete-bank="${i}" style="margin-top:6px">Delete</button>
                 </div>
-              `
-                )
-                .join("")}
+              `).join("")}
             </div>
 
             <button type="button" id="add-bank-btn" style="margin-top:10px">+ Add Bank</button>
@@ -698,6 +672,7 @@ function buyerFormHtml(b = {}, edit = false, id = "") {
           <input name="pan" value="${esc(b.pan || "")}" placeholder="PAN">
           <input name="customer_id" value="${esc(b.customer_id || "")}" placeholder="Customer ID">
         </div>
+        <input name="phone" value="${esc(b.phone || "")}" placeholder="Phone">
         <div style="display:flex;gap:10px">
           <button type="submit" style="background:#d4a646;color:#fff;border:none">${edit ? "Update Buyer" : "Save Buyer"}</button>
           <button type="button" id="${edit ? `cancel-buyer-edit-${id}` : "cancel-buyer-form"}">Cancel</button>
@@ -755,7 +730,6 @@ function dealFormHtml(d = {}, edit = false, id = "") {
               <option value="purchase" ${d.type === "purchase" ? "selected" : ""}>Purchase</option>
             </select>
           </div>
-
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Deal No</label>
             <input name="deal_no" value="${esc(d.deal_no || nextDealNo())}" required>
@@ -767,12 +741,15 @@ function dealFormHtml(d = {}, edit = false, id = "") {
           <input name="product_name" value="${esc(d.product_name || "")}" placeholder="Product name" required>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">HSN Code</label>
             <input name="hsn_code" value="${esc(d.hsn_code || "")}" placeholder="HSN Code">
           </div>
-
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Unit</label>
+            <input name="unit" value="${esc(d.unit || "MTON")}" placeholder="Unit">
+          </div>
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Currency</label>
             <input name="currency" value="${esc(d.currency || "AED")}">
@@ -782,29 +759,26 @@ function dealFormHtml(d = {}, edit = false, id = "") {
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Quantity</label>
-            <input name="quantity" id="${edit ? `quantity-${id}` : "quantity"}" type="number" step="0.001" value="${esc(d.quantity || "")}" placeholder="Quantity">
+            <input name="quantity" id="${edit ? `quantity-${id}` : "quantity"}" type="number" step="0.001" value="${esc(d.quantity || "")}">
           </div>
-
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Rate</label>
-            <input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}" placeholder="Rate">
+            <input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}">
           </div>
-
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Total Amount</label>
-            <input name="total_amount" id="${edit ? `total-${id}` : "total"}" type="number" step="0.01" value="${esc(d.total_amount || "")}" placeholder="Total Amount" readonly>
+            <input name="total_amount" id="${edit ? `total-${id}` : "total"}" type="number" step="0.01" value="${esc(d.total_amount || "")}" readonly>
           </div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Loading Port</label>
-            <input name="loading_port" value="${esc(d.loading_port || "")}" placeholder="Loading port">
+            <input name="loading_port" value="${esc(d.loading_port || "")}">
           </div>
-
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Discharge Port</label>
-            <input name="discharge_port" value="${esc(d.discharge_port || "")}" placeholder="Discharge port">
+            <input name="discharge_port" value="${esc(d.discharge_port || "")}">
           </div>
         </div>
 
@@ -813,19 +787,24 @@ function dealFormHtml(d = {}, edit = false, id = "") {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
             <div>
               <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Vessel Name</label>
-              <input name="vessel" placeholder="Vessel Name" value="${esc(d.vessel || "")}">
+              <input name="vessel" value="${esc(d.vessel || "")}">
             </div>
-
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Vessel / Voyage</label>
+              <input name="vessel_voyage" value="${esc(d.vessel_voyage || "")}">
+            </div>
             <div>
               <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Shipment Out Date</label>
-              <input name="shipment_out_date" type="date" value="${esc(d.shipment_out_date || d.etd || "")}">
+              <input name="shipment_out_date" type="date" value="${esc(d.shipment_out_date || "")}">
             </div>
-
             <div>
               <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">ETA</label>
               <input name="eta" type="date" value="${esc(d.eta || "")}">
             </div>
-
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Freight Type</label>
+              <input name="freight_type" value="${esc(d.freight_type || "BY SEA")}">
+            </div>
             <div>
               <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Shipment Status</label>
               <select name="shipment_status">
@@ -837,6 +816,83 @@ function dealFormHtml(d = {}, edit = false, id = "") {
           </div>
         </div>
 
+        <div class="card">
+          <div class="title">Packing / BL / Weight</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Gross Weight</label>
+              <input name="gross_weight" type="number" step="0.001" value="${esc(d.gross_weight || "")}">
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Net Weight</label>
+              <input name="net_weight" type="number" step="0.001" value="${esc(d.net_weight || "")}">
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Package Details</label>
+              <input name="package_details" value="${esc(d.package_details || "20ft x 10 Containers")}">
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Loaded On</label>
+              <input name="loaded_on" value="${esc(d.loaded_on || "ISO TANK")}">
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">BL No</label>
+              <input name="bl_no" value="${esc(d.bl_no || "")}">
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">CFS</label>
+              <input name="cfs" value="${esc(d.cfs || "")}">
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Container Numbers (comma separated)</label>
+            <textarea name="container_numbers" style="min-height:90px">${esc(d.container_numbers || "")}</textarea>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="title">Document / Terms</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Country of Origin</label>
+              <input name="country_of_origin" value="${esc(d.country_of_origin || "")}">
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Invoice Date</label>
+              <input name="invoice_date" type="date" value="${esc(d.invoice_date || "")}">
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">PI No</label>
+              <input name="pi_no" value="${esc(d.pi_no || "")}">
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">CI No</label>
+              <input name="ci_no" value="${esc(d.ci_no || "")}">
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">PL No</label>
+              <input name="pl_no" value="${esc(d.pl_no || "")}">
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">COO No</label>
+              <input name="coo_no" value="${esc(d.coo_no || "")}">
+            </div>
+          </div>
+
+          <div style="margin-top:10px">
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Terms of Delivery</label>
+            <input name="terms_delivery" value="${esc(d.terms_delivery || "")}">
+          </div>
+          <div style="margin-top:10px">
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Payment Terms</label>
+            <input name="payment_terms" value="${esc(d.payment_terms || "")}">
+          </div>
+          <div style="margin-top:10px">
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Bank Terms</label>
+            <input name="bank_terms" value="${esc(d.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}">
+          </div>
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Buyer</label>
@@ -845,7 +901,6 @@ function dealFormHtml(d = {}, edit = false, id = "") {
               ${state.buyers.map((b) => `<option value="${b.id}" ${String(d.buyer_id) === String(b.id) ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
             </select>
           </div>
-
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Supplier</label>
             <select name="supplier_id">
@@ -961,15 +1016,11 @@ function showPaymentForm(dealId) {
             <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">Select Bank Account</div>
             <select name="method" id="bank-select">
               <option value="">Select Bank</option>
-              ${banks
-                .map(
-                  (b) => `
+              ${banks.map((b) => `
                 <option value="${esc(`${b.bankName} - ${b.account}`)}">
                   ${esc(b.bankName)} (${esc(b.account)})
                 </option>
-              `
-                )
-                .join("")}
+              `).join("")}
             </select>
           </div>
         </div>
@@ -1026,6 +1077,7 @@ async function saveCompanySettings(e) {
   if (error) return alert(error.message);
 
   state.company = {
+    ...state.company,
     id: 1,
     name: companyData.name,
     address: companyData.address,
@@ -1041,6 +1093,7 @@ async function loadCompanySettings() {
   if (error) return;
   if (data) {
     state.company = {
+      ...state.company,
       id: data.id,
       name: data.name || state.company.name,
       address: data.address || state.company.address,
@@ -1127,7 +1180,8 @@ async function saveBuyer(e) {
     gst: fd.get("gst") || "",
     iec: fd.get("iec") || "",
     pan: fd.get("pan") || "",
-    customer_id: fd.get("customer_id") || ""
+    customer_id: fd.get("customer_id") || "",
+    phone: fd.get("phone") || ""
   });
 
   if (error) return alert(error.message);
@@ -1147,7 +1201,8 @@ async function updateBuyer(e, id) {
       gst: fd.get("gst") || "",
       iec: fd.get("iec") || "",
       pan: fd.get("pan") || "",
-      customer_id: fd.get("customer_id") || ""
+      customer_id: fd.get("customer_id") || "",
+      phone: fd.get("phone") || ""
     })
     .eq("id", id);
 
@@ -1222,6 +1277,7 @@ function validateDeal(fd) {
   const deal_no = cleanText(fd.get("deal_no"));
   const product_name = cleanText(fd.get("product_name"));
   const hsn_code = cleanText(fd.get("hsn_code"));
+  const unit = cleanText(fd.get("unit") || "MTON");
   const quantity = cleanNumber(fd.get("quantity"));
   const rate = cleanNumber(fd.get("rate"));
   const total_amount = quantity * rate;
@@ -1246,6 +1302,7 @@ function validateDeal(fd) {
     deal_no,
     product_name,
     hsn_code,
+    unit,
     quantity,
     rate,
     total_amount,
@@ -1256,9 +1313,27 @@ function validateDeal(fd) {
     buyer_id: buyer_id || null,
     supplier_id: supplier_id || null,
     vessel: cleanText(fd.get("vessel")),
+    vessel_voyage: cleanText(fd.get("vessel_voyage")),
     shipment_out_date: cleanText(fd.get("shipment_out_date")) || null,
     eta: cleanText(fd.get("eta")) || null,
-    shipment_status: cleanText(fd.get("shipment_status") || "pending")
+    freight_type: cleanText(fd.get("freight_type") || "BY SEA"),
+    shipment_status: cleanText(fd.get("shipment_status") || "pending"),
+    gross_weight: cleanNumber(fd.get("gross_weight")) || null,
+    net_weight: cleanNumber(fd.get("net_weight")) || null,
+    package_details: cleanText(fd.get("package_details")),
+    loaded_on: cleanText(fd.get("loaded_on")),
+    container_numbers: cleanText(fd.get("container_numbers")),
+    bl_no: cleanText(fd.get("bl_no")),
+    cfs: cleanText(fd.get("cfs")),
+    country_of_origin: cleanText(fd.get("country_of_origin")),
+    terms_delivery: cleanText(fd.get("terms_delivery")),
+    payment_terms: cleanText(fd.get("payment_terms")),
+    bank_terms: cleanText(fd.get("bank_terms")),
+    pi_no: cleanText(fd.get("pi_no")),
+    ci_no: cleanText(fd.get("ci_no")),
+    pl_no: cleanText(fd.get("pl_no")),
+    coo_no: cleanText(fd.get("coo_no")),
+    invoice_date: cleanText(fd.get("invoice_date")) || null
   };
 }
 
@@ -1429,9 +1504,7 @@ function exportDealsCsv() {
       d.type,
       buyer,
       supplier
-    ]
-      .join(" ")
-      .toLowerCase();
+    ].join(" ").toLowerCase();
     return text.includes(q);
   });
 
