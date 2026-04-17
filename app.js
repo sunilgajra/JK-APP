@@ -90,6 +90,25 @@ function getSelectedDeal() {
   return state.deals.find((d) => String(d.id) === String(state.selectedDealId)) || null;
 }
 
+function bindDealAutoTotal(edit = false, id = "") {
+  const qtyEl = document.getElementById(edit ? `quantity-${id}` : "quantity");
+  const rateEl = document.getElementById(edit ? `rate-${id}` : "rate");
+  const totalEl = document.getElementById(edit ? `total-${id}` : "total");
+
+  if (!qtyEl || !rateEl || !totalEl) return;
+
+  function calcTotal() {
+    const qty = Number(qtyEl.value || 0);
+    const rate = Number(rateEl.value || 0);
+    const total = qty * rate;
+    totalEl.value = total ? total.toFixed(2) : "";
+  }
+
+  qtyEl.addEventListener("input", calcTotal);
+  rateEl.addEventListener("input", calcTotal);
+  calcTotal();
+}
+
 function dashboardView() {
   const totalDeals = state.deals.length;
   const totalBuyers = state.buyers.length;
@@ -146,6 +165,7 @@ function dashboardView() {
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
                   <div style="min-width:0;flex:1">
                     <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
+                    <div class="item-sub">HSN: ${esc(d.hsn_code || "—")}</div>
                     <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
                     <div class="item-sub">${esc(d.type || "sell")} · ${esc(d.status || "active")}</div>
                   </div>
@@ -285,6 +305,7 @@ function dealsView() {
     const text = [
       d.deal_no,
       d.product_name,
+      d.hsn_code,
       d.loading_port,
       d.discharge_port,
       d.status,
@@ -323,6 +344,7 @@ function dealsView() {
                   return `
             <div class="item">
               <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
+              <div class="item-sub">HSN: ${esc(d.hsn_code || "—")}</div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
               <div class="item-sub">${esc(d.currency || "AED")} ${Number(d.total_amount || 0).toLocaleString("en-IN")} · ${esc(d.status || "active")}</div>
               <div class="item-sub">${esc(d.type || "sell")} · Buyer: ${esc(buyerName(d.buyer_id))} · Supplier: ${esc(supplierName(d.supplier_id))}</div>
@@ -395,9 +417,12 @@ function dealDetailView() {
 
       <div class="grid grid-2">
         <div class="item"><div class="item-title">Product</div><div class="item-sub">${esc(d.product_name || "—")}</div></div>
+        <div class="item"><div class="item-title">HSN Code</div><div class="item-sub">${esc(d.hsn_code || "—")}</div></div>
         <div class="item"><div class="item-title">Status</div><div class="item-sub">${esc(d.status || "active")}</div></div>
         <div class="item"><div class="item-title">Route</div><div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div></div>
         <div class="item"><div class="item-title">Value</div><div class="item-sub">${esc(d.currency || "AED")} ${Number(d.total_amount || 0).toLocaleString("en-IN")}</div></div>
+        <div class="item"><div class="item-title">Shipment Out Date</div><div class="item-sub">${esc(d.shipment_out_date || "—")}</div></div>
+        <div class="item"><div class="item-title">ETA</div><div class="item-sub">${esc(d.eta || "—")}</div></div>
         <div class="item"><div class="item-title">Buyer</div><div class="item-sub">${esc(buyer?.name || "—")}</div></div>
         <div class="item">
           <div class="item-title">Supplier</div>
@@ -719,62 +744,124 @@ function dealFormHtml(d = {}, edit = false, id = "") {
   return `
     <form id="${edit ? `deal-edit-form-${id}` : "deal-form"}" class="item" style="margin-bottom:12px">
       <div style="font-weight:800;margin-bottom:12px;color:#d4a646">${edit ? "Edit Deal" : "New Deal"}</div>
-      <div style="display:grid;gap:10px">
+
+      <div style="display:grid;gap:12px">
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <select name="type" required>
-            <option value="sell" ${d.type === "sell" ? "selected" : ""}>Sell</option>
-            <option value="purchase" ${d.type === "purchase" ? "selected" : ""}>Purchase</option>
-          </select>
-          <input name="deal_no" value="${esc(d.deal_no || nextDealNo())}" required>
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Deal Type</label>
+            <select name="type" required>
+              <option value="sell" ${d.type === "sell" ? "selected" : ""}>Sell</option>
+              <option value="purchase" ${d.type === "purchase" ? "selected" : ""}>Purchase</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Deal No</label>
+            <input name="deal_no" value="${esc(d.deal_no || nextDealNo())}" required>
+          </div>
         </div>
 
-        <input name="product_name" value="${esc(d.product_name || "")}" placeholder="Product name" required>
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Product Name</label>
+          <input name="product_name" value="${esc(d.product_name || "")}" placeholder="Product name" required>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">HSN Code</label>
+            <input name="hsn_code" value="${esc(d.hsn_code || "")}" placeholder="HSN Code">
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Currency</label>
+            <input name="currency" value="${esc(d.currency || "AED")}">
+          </div>
+        </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-          <input name="quantity" type="number" step="0.001" value="${esc(d.quantity || "")}" placeholder="Quantity">
-          <input name="rate" type="number" step="0.01" value="${esc(d.rate || "")}" placeholder="Rate">
-          <input name="total_amount" type="number" step="0.01" value="${esc(d.total_amount || "")}" placeholder="Total Amount">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Quantity</label>
+            <input name="quantity" id="${edit ? `quantity-${id}` : "quantity"}" type="number" step="0.001" value="${esc(d.quantity || "")}" placeholder="Quantity">
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Rate</label>
+            <input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}" placeholder="Rate">
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Total Amount</label>
+            <input name="total_amount" id="${edit ? `total-${id}` : "total"}" type="number" step="0.01" value="${esc(d.total_amount || "")}" placeholder="Total Amount" readonly>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Loading Port</label>
+            <input name="loading_port" value="${esc(d.loading_port || "")}" placeholder="Loading port">
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Discharge Port</label>
+            <input name="discharge_port" value="${esc(d.discharge_port || "")}" placeholder="Discharge port">
+          </div>
         </div>
 
         <div class="card">
           <div class="title">Shipment Details</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-            <input name="vessel" placeholder="Vessel Name" value="${esc(d.vessel || "")}">
-            <input name="port_loading" placeholder="Port of Loading" value="${esc(d.port_loading || "")}">
-            <input name="port_discharge" placeholder="Port of Discharge" value="${esc(d.port_discharge || "")}">
-            <input name="etd" type="date" value="${esc(d.etd || "")}">
-            <input name="eta" type="date" value="${esc(d.eta || "")}">
-            <select name="shipment_status">
-              <option value="pending" ${d.shipment_status === "pending" ? "selected" : ""}>Pending</option>
-              <option value="in_transit" ${d.shipment_status === "in_transit" ? "selected" : ""}>In Transit</option>
-              <option value="delivered" ${d.shipment_status === "delivered" ? "selected" : ""}>Delivered</option>
-            </select>
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Vessel Name</label>
+              <input name="vessel" placeholder="Vessel Name" value="${esc(d.vessel || "")}">
+            </div>
+
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Shipment Out Date</label>
+              <input name="shipment_out_date" type="date" value="${esc(d.shipment_out_date || d.etd || "")}">
+            </div>
+
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">ETA</label>
+              <input name="eta" type="date" value="${esc(d.eta || "")}">
+            </div>
+
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Shipment Status</label>
+              <select name="shipment_status">
+                <option value="pending" ${d.shipment_status === "pending" ? "selected" : ""}>Pending</option>
+                <option value="in_transit" ${d.shipment_status === "in_transit" ? "selected" : ""}>In Transit</option>
+                <option value="delivered" ${d.shipment_status === "delivered" ? "selected" : ""}>Delivered</option>
+              </select>
+            </div>
           </div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <input name="currency" value="${esc(d.currency || "AED")}">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Buyer</label>
+            <select name="buyer_id">
+              <option value="">Select buyer</option>
+              ${state.buyers.map((b) => `<option value="${b.id}" ${String(d.buyer_id) === String(b.id) ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
+            </select>
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Supplier</label>
+            <select name="supplier_id">
+              <option value="">Select supplier</option>
+              ${state.suppliers.map((s) => `<option value="${s.id}" ${String(d.supplier_id) === String(s.id) ? "selected" : ""}>${esc(s.name)}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Status</label>
           <select name="status">
             <option value="active" ${d.status === "active" ? "selected" : ""}>active</option>
             <option value="shipped" ${d.status === "shipped" ? "selected" : ""}>shipped</option>
             <option value="invoiced" ${d.status === "invoiced" ? "selected" : ""}>invoiced</option>
             <option value="completed" ${d.status === "completed" ? "selected" : ""}>completed</option>
-          </select>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <input name="loading_port" value="${esc(d.loading_port || "")}" placeholder="Loading port">
-          <input name="discharge_port" value="${esc(d.discharge_port || "")}" placeholder="Discharge port">
-        </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <select name="buyer_id">
-            <option value="">Select buyer</option>
-            ${state.buyers.map((b) => `<option value="${b.id}" ${String(d.buyer_id) === String(b.id) ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
-          </select>
-          <select name="supplier_id">
-            <option value="">Select supplier</option>
-            ${state.suppliers.map((s) => `<option value="${s.id}" ${String(d.supplier_id) === String(s.id) ? "selected" : ""}>${esc(s.name)}</option>`).join("")}
           </select>
         </div>
 
@@ -809,6 +896,7 @@ function showDealForm() {
   wrap.innerHTML = dealFormHtml({}, false);
   document.getElementById("deal-form").addEventListener("submit", saveDeal);
   document.getElementById("cancel-deal-form").addEventListener("click", () => (wrap.innerHTML = ""));
+  bindDealAutoTotal(false);
 }
 
 function showEditBuyerForm(id) {
@@ -836,6 +924,7 @@ function showEditDealForm(id) {
   wrap.innerHTML = dealFormHtml(deal, true, id);
   document.getElementById(`deal-edit-form-${id}`).addEventListener("submit", (e) => updateDeal(e, id));
   document.getElementById(`cancel-deal-edit-${id}`)?.addEventListener("click", () => (wrap.innerHTML = ""));
+  bindDealAutoTotal(true, id);
 }
 
 function showPaymentForm(dealId) {
@@ -1011,7 +1100,8 @@ function printDoc(type, dealId) {
     productName: deal.product_name,
     totalAmount: deal.total_amount,
     loadingPort: deal.loading_port,
-    dischargePort: deal.discharge_port
+    dischargePort: deal.discharge_port,
+    hsn: deal.hsn_code
   };
 
   const companyForDocs = getPrimaryBank(state.company);
@@ -1131,9 +1221,10 @@ function validateDeal(fd) {
   const type = cleanText(fd.get("type") || "sell");
   const deal_no = cleanText(fd.get("deal_no"));
   const product_name = cleanText(fd.get("product_name"));
+  const hsn_code = cleanText(fd.get("hsn_code"));
   const quantity = cleanNumber(fd.get("quantity"));
   const rate = cleanNumber(fd.get("rate"));
-  let total_amount = cleanNumber(fd.get("total_amount"));
+  const total_amount = quantity * rate;
   const currency = cleanText(fd.get("currency") || "AED");
   const status = cleanText(fd.get("status") || "active");
   const loading_port = cleanText(fd.get("loading_port"));
@@ -1147,7 +1238,6 @@ function validateDeal(fd) {
   if (rate <= 0) throw new Error("Rate must be greater than 0");
   if (!loading_port) throw new Error("Loading port is required");
   if (!discharge_port) throw new Error("Discharge port is required");
-  if (total_amount <= 0) total_amount = quantity * rate;
   if (type === "sell" && !buyer_id) throw new Error("Buyer is required for sell deals");
   if (type === "purchase" && !supplier_id) throw new Error("Supplier is required for purchase deals");
 
@@ -1155,6 +1245,7 @@ function validateDeal(fd) {
     type,
     deal_no,
     product_name,
+    hsn_code,
     quantity,
     rate,
     total_amount,
@@ -1165,9 +1256,7 @@ function validateDeal(fd) {
     buyer_id: buyer_id || null,
     supplier_id: supplier_id || null,
     vessel: cleanText(fd.get("vessel")),
-    port_loading: cleanText(fd.get("port_loading")),
-    port_discharge: cleanText(fd.get("port_discharge")),
-    etd: cleanText(fd.get("etd")) || null,
+    shipment_out_date: cleanText(fd.get("shipment_out_date")) || null,
     eta: cleanText(fd.get("eta")) || null,
     shipment_status: cleanText(fd.get("shipment_status") || "pending")
   };
@@ -1333,6 +1422,7 @@ function exportDealsCsv() {
     const text = [
       d.deal_no,
       d.product_name,
+      d.hsn_code,
       d.loading_port,
       d.discharge_port,
       d.status,
@@ -1346,7 +1436,7 @@ function exportDealsCsv() {
   });
 
   const rows = [[
-    "Deal No", "Type", "Product", "Buyer", "Supplier", "Loading Port", "Discharge Port", "Currency", "Total Amount", "Status"
+    "Deal No", "Type", "Product", "HSN Code", "Buyer", "Supplier", "Loading Port", "Discharge Port", "Currency", "Total Amount", "Status"
   ]];
 
   filteredDeals.forEach((d) => {
@@ -1354,6 +1444,7 @@ function exportDealsCsv() {
       d.deal_no || "",
       d.type || "",
       d.product_name || "",
+      d.hsn_code || "",
       buyerName(d.buyer_id),
       supplierName(d.supplier_id),
       d.loading_port || "",
