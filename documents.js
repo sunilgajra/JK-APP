@@ -17,6 +17,13 @@ function fmtDate(d) {
   return `${String(x.getDate()).padStart(2, "0")}/${String(x.getMonth() + 1).padStart(2, "0")}/${x.getFullYear()}`;
 }
 
+function assetUrl(file) {
+  return new URL(file, window.location.href).href;
+}
+
+const LOGO_URL = assetUrl("logo.png");
+const STAMP_URL = assetUrl("stamp.png");
+
 function openPrintWindow(html) {
   const w = window.open("", "_blank", "width=1000,height=800");
   if (!w) return false;
@@ -29,6 +36,7 @@ function openPrintWindow(html) {
 function amountWords(n) {
   n = Math.round(Number(n || 0));
   if (!n) return "ZERO";
+
   const ones = ["", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN"];
   const tens = ["", "", "TWENTY", "THIRTY", "FORTY", "FIFTY", "SIXTY", "SEVENTY", "EIGHTY", "NINETY"];
 
@@ -59,7 +67,7 @@ function amountWords(n) {
   return out.join(" ").trim();
 }
 
-function commonStyle(title) {
+function commonStyle() {
   return `
   <style>
     @page { size: A4; margin: 10mm; }
@@ -82,7 +90,6 @@ function commonStyle(title) {
     .meta td { padding:3px 6px; }
     .right { text-align:right; }
     .center { text-align:center; }
-    .muted { color:#444; }
     .box { border:2px solid #222; margin-top:8px; }
     .boxHead { background:#2f9aa0; color:#fff; padding:4px 6px; font-weight:700; text-transform:uppercase; }
     .boxBody { padding:8px; min-height:70px; }
@@ -118,7 +125,7 @@ function rightHeader(title, docNo, customerId, date) {
       <div class="docTitle">${title}</div>
       <table class="meta thin">
         <tr><td><b>Date</b></td><td class="center">${esc(fmtDate(date) || "")}</td></tr>
-        <tr><td><b>${title === "PRO FORMA INVOICE" ? "Proforma Invoice #" : title === "PACKING LIST" ? "P.L.Invoice #" : title === "CERTIFICATE OF ORIGIN" ? "Invoice #" : "Invoice #"}</b></td><td class="center">${esc(docNo || "")}</td></tr>
+        <tr><td><b>${title === "PRO FORMA INVOICE" ? "Proforma Invoice #" : title === "PACKING LIST" ? "P.L.Invoice #" : "Invoice #"}</b></td><td class="center">${esc(docNo || "")}</td></tr>
         <tr><td><b>Customer ID</b></td><td class="center">${esc(customerId || "")}</td></tr>
       </table>
     </div>
@@ -128,7 +135,7 @@ function rightHeader(title, docNo, customerId, date) {
 function logoBlock() {
   return `
     <div class="logoBox">
-      <img src="./logo.png" alt="JK Petrochem logo">
+      <img src="${LOGO_URL}" alt="JK Petrochem logo">
     </div>
   `;
 }
@@ -208,7 +215,7 @@ function footer(company = {}, date = "") {
   return `
     <div class="footer">
       <div class="signLine">FOR ${esc(company.name || "")}</div>
-      <div class="stamp"><img src="./stamp.png" alt="stamp"></div>
+      <div class="stamp"><img src="${STAMP_URL}" alt="stamp"></div>
       <div class="signLine">${esc(fmtDate(date) || "")}<br>Date</div>
     </div>
     <div class="note">This is computer generated Document, No signature required</div>
@@ -219,8 +226,9 @@ function footer(company = {}, date = "") {
 function buildPI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.created_at || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
+
   return `
-  <!DOCTYPE html><html><head><title>PI ${esc(deal.dealNo || "")}</title>${commonStyle("PI")}</head><body>
+  <!DOCTYPE html><html><head><title>PI ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
@@ -261,7 +269,7 @@ function buildPI(deal, buyer, supplier, company = {}) {
         <div class="boxHead">Terms of Sale and Other Comments</div>
         <div class="boxBody tight">
           <div><b>Terms of Delivery / Payment :</b></div>
-          <div>${esc(deal.terms_delivery || deal.loadingPort && deal.dischargePort ? `CFR ${deal.dischargePort}` : "CFR MUNDRA PORT,INDIA")} / <span class="red">${esc(deal.payment_terms || "PART/FULL ADVANCE ON PI")}</span></div>
+          <div>${esc(deal.terms_delivery || (deal.dischargePort ? `CFR ${deal.dischargePort}` : "CFR MUNDRA PORT,INDIA"))} / <span class="red">${esc(deal.payment_terms || "PART/FULL ADVANCE ON PI")}</span></div>
           <div style="margin-top:8px"><b>BANK TERMS:</b> ${esc(deal.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}</div>
           <div style="margin-top:8px"><b>Our Bank Details:-</b></div>
           <div>Account Name: ${esc(company.name || "")}</div>
@@ -304,8 +312,9 @@ function buildPI(deal, buyer, supplier, company = {}) {
 function buildCI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
+
   return `
-  <!DOCTYPE html><html><head><title>CI ${esc(deal.dealNo || "")}</title>${commonStyle("CI")}</head><body>
+  <!DOCTYPE html><html><head><title>CI ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
@@ -393,8 +402,9 @@ function buildCI(deal, buyer, supplier, company = {}) {
 
 function buildPL(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || new Date().toISOString();
+
   return `
-  <!DOCTYPE html><html><head><title>PL ${esc(deal.dealNo || "")}</title>${commonStyle("PL")}</head><body>
+  <!DOCTYPE html><html><head><title>PL ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
@@ -450,8 +460,9 @@ function buildPL(deal, buyer, supplier, company = {}) {
 
 function buildCOO(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || new Date().toISOString();
+
   return `
-  <!DOCTYPE html><html><head><title>COO ${esc(deal.dealNo || "")}</title>${commonStyle("COO")}</head><body>
+  <!DOCTYPE html><html><head><title>COO ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
