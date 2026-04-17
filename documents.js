@@ -21,7 +21,7 @@ function assetUrl(file) {
   return new URL(file, window.location.href).href;
 }
 
-const LOGO_URL = assetUrl("logo.png");
+const LOGO_URL = assetUrl("logo.PNG");
 const STAMP_URL = assetUrl("stamp.png");
 
 function openPrintWindow(html) {
