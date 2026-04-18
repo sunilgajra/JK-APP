@@ -112,7 +112,7 @@ function bindDealAutoTotal(edit = false, id = "") {
   const convEl = document.getElementById(edit ? `conversion-rate-${id}` : "conversion-rate");
   const baseCurrencyEl = document.getElementById(edit ? `base-currency-${id}` : "base-currency");
 
-  if (!qtyEl || !rateEl || !totalEl) return;
+  if (!qtyEl || !rateEl || !totalEl || !totalAedEl) return;
 
   function calcTotal() {
     const qty = Number(qtyEl.value || 0);
@@ -123,13 +123,11 @@ function bindDealAutoTotal(edit = false, id = "") {
 
     totalEl.value = total ? total.toFixed(2) : "";
 
-    if (totalAedEl) {
-      if (baseCurrency === "USD") {
-        const totalAed = total * conv;
-        totalAedEl.value = totalAed ? totalAed.toFixed(2) : "";
-      } else {
-        totalAedEl.value = total ? total.toFixed(2) : "";
-      }
+    if (baseCurrency === "USD") {
+      const totalAed = total * conv;
+      totalAedEl.value = totalAed ? totalAed.toFixed(2) : "";
+    } else {
+      totalAedEl.value = total ? total.toFixed(2) : "";
     }
   }
 
@@ -172,9 +170,9 @@ function dashboardView() {
   const totalDeals = state.deals.length;
   const totalBuyers = state.buyers.length;
   const totalSuppliers = state.suppliers.length;
-  const totalValue = state.deals.reduce((sum, d) => sum + Number(d.total_amount_aed || d.total_amount || 0), 0);
+  const totalValue = state.deals.reduce((sum, d) => sum + Number(d.total_amount || 0), 0);
   const totalReceived = state.deals.reduce((sum, d) => {
-    const s = paymentSummary(d.id, d.total_amount_aed || d.total_amount, d.type);
+    const s = paymentSummary(d.id, d.total_amount, d.type);
     return sum + s.received;
   }, 0);
   const activeDeals = state.deals.filter((d) => (d.status || "").toLowerCase() !== "completed").length;
@@ -217,9 +215,7 @@ function dashboardView() {
         ${
           recentDeals.length
             ? recentDeals.map((d) => {
-                const s = paymentSummary(d.id, d.total_amount_aed || d.total_amount, d.type);
-                const shownCurrency = d.document_currency || "AED";
-                const shownAmount = shownCurrency === "AED" ? d.total_amount_aed : d.total_amount;
+                const s = paymentSummary(d.id, d.total_amount, d.type);
                 return `
               <div class="item" style="padding:14px">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
@@ -230,8 +226,8 @@ function dashboardView() {
                     <div class="item-sub">${esc(d.type || "sell")} · ${esc(d.status || "active")}</div>
                   </div>
                   <div style="text-align:right;min-width:150px">
-                    <div style="font-size:15px;font-weight:800;color:#d4a646">${esc(shownCurrency)} ${Number(shownAmount || 0).toLocaleString("en-IN")}</div>
-                    <div class="item-sub">Received: ${esc(shownCurrency)} ${s.received.toLocaleString("en-IN")}</div>
+                    <div style="font-size:15px;font-weight:800;color:#d4a646">${esc(d.currency || "AED")} ${Number(d.total_amount || 0).toLocaleString("en-IN")}</div>
+                    <div class="item-sub">Received: ${esc(d.currency || "AED")} ${s.received.toLocaleString("en-IN")}</div>
                   </div>
                 </div>
               </div>
@@ -346,6 +342,7 @@ function suppliersView() {
     </div>
   `;
 }
+
 function dealsView() {
   const q = state.dealSearch.trim().toLowerCase();
   const filteredDeals = state.deals.filter((d) => {
@@ -386,20 +383,16 @@ function dealsView() {
         ${
           filteredDeals.length
             ? filteredDeals.map((d) => {
-                const s = paymentSummary(d.id, d.total_amount_aed || d.total_amount, d.type);
+                const s = paymentSummary(d.id, d.total_amount, d.type);
                 const payments = paymentsForDeal(d.id);
-                const shownCurrency = d.document_currency || "AED";
-                const shownAmount = shownCurrency === "AED" ? d.total_amount_aed : d.total_amount;
-
                 return `
             <div class="item">
               <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
               <div class="item-sub">HSN: ${esc(d.hsn_code || "—")}</div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
-              <div class="item-sub">Base: ${esc(d.base_currency || "USD")} · Doc: ${esc(d.document_currency || "AED")} · Rate: ${esc(d.conversion_rate || "—")}</div>
-              <div class="item-sub">${esc(shownCurrency)} ${Number(shownAmount || 0).toLocaleString("en-IN")} · ${esc(d.status || "active")}</div>
+              <div class="item-sub">${esc(d.currency || "AED")} ${Number(d.total_amount || 0).toLocaleString("en-IN")} · ${esc(d.status || "active")}</div>
               <div class="item-sub">${esc(d.type || "sell")} · Buyer: ${esc(buyerName(d.buyer_id))} · Supplier: ${esc(supplierName(d.supplier_id))}</div>
-              <div class="item-sub">Received: ${esc(shownCurrency)} ${s.received.toLocaleString("en-IN")} · Sent: ${esc(shownCurrency)} ${s.sent.toLocaleString("en-IN")} · Balance: ${esc(shownCurrency)} ${s.balance.toLocaleString("en-IN")}</div>
+              <div class="item-sub">Received: ${esc(d.currency || "AED")} ${s.received.toLocaleString("en-IN")} · Sent: ${esc(d.currency || "AED")} ${s.sent.toLocaleString("en-IN")} · Balance: ${esc(d.currency || "AED")} ${s.balance.toLocaleString("en-IN")}</div>
 
               <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
                 <button data-open-deal="${d.id}">Open</button>
@@ -423,7 +416,7 @@ function dealsView() {
                   payments.length
                     ? payments.map((p) => `
                   <div class="item" style="padding:10px">
-                    <div class="item-title">${esc(p.currency || shownCurrency)} ${Number(p.amount || 0).toLocaleString("en-IN")}</div>
+                    <div class="item-title">${esc(p.currency || d.currency || "AED")} ${Number(p.amount || 0).toLocaleString("en-IN")}</div>
                     <div class="item-sub">${esc(p.direction || "in")} · ${esc(p.method || "—")} · ${esc(p.status || "pending")}</div>
                     <div class="item-sub">${esc(p.ref || "—")} · ${esc(p.payment_date || "—")}</div>
                     <div style="margin-top:8px;display:flex;gap:8px">
@@ -452,7 +445,7 @@ function dealDetailView() {
   const supplier = state.suppliers.find((s) => String(s.id) === String(d.supplier_id));
   const payments = paymentsForDeal(d.id);
   const documents = documentsForDeal(d.id);
-  const s = paymentSummary(d.id, d.total_amount_aed || d.total_amount, d.type);
+  const s = paymentSummary(d.id, d.total_amount, d.type);
 
   return `
     <div class="card">
@@ -466,11 +459,7 @@ function dealDetailView() {
         <div class="item"><div class="item-title">HSN Code</div><div class="item-sub">${esc(d.hsn_code || "—")}</div></div>
         <div class="item"><div class="item-title">Status</div><div class="item-sub">${esc(d.status || "active")}</div></div>
         <div class="item"><div class="item-title">Route</div><div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div></div>
-        <div class="item"><div class="item-title">Base Currency</div><div class="item-sub">${esc(d.base_currency || "USD")}</div></div>
-        <div class="item"><div class="item-title">Conversion Rate</div><div class="item-sub">${esc(d.conversion_rate || "—")}</div></div>
-        <div class="item"><div class="item-title">Total (${esc(d.base_currency || "USD")})</div><div class="item-sub">${esc(d.base_currency || "USD")} ${Number(d.total_amount || 0).toLocaleString("en-IN")}</div></div>
-        <div class="item"><div class="item-title">Total (AED)</div><div class="item-sub">AED ${Number(d.total_amount_aed || 0).toLocaleString("en-IN")}</div></div>
-        <div class="item"><div class="item-title">Document Currency</div><div class="item-sub">${esc(d.document_currency || "AED")}</div></div>
+        <div class="item"><div class="item-title">Value</div><div class="item-sub">${esc(d.currency || "AED")} ${Number(d.total_amount || 0).toLocaleString("en-IN")}</div></div>
         <div class="item"><div class="item-title">Shipment Out Date</div><div class="item-sub">${esc(d.shipment_out_date || "—")}</div></div>
         <div class="item"><div class="item-title">ETA</div><div class="item-sub">${esc(d.eta || "—")}</div></div>
         <div class="item"><div class="item-title">BL No</div><div class="item-sub">${esc(d.bl_no || "—")}</div></div>
@@ -495,9 +484,9 @@ function dealDetailView() {
 
       <div class="item" style="margin-top:12px">
         <div class="item-title">Payment Summary</div>
-        <div class="item-sub">Received: ${esc(d.document_currency || "AED")} ${s.received.toLocaleString("en-IN")}</div>
-        <div class="item-sub">Sent: ${esc(d.document_currency || "AED")} ${s.sent.toLocaleString("en-IN")}</div>
-        <div class="item-sub">Balance: ${esc(d.document_currency || "AED")} ${s.balance.toLocaleString("en-IN")}</div>
+        <div class="item-sub">Received: ${esc(d.currency || "AED")} ${s.received.toLocaleString("en-IN")}</div>
+        <div class="item-sub">Sent: ${esc(d.currency || "AED")} ${s.sent.toLocaleString("en-IN")}</div>
+        <div class="item-sub">Balance: ${esc(d.currency || "AED")} ${s.balance.toLocaleString("en-IN")}</div>
       </div>
 
       <div class="item" style="margin-top:12px">
@@ -563,7 +552,7 @@ function dealDetailView() {
             payments.length
               ? payments.map((p) => `
             <div class="item" style="padding:10px">
-              <div class="item-title">${esc(p.currency || d.document_currency || "AED")} ${Number(p.amount || 0).toLocaleString("en-IN")}</div>
+              <div class="item-title">${esc(p.currency || d.currency || "AED")} ${Number(p.amount || 0).toLocaleString("en-IN")}</div>
               <div class="item-sub">${esc(p.direction || "in")} · ${esc(p.method || "—")} · ${esc(p.status || "pending")}</div>
               <div class="item-sub">${esc(p.ref || "—")} · ${esc(p.payment_date || "—")}</div>
               <div style="margin-top:8px;display:flex;gap:8px">
@@ -578,6 +567,7 @@ function dealDetailView() {
     </div>
   `;
 }
+
 function settingsView() {
   const c = state.company;
 
@@ -619,6 +609,119 @@ function settingsView() {
       </form>
     </div>
   `;
+}
+
+function render() {
+  if (state.page === "dashboard") content.innerHTML = dashboardView();
+  if (state.page === "buyers") content.innerHTML = buyersView();
+  if (state.page === "suppliers") content.innerHTML = suppliersView();
+  if (state.page === "deals") content.innerHTML = dealsView();
+  if (state.page === "dealDetail") content.innerHTML = dealDetailView();
+  if (state.page === "settings") content.innerHTML = settingsView();
+  bindUI();
+}
+
+function bindUI() {
+  document.getElementById("show-buyer-form")?.addEventListener("click", showBuyerForm);
+  document.getElementById("show-supplier-form")?.addEventListener("click", showSupplierForm);
+  document.getElementById("show-deal-form")?.addEventListener("click", showDealForm);
+  document.getElementById("back-to-deals")?.addEventListener("click", () => setPage("deals"));
+  document.getElementById("open-company-settings")?.addEventListener("click", () => setPage("settings"));
+  document.getElementById("company-settings-form")?.addEventListener("submit", saveCompanySettings);
+  document.getElementById("add-bank-btn")?.addEventListener("click", addBankAccount);
+  document.getElementById("export-deals-csv")?.addEventListener("click", exportDealsCsv);
+
+  document.querySelectorAll("[data-delete-bank]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const index = Number(btn.dataset.deleteBank);
+      state.company.bankAccounts.splice(index, 1);
+      render();
+    });
+  });
+
+  document.getElementById("deal-search")?.addEventListener("input", (e) => {
+    state.dealSearch = e.target.value;
+    render();
+  });
+
+  document.getElementById("buyer-search")?.addEventListener("input", (e) => {
+    state.buyerSearch = e.target.value;
+    render();
+  });
+
+  document.getElementById("supplier-search")?.addEventListener("input", (e) => {
+    state.supplierSearch = e.target.value;
+    render();
+  });
+
+  document.querySelectorAll("[data-open-deal]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      state.selectedDealId = btn.dataset.openDeal;
+      setPage("dealDetail");
+    })
+  );
+
+  document.querySelectorAll("[data-show-payment-form]").forEach((btn) =>
+    btn.addEventListener("click", () => showPaymentForm(btn.dataset.showPaymentForm))
+  );
+
+  document.querySelectorAll("[data-delete-payment]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const [dealId, paymentId] = btn.dataset.deletePayment.split(":");
+      deletePayment(dealId, paymentId);
+    })
+  );
+
+  document.querySelectorAll("[data-placeholder-upload]").forEach((form) => {
+    form.addEventListener("submit", (e) => savePlaceholderDocument(e, form.dataset.placeholderUpload));
+  });
+
+  document.querySelectorAll("[data-delete-placeholder-doc]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const [dealId, index] = btn.dataset.deletePlaceholderDoc.split(":");
+      deletePlaceholderDocument(dealId, Number(index));
+    });
+  });
+
+  document.querySelectorAll("[data-edit-buyer]").forEach((btn) =>
+    btn.addEventListener("click", () => showEditBuyerForm(btn.dataset.editBuyer))
+  );
+
+  document.querySelectorAll("[data-delete-buyer]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteBuyer(btn.dataset.deleteBuyer))
+  );
+
+  document.querySelectorAll("[data-edit-supplier]").forEach((btn) =>
+    btn.addEventListener("click", () => showEditSupplierForm(btn.dataset.editSupplier))
+  );
+
+  document.querySelectorAll("[data-delete-supplier]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteSupplier(btn.dataset.deleteSupplier))
+  );
+
+  document.querySelectorAll("[data-edit-deal]").forEach((btn) =>
+    btn.addEventListener("click", () => showEditDealForm(btn.dataset.editDeal))
+  );
+
+  document.querySelectorAll("[data-delete-deal]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteDeal(btn.dataset.deleteDeal))
+  );
+
+  document.querySelectorAll("[data-print-pi]").forEach((btn) =>
+    btn.addEventListener("click", () => printDoc("pi", btn.dataset.printPi))
+  );
+
+  document.querySelectorAll("[data-print-ci]").forEach((btn) =>
+    btn.addEventListener("click", () => printDoc("ci", btn.dataset.printCi))
+  );
+
+  document.querySelectorAll("[data-print-pl]").forEach((btn) =>
+    btn.addEventListener("click", () => printDoc("pl", btn.dataset.printPl))
+  );
+
+  document.querySelectorAll("[data-print-coo]").forEach((btn) =>
+    btn.addEventListener("click", () => printDoc("coo", btn.dataset.printCoo))
+  );
 }
 
 function buyerFormHtml(b = {}, edit = false, id = "") {
