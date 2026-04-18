@@ -111,6 +111,10 @@ function bindDealAutoTotal(edit = false, id = "") {
   const totalAedEl = document.getElementById(edit ? `total-aed-${id}` : "total-aed");
   const convEl = document.getElementById(edit ? `conversion-rate-${id}` : "conversion-rate");
   const baseCurrencyEl = document.getElementById(edit ? `base-currency-${id}` : "base-currency");
+  const docCurrencyEl = document.querySelector(
+    edit ? `#deal-edit-form-${id} select[name="document_currency"]` : `#deal-form select[name="document_currency"]`
+  );
+  const totalLabelEl = document.getElementById(edit ? `total-label-${id}` : "total-label");
 
   if (!qtyEl || !rateEl || !totalEl || !totalAedEl) return;
 
@@ -119,15 +123,20 @@ function bindDealAutoTotal(edit = false, id = "") {
     const rate = Number(rateEl.value || 0);
     const conv = Number(convEl?.value || 0);
     const baseCurrency = baseCurrencyEl?.value || "USD";
-    const total = qty * rate;
+    const documentCurrency = docCurrencyEl?.value || baseCurrency;
 
-    totalEl.value = total ? total.toFixed(2) : "";
+    const totalBase = qty * rate;
+    const totalInAed = baseCurrency === "USD" ? totalBase * conv : totalBase;
+    const totalInUsd = baseCurrency === "AED" ? (conv ? totalBase / conv : 0) : totalBase;
 
-    if (baseCurrency === "USD") {
-      const totalAed = total * conv;
-      totalAedEl.value = totalAed ? totalAed.toFixed(2) : "";
-    } else {
-      totalAedEl.value = total ? total.toFixed(2) : "";
+    totalEl.value = documentCurrency === "USD"
+      ? (totalInUsd ? totalInUsd.toFixed(2) : "")
+      : (totalInAed ? totalInAed.toFixed(2) : "");
+
+    totalAedEl.value = totalInAed ? totalInAed.toFixed(2) : "";
+
+    if (totalLabelEl) {
+      totalLabelEl.textContent = `Total (${documentCurrency})`;
     }
   }
 
@@ -135,6 +144,8 @@ function bindDealAutoTotal(edit = false, id = "") {
   rateEl.addEventListener("input", calcTotal);
   convEl?.addEventListener("input", calcTotal);
   baseCurrencyEl?.addEventListener("change", calcTotal);
+  docCurrencyEl?.addEventListener("change", calcTotal);
+
   calcTotal();
 }
 
@@ -170,7 +181,7 @@ function dashboardView() {
   const totalDeals = state.deals.length;
   const totalBuyers = state.buyers.length;
   const totalSuppliers = state.suppliers.length;
-  const totalValue = state.deals.reduce((sum, d) => sum + Number(d.total_amount || 0), 0);
+  const totalValue = state.deals.reduce((sum, d) => sum + Number(d.total_amount_aed || d.total_amount || 0), 0);
   const totalReceived = state.deals.reduce((sum, d) => {
     const s = paymentSummary(d.id, d.total_amount, d.type);
     return sum + s.received;
@@ -216,6 +227,11 @@ function dashboardView() {
           recentDeals.length
             ? recentDeals.map((d) => {
                 const s = paymentSummary(d.id, d.total_amount, d.type);
+                const showCurrency = d.document_currency || d.currency || d.base_currency || "AED";
+                const showTotal = showCurrency === "USD"
+                  ? Number(d.total_amount_usd || d.total_amount || 0)
+                  : Number(d.total_amount_aed || d.total_amount || 0);
+
                 return `
               <div class="item" style="padding:14px">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
@@ -226,8 +242,8 @@ function dashboardView() {
                     <div class="item-sub">${esc(d.type || "sell")} · ${esc(d.status || "active")}</div>
                   </div>
                   <div style="text-align:right;min-width:150px">
-                    <div style="font-size:15px;font-weight:800;color:#d4a646">${esc(d.currency || "AED")} ${Number(d.total_amount || 0).toLocaleString("en-IN")}</div>
-                    <div class="item-sub">Received: ${esc(d.currency || "AED")} ${s.received.toLocaleString("en-IN")}</div>
+                    <div style="font-size:15px;font-weight:800;color:#d4a646">${esc(showCurrency)} ${showTotal.toLocaleString("en-IN")}</div>
+                    <div class="item-sub">Received: ${esc(showCurrency)} ${s.received.toLocaleString("en-IN")}</div>
                   </div>
                 </div>
               </div>
@@ -385,14 +401,19 @@ function dealsView() {
             ? filteredDeals.map((d) => {
                 const s = paymentSummary(d.id, d.total_amount, d.type);
                 const payments = paymentsForDeal(d.id);
+                const showCurrency = d.document_currency || d.currency || d.base_currency || "AED";
+                const showTotal = showCurrency === "USD"
+                  ? Number(d.total_amount_usd || d.total_amount || 0)
+                  : Number(d.total_amount_aed || d.total_amount || 0);
+
                 return `
             <div class="item">
               <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
               <div class="item-sub">HSN: ${esc(d.hsn_code || "—")}</div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
-              <div class="item-sub">${esc(d.currency || "AED")} ${Number(d.total_amount || 0).toLocaleString("en-IN")} · ${esc(d.status || "active")}</div>
+              <div class="item-sub">${esc(showCurrency)} ${showTotal.toLocaleString("en-IN")} · ${esc(d.status || "active")}</div>
               <div class="item-sub">${esc(d.type || "sell")} · Buyer: ${esc(buyerName(d.buyer_id))} · Supplier: ${esc(supplierName(d.supplier_id))}</div>
-              <div class="item-sub">Received: ${esc(d.currency || "AED")} ${s.received.toLocaleString("en-IN")} · Sent: ${esc(d.currency || "AED")} ${s.sent.toLocaleString("en-IN")} · Balance: ${esc(d.currency || "AED")} ${s.balance.toLocaleString("en-IN")}</div>
+              <div class="item-sub">Received: ${esc(showCurrency)} ${s.received.toLocaleString("en-IN")} · Sent: ${esc(showCurrency)} ${s.sent.toLocaleString("en-IN")} · Balance: ${esc(showCurrency)} ${s.balance.toLocaleString("en-IN")}</div>
 
               <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
                 <button data-open-deal="${d.id}">Open</button>
@@ -416,7 +437,7 @@ function dealsView() {
                   payments.length
                     ? payments.map((p) => `
                   <div class="item" style="padding:10px">
-                    <div class="item-title">${esc(p.currency || d.currency || "AED")} ${Number(p.amount || 0).toLocaleString("en-IN")}</div>
+                    <div class="item-title">${esc(p.currency || showCurrency)} ${Number(p.amount || 0).toLocaleString("en-IN")}</div>
                     <div class="item-sub">${esc(p.direction || "in")} · ${esc(p.method || "—")} · ${esc(p.status || "pending")}</div>
                     <div class="item-sub">${esc(p.ref || "—")} · ${esc(p.payment_date || "—")}</div>
                     <div style="margin-top:8px;display:flex;gap:8px">
@@ -446,6 +467,10 @@ function dealDetailView() {
   const payments = paymentsForDeal(d.id);
   const documents = documentsForDeal(d.id);
   const s = paymentSummary(d.id, d.total_amount, d.type);
+  const showCurrency = d.document_currency || d.currency || d.base_currency || "AED";
+  const showTotal = showCurrency === "USD"
+    ? Number(d.total_amount_usd || d.total_amount || 0)
+    : Number(d.total_amount_aed || d.total_amount || 0);
 
   return `
     <div class="card">
@@ -459,7 +484,12 @@ function dealDetailView() {
         <div class="item"><div class="item-title">HSN Code</div><div class="item-sub">${esc(d.hsn_code || "—")}</div></div>
         <div class="item"><div class="item-title">Status</div><div class="item-sub">${esc(d.status || "active")}</div></div>
         <div class="item"><div class="item-title">Route</div><div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div></div>
-        <div class="item"><div class="item-title">Value</div><div class="item-sub">${esc(d.currency || "AED")} ${Number(d.total_amount || 0).toLocaleString("en-IN")}</div></div>
+        <div class="item"><div class="item-title">Value</div><div class="item-sub">${esc(showCurrency)} ${showTotal.toLocaleString("en-IN")}</div></div>
+        <div class="item"><div class="item-title">Base Currency</div><div class="item-sub">${esc(d.base_currency || "USD")}</div></div>
+        <div class="item"><div class="item-title">Document Currency</div><div class="item-sub">${esc(d.document_currency || d.currency || "AED")}</div></div>
+        <div class="item"><div class="item-title">Conversion Rate</div><div class="item-sub">${esc(d.conversion_rate || "—")}</div></div>
+        <div class="item"><div class="item-title">Total USD</div><div class="item-sub">USD ${Number(d.total_amount_usd || 0).toLocaleString("en-IN")}</div></div>
+        <div class="item"><div class="item-title">Total AED</div><div class="item-sub">AED ${Number(d.total_amount_aed || 0).toLocaleString("en-IN")}</div></div>
         <div class="item"><div class="item-title">Shipment Out Date</div><div class="item-sub">${esc(d.shipment_out_date || "—")}</div></div>
         <div class="item"><div class="item-title">ETA</div><div class="item-sub">${esc(d.eta || "—")}</div></div>
         <div class="item"><div class="item-title">BL No</div><div class="item-sub">${esc(d.bl_no || "—")}</div></div>
@@ -484,9 +514,9 @@ function dealDetailView() {
 
       <div class="item" style="margin-top:12px">
         <div class="item-title">Payment Summary</div>
-        <div class="item-sub">Received: ${esc(d.currency || "AED")} ${s.received.toLocaleString("en-IN")}</div>
-        <div class="item-sub">Sent: ${esc(d.currency || "AED")} ${s.sent.toLocaleString("en-IN")}</div>
-        <div class="item-sub">Balance: ${esc(d.currency || "AED")} ${s.balance.toLocaleString("en-IN")}</div>
+        <div class="item-sub">Received: ${esc(showCurrency)} ${s.received.toLocaleString("en-IN")}</div>
+        <div class="item-sub">Sent: ${esc(showCurrency)} ${s.sent.toLocaleString("en-IN")}</div>
+        <div class="item-sub">Balance: ${esc(showCurrency)} ${s.balance.toLocaleString("en-IN")}</div>
       </div>
 
       <div class="item" style="margin-top:12px">
@@ -552,7 +582,7 @@ function dealDetailView() {
             payments.length
               ? payments.map((p) => `
             <div class="item" style="padding:10px">
-              <div class="item-title">${esc(p.currency || d.currency || "AED")} ${Number(p.amount || 0).toLocaleString("en-IN")}</div>
+              <div class="item-title">${esc(p.currency || showCurrency)} ${Number(p.amount || 0).toLocaleString("en-IN")}</div>
               <div class="item-sub">${esc(p.direction || "in")} · ${esc(p.method || "—")} · ${esc(p.status || "pending")}</div>
               <div class="item-sub">${esc(p.ref || "—")} · ${esc(p.payment_date || "—")}</div>
               <div style="margin-top:8px;display:flex;gap:8px">
@@ -856,6 +886,9 @@ function nextDealNo() {
 }
 
 function dealFormHtml(d = {}, edit = false, id = "") {
+  const labelId = edit ? `total-label-${id}` : "total-label";
+  const currentDocCurrency = d.document_currency || d.currency || "AED";
+
   return `
     <form id="${edit ? `deal-edit-form-${id}` : "deal-form"}" class="item" style="margin-bottom:12px">
       <div style="font-weight:800;margin-bottom:12px;color:#d4a646">${edit ? "Edit Deal" : "New Deal"}</div>
@@ -907,8 +940,8 @@ function dealFormHtml(d = {}, edit = false, id = "") {
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Document Currency</label>
             <select name="document_currency">
-              <option value="AED" ${(d.document_currency || "AED") === "AED" ? "selected" : ""}>AED</option>
-              <option value="USD" ${d.document_currency === "USD" ? "selected" : ""}>USD</option>
+              <option value="AED" ${currentDocCurrency === "AED" ? "selected" : ""}>AED</option>
+              <option value="USD" ${currentDocCurrency === "USD" ? "selected" : ""}>USD</option>
             </select>
           </div>
           <div>
@@ -932,7 +965,7 @@ function dealFormHtml(d = {}, edit = false, id = "") {
             <input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}">
           </div>
           <div>
-            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Total (${esc(d.base_currency || "USD")})</label>
+            <label id="${labelId}" style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Total (${esc(currentDocCurrency)})</label>
             <input name="total_amount" id="${edit ? `total-${id}` : "total"}" type="number" step="0.01" value="${esc(d.total_amount || "")}" readonly>
           </div>
           <div>
@@ -1193,7 +1226,7 @@ function showPaymentForm(dealId) {
 
         <div>
           <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Currency</label>
-          <input name="currency" value="${esc(deal.currency || "AED")}">
+          <input name="currency" value="${esc(deal.document_currency || deal.currency || "AED")}">
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -1327,16 +1360,21 @@ function printDoc(type, dealId) {
       }
     : null;
 
+  const currency = deal.document_currency || deal.currency || deal.base_currency || "AED";
+
   const dealDoc = {
-  ...deal,
-  currency: deal.document_currency || deal.currency || deal.base_currency || "AED",
-  dealNo: deal.deal_no,
-  productName: deal.product_name,
-  totalAmount: deal.total_amount,
-  loadingPort: deal.loading_port,
-  dischargePort: deal.discharge_port,
-  hsn: deal.hsn_code
-};
+    ...deal,
+    currency,
+    dealNo: deal.deal_no,
+    productName: deal.product_name,
+    totalAmount: currency === "USD"
+      ? (deal.total_amount_usd ?? deal.total_amount)
+      : (deal.total_amount_aed ?? deal.total_amount),
+    loadingPort: deal.loading_port,
+    dischargePort: deal.discharge_port,
+    hsn: deal.hsn_code
+  };
+
   const companyForDocs = getPrimaryBank(state.company);
 
   let html = "";
@@ -1496,10 +1534,13 @@ function validateDeal(fd) {
 
   const quantity = cleanNumber(fd.get("quantity"));
   const rate = cleanNumber(fd.get("rate"));
-  const total_amount = quantity * rate;
-  const total_amount_aed =
-    base_currency === "USD" ? total_amount * conversion_rate : total_amount;
 
+  const total_base = quantity * rate;
+  const total_amount_aed = base_currency === "USD" ? total_base * conversion_rate : total_base;
+  const total_amount_usd = base_currency === "AED" ? (conversion_rate ? total_base / conversion_rate : 0) : total_base;
+  const total_amount = document_currency === "USD" ? total_amount_usd : total_amount_aed;
+
+  const currency = document_currency;
   const status = cleanText(fd.get("status") || "active");
   const loading_port = cleanText(fd.get("loading_port"));
   const discharge_port = cleanText(fd.get("discharge_port"));
@@ -1524,11 +1565,12 @@ function validateDeal(fd) {
     base_currency,
     document_currency,
     conversion_rate,
-    total_amount,
-    total_amount_aed,
-    currency: document_currency,
+    currency,
     quantity,
     rate,
+    total_amount,
+    total_amount_aed,
+    total_amount_usd,
     status,
     loading_port,
     discharge_port,
@@ -1738,10 +1780,11 @@ function exportDealsCsv() {
   });
 
   const rows = [[
-    "Deal No", "Type", "Product", "HSN Code", "Buyer", "Supplier", "Loading Port", "Discharge Port", "Currency", "Total Amount", "Status"
+    "Deal No", "Type", "Product", "HSN Code", "Buyer", "Supplier", "Loading Port", "Discharge Port", "Document Currency", "Total Amount", "Total USD", "Total AED", "Status"
   ]];
 
   filteredDeals.forEach((d) => {
+    const currency = d.document_currency || d.currency || d.base_currency || "AED";
     rows.push([
       d.deal_no || "",
       d.type || "",
@@ -1751,8 +1794,10 @@ function exportDealsCsv() {
       supplierName(d.supplier_id),
       d.loading_port || "",
       d.discharge_port || "",
-      d.currency || "AED",
+      currency,
       d.total_amount || 0,
+      d.total_amount_usd || 0,
+      d.total_amount_aed || 0,
       d.status || ""
     ]);
   });
