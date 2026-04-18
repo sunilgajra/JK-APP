@@ -1328,15 +1328,15 @@ function printDoc(type, dealId) {
     : null;
 
   const dealDoc = {
-    ...deal,
-    dealNo: deal.deal_no,
-    productName: deal.product_name,
-    totalAmount: deal.total_amount,
-    loadingPort: deal.loading_port,
-    dischargePort: deal.discharge_port,
-    hsn: deal.hsn_code
-  };
-
+  ...deal,
+  currency: deal.document_currency || deal.currency || deal.base_currency || "AED",
+  dealNo: deal.deal_no,
+  productName: deal.product_name,
+  totalAmount: deal.total_amount,
+  loadingPort: deal.loading_port,
+  dischargePort: deal.discharge_port,
+  hsn: deal.hsn_code
+};
   const companyForDocs = getPrimaryBank(state.company);
 
   let html = "";
@@ -1489,10 +1489,17 @@ function validateDeal(fd) {
   const product_name = cleanText(fd.get("product_name"));
   const hsn_code = cleanText(fd.get("hsn_code"));
   const unit = cleanText(fd.get("unit") || "MTON");
+
+  const base_currency = cleanText(fd.get("base_currency") || "USD");
+  const document_currency = cleanText(fd.get("document_currency") || base_currency);
+  const conversion_rate = cleanNumber(fd.get("conversion_rate"));
+
   const quantity = cleanNumber(fd.get("quantity"));
   const rate = cleanNumber(fd.get("rate"));
   const total_amount = quantity * rate;
-  const currency = cleanText(fd.get("currency") || "AED");
+  const total_amount_aed =
+    base_currency === "USD" ? total_amount * conversion_rate : total_amount;
+
   const status = cleanText(fd.get("status") || "active");
   const loading_port = cleanText(fd.get("loading_port"));
   const discharge_port = cleanText(fd.get("discharge_port"));
@@ -1514,10 +1521,14 @@ function validateDeal(fd) {
     product_name,
     hsn_code,
     unit,
+    base_currency,
+    document_currency,
+    conversion_rate,
+    total_amount,
+    total_amount_aed,
+    currency: document_currency,
     quantity,
     rate,
-    total_amount,
-    currency,
     status,
     loading_port,
     discharge_port,
