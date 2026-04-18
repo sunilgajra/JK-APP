@@ -116,30 +116,31 @@ function bindDealAutoTotal(edit = false, id = "") {
   );
   const totalLabelEl = document.getElementById(edit ? `total-label-${id}` : "total-label");
 
-  if (!qtyEl || !rateEl || !totalEl || !totalAedEl) return;
+  if (!qtyEl || !rateEl || !totalEl || !totalAedEl || !baseCurrencyEl || !docCurrencyEl) return;
 
   function calcTotal() {
     const qty = Number(qtyEl.value || 0);
     const rate = Number(rateEl.value || 0);
     const conv = Number(convEl?.value || 0);
-    const baseCurrency = baseCurrencyEl?.value || "USD";
-    const documentCurrency = docCurrencyEl?.value || baseCurrency;
+    const baseCurrency = baseCurrencyEl.value || "USD";
+    const documentCurrency = docCurrencyEl.value || baseCurrency;
 
     let totalUsd = 0;
     let totalAed = 0;
 
     if (baseCurrency === "USD") {
       totalUsd = qty * rate;
-      totalAed = conv ? totalUsd * conv : 0;
+      totalAed = conv > 0 ? totalUsd * conv : 0;
     } else {
       totalAed = qty * rate;
-      totalUsd = conv ? totalAed / conv : 0;
+      totalUsd = conv > 0 ? totalAed / conv : 0;
     }
 
-    totalEl.value =
-      documentCurrency === "USD"
-        ? (totalUsd ? totalUsd.toFixed(2) : "")
-        : (totalAed ? totalAed.toFixed(2) : "");
+    if (documentCurrency === "USD") {
+      totalEl.value = totalUsd ? totalUsd.toFixed(2) : "";
+    } else {
+      totalEl.value = totalAed ? totalAed.toFixed(2) : "";
+    }
 
     totalAedEl.value = totalAed ? totalAed.toFixed(2) : "";
 
@@ -151,8 +152,9 @@ function bindDealAutoTotal(edit = false, id = "") {
   qtyEl.addEventListener("input", calcTotal);
   rateEl.addEventListener("input", calcTotal);
   convEl?.addEventListener("input", calcTotal);
-  baseCurrencyEl?.addEventListener("change", calcTotal);
-  docCurrencyEl?.addEventListener("change", calcTotal);
+  baseCurrencyEl.addEventListener("change", calcTotal);
+  docCurrencyEl.addEventListener("change", calcTotal);
+
   calcTotal();
 }
 
@@ -874,6 +876,9 @@ function nextDealNo() {
 }
 
 function dealFormHtml(d = {}, edit = false, id = "") {
+  const labelId = edit ? `total-label-${id}` : "total-label";
+  const currentDocCurrency = d.document_currency || d.currency || "USD";
+
   return `
     <form id="${edit ? `deal-edit-form-${id}` : "deal-form"}" class="item" style="margin-bottom:12px">
       <div style="font-weight:800;margin-bottom:12px;color:#d4a646">${edit ? "Edit Deal" : "New Deal"}</div>
@@ -925,8 +930,8 @@ function dealFormHtml(d = {}, edit = false, id = "") {
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Document Currency</label>
             <select name="document_currency">
-              <option value="AED" ${(d.document_currency || "AED") === "AED" ? "selected" : ""}>AED</option>
-              <option value="USD" ${d.document_currency === "USD" ? "selected" : ""}>USD</option>
+              <option value="AED" ${currentDocCurrency === "AED" ? "selected" : ""}>AED</option>
+              <option value="USD" ${currentDocCurrency === "USD" ? "selected" : ""}>USD</option>
             </select>
           </div>
           <div>
@@ -950,7 +955,7 @@ function dealFormHtml(d = {}, edit = false, id = "") {
             <input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}">
           </div>
           <div>
-            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Total (${esc(d.base_currency || "USD")})</label>
+            <label id="${labelId}" style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Total (${esc(currentDocCurrency)})</label>
             <input name="total_amount" id="${edit ? `total-${id}` : "total"}" type="number" step="0.01" value="${esc(d.total_amount || "")}" readonly>
           </div>
           <div>
