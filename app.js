@@ -44,6 +44,18 @@ function cleanNumber(v) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function normalizeCustomerId(v) {
+  return String(v || "").replace(/\D/g, "");
+}
+
+function nextCustomerId() {
+  const nums = state.buyers
+    .map((b) => Number(String(b.customer_id || "").replace(/\D/g, "")))
+    .filter((n) => Number.isFinite(n) && n > 0);
+
+  return String((nums.length ? Math.max(...nums) : 1000) + 1);
+}
+
 function setPage(page) {
   state.page = page;
   document.querySelectorAll(".nav-btn").forEach((btn) => {
@@ -242,6 +254,7 @@ function buyersView() {
             <div class="item-title">${esc(b.name || "—")}</div>
             <div class="item-sub">${esc(b.address || "—")}</div>
             <div class="item-sub">GST: ${esc(b.gst || "—")} · IEC: ${esc(b.iec || "—")}</div>
+            <div class="item-sub">Customer ID: ${esc(b.customer_id || "—")}</div>
             <div class="item-sub">Phone: ${esc(b.phone || "—")}</div>
             <div style="margin-top:8px;display:flex;gap:8px">
               <button data-edit-buyer="${b.id}">Edit</button>
@@ -702,7 +715,15 @@ function buyerFormHtml(b = {}, edit = false, id = "") {
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <input name="pan" value="${esc(b.pan || "")}" placeholder="PAN">
-          <input name="customer_id" value="${esc(b.customer_id || "")}" placeholder="Customer ID">
+          <input
+            name="customer_id"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            step="1"
+            value="${esc(b.customer_id || (edit ? "" : nextCustomerId()))}"
+            placeholder="Customer ID"
+          >
         </div>
         <input name="phone" value="${esc(b.phone || "")}" placeholder="Phone">
         <div style="display:flex;gap:10px">
@@ -1206,13 +1227,26 @@ async function saveBuyer(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
 
+  const customerId = normalizeCustomerId(fd.get("customer_id"));
+
+  if (!customerId) {
+    alert("Customer ID is required");
+    return;
+  }
+
+  const duplicate = state.buyers.find((b) => normalizeCustomerId(b.customer_id) === customerId);
+  if (duplicate) {
+    alert("Customer ID already exists");
+    return;
+  }
+
   const { error } = await supabase.from("buyers").insert({
     name: fd.get("name") || "",
     address: fd.get("address") || "",
     gst: fd.get("gst") || "",
     iec: fd.get("iec") || "",
     pan: fd.get("pan") || "",
-    customer_id: fd.get("customer_id") || "",
+    customer_id: customerId,
     phone: fd.get("phone") || ""
   });
 
@@ -1225,6 +1259,24 @@ async function updateBuyer(e, id) {
   e.preventDefault();
   const fd = new FormData(e.target);
 
+  const customerId = normalizeCustomerId(fd.get("customer_id"));
+
+  if (!customerId) {
+    alert("Customer ID is required");
+    return;
+  }
+
+  const duplicate = state.buyers.find(
+    (b) =>
+      String(b.id) !== String(id) &&
+      normalizeCustomerId(b.customer_id) === customerId
+  );
+
+  if (duplicate) {
+    alert("Customer ID already exists");
+    return;
+  }
+
   const { error } = await supabase
     .from("buyers")
     .update({
@@ -1233,7 +1285,7 @@ async function updateBuyer(e, id) {
       gst: fd.get("gst") || "",
       iec: fd.get("iec") || "",
       pan: fd.get("pan") || "",
-      customer_id: fd.get("customer_id") || "",
+      customer_id: customerId,
       phone: fd.get("phone") || ""
     })
     .eq("id", id);
