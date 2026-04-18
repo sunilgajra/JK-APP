@@ -562,8 +562,15 @@ function settingsView() {
 
       <form id="company-settings-form" class="item" style="margin-top:12px">
         <div style="display:grid;gap:10px">
-          <input name="name" value="${esc(c.name || "")}" placeholder="Company name">
-          <textarea name="address" placeholder="Address" style="min-height:90px">${esc(c.address || "")}</textarea>
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Company Name</label>
+            <input name="name" value="${esc(c.name || "")}" placeholder="Company name">
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Address</label>
+            <textarea name="address" placeholder="Address" style="min-height:90px">${esc(c.address || "")}</textarea>
+          </div>
 
           <div>
             <div style="font-weight:800;margin-bottom:10px;color:#d4a646">Bank Accounts</div>
@@ -707,25 +714,52 @@ function buyerFormHtml(b = {}, edit = false, id = "") {
     <form id="${edit ? `buyer-edit-form-${id}` : "buyer-form"}" class="item" style="margin-bottom:12px">
       <div style="font-weight:800;margin-bottom:12px;color:#d4a646">${edit ? "Edit Buyer" : "New Buyer"}</div>
       <div style="display:grid;gap:10px">
-        <input name="name" value="${esc(b.name || "")}" placeholder="Buyer name" required>
-        <textarea name="address" placeholder="Address" style="min-height:80px">${esc(b.address || "")}</textarea>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <input name="gst" value="${esc(b.gst || "")}" placeholder="GST">
-          <input name="iec" value="${esc(b.iec || "")}" placeholder="IEC">
+
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Buyer Name</label>
+          <input name="name" value="${esc(b.name || "")}" placeholder="Buyer name" required>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <input name="pan" value="${esc(b.pan || "")}" placeholder="PAN">
-          <input
-            name="customer_id"
-            type="number"
-            inputmode="numeric"
-            min="1"
-            step="1"
-            value="${esc(b.customer_id || (edit ? "" : nextCustomerId()))}"
-            placeholder="Customer ID"
-          >
+
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Address</label>
+          <textarea name="address" placeholder="Address" style="min-height:80px">${esc(b.address || "")}</textarea>
         </div>
-        <input name="phone" value="${esc(b.phone || "")}" placeholder="Phone">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">GST</label>
+            <input name="gst" value="${esc(b.gst || "")}" placeholder="GST">
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">IEC</label>
+            <input name="iec" value="${esc(b.iec || "")}" placeholder="IEC">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">PAN</label>
+            <input name="pan" value="${esc(b.pan || "")}" placeholder="PAN">
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Customer ID</label>
+            <input
+              name="customer_id"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              step="1"
+              value="${esc(b.customer_id || (edit ? "" : nextCustomerId()))}"
+              placeholder="Customer ID"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Phone</label>
+          <input name="phone" value="${esc(b.phone || "")}" placeholder="Phone">
+        </div>
+
         <div style="display:flex;gap:10px">
           <button type="submit" style="background:#d4a646;color:#fff;border:none">${edit ? "Update Buyer" : "Save Buyer"}</button>
           <button type="button" id="${edit ? `cancel-buyer-edit-${id}` : "cancel-buyer-form"}">Cancel</button>
@@ -740,15 +774,53 @@ function supplierFormHtml(s = {}, edit = false, id = "") {
     <form id="${edit ? `supplier-edit-form-${id}` : "supplier-form"}" class="item" style="margin-bottom:12px">
       <div style="font-weight:800;margin-bottom:12px;color:#d4a646">${edit ? "Edit Supplier" : "New Supplier"}</div>
       <div style="display:grid;gap:10px">
-        <input name="name" value="${esc(s.name || "")}" placeholder="Supplier name" required>
-        <input name="company_name" value="${esc(s.company_name || "")}" placeholder="Company name">
-        <input name="country" value="${esc(s.country || "")}" placeholder="Country" required>
-        <input name="email" value="${esc(s.email || "")}" placeholder="Email">
-        <textarea name="address" placeholder="Address" style="min-height:80px">${esc(s.address || "")}</textarea>
-        <input name="bank_name" value="${esc(s.bank_name || "")}" placeholder="Bank name">
-        <input name="bank_account" value="${esc(s.bank_account || "")}" placeholder="Bank account">
-        <input name="bank_iban" value="${esc(s.bank_iban || "")}" placeholder="IBAN">
-        <input name="bank_swift" value="${esc(s.bank_swift || "")}" placeholder="SWIFT">
+
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Supplier Name</label>
+          <input name="name" value="${esc(s.name || "")}" placeholder="Supplier name" required>
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Company Name</label>
+          <input name="company_name" value="${esc(s.company_name || "")}" placeholder="Company name">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Country</label>
+            <input name="country" value="${esc(s.country || "")}" placeholder="Country" required>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Email</label>
+            <input name="email" value="${esc(s.email || "")}" placeholder="Email">
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Address</label>
+          <textarea name="address" placeholder="Address" style="min-height:80px">${esc(s.address || "")}</textarea>
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Bank Name</label>
+          <input name="bank_name" value="${esc(s.bank_name || "")}" placeholder="Bank name">
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Bank Account</label>
+          <input name="bank_account" value="${esc(s.bank_account || "")}" placeholder="Bank account">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">IBAN</label>
+            <input name="bank_iban" value="${esc(s.bank_iban || "")}" placeholder="IBAN">
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">SWIFT</label>
+            <input name="bank_swift" value="${esc(s.bank_swift || "")}" placeholder="SWIFT">
+          </div>
+        </div>
 
         <div style="display:flex;gap:10px">
           <button type="submit" style="background:#d4a646;color:#fff;border:none">${edit ? "Update Supplier" : "Save Supplier"}</button>
@@ -1046,50 +1118,69 @@ function showPaymentForm(dealId) {
     <form data-payment-form="${dealId}" class="item" style="margin-top:10px">
       <div style="font-weight:800;margin-bottom:12px;color:#d4a646">New Payment</div>
       <div style="display:grid;gap:10px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <select name="direction" required>
-            <option value="in">Payment In</option>
-            <option value="out">Payment Out</option>
-          </select>
-          <input name="amount" type="number" step="0.01" placeholder="Amount" required>
-        </div>
 
-        <div style="display:grid;gap:10px">
-          <div style="background:#0b1220;padding:12px;border-radius:12px;border:1px solid #243244">
-            <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">Payment Mode</div>
-            <select name="payment_mode" id="payment-mode" required>
-              <option value="">Select Mode</option>
-              <option value="cash">Cash</option>
-              <option value="bank">Bank Transfer</option>
-              <option value="other">Other</option>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Direction</label>
+            <select name="direction" required>
+              <option value="in">Payment In</option>
+              <option value="out">Payment Out</option>
             </select>
           </div>
 
-          <div id="bank-wrapper" style="display:none;background:#0b1220;padding:12px;border-radius:12px;border:1px solid #243244">
-            <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">Select Bank Account</div>
-            <select name="method" id="bank-select">
-              <option value="">Select Bank</option>
-              ${banks.map((b) => `
-                <option value="${esc(`${b.bankName} - ${b.account}`)}">
-                  ${esc(b.bankName)} (${esc(b.account)})
-                </option>
-              `).join("")}
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Amount</label>
+            <input name="amount" type="number" step="0.01" placeholder="Amount" required>
+          </div>
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Payment Mode</label>
+          <select name="payment_mode" id="payment-mode" required>
+            <option value="">Select Mode</option>
+            <option value="cash">Cash</option>
+            <option value="bank">Bank Transfer</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div id="bank-wrapper" style="display:none">
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Bank Account</label>
+          <select name="method" id="bank-select">
+            <option value="">Select Bank</option>
+            ${banks.map((b) => `
+              <option value="${esc(`${b.bankName} - ${b.account}`)}">
+                ${esc(b.bankName)} (${esc(b.account)})
+              </option>
+            `).join("")}
+          </select>
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Currency</label>
+          <input name="currency" value="${esc(deal.currency || "AED")}">
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Reference</label>
+            <input name="ref" placeholder="Reference">
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Status</label>
+            <select name="status">
+              <option value="received">Received</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
             </select>
           </div>
         </div>
 
-        <input name="currency" value="${esc(deal.currency || "AED")}">
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <input name="ref" placeholder="Reference">
-          <select name="status">
-            <option value="received">Received</option>
-            <option value="pending">Pending</option>
-            <option value="failed">Failed</option>
-          </select>
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Payment Date</label>
+          <input name="payment_date" type="date" required>
         </div>
-
-        <input name="payment_date" type="date" required>
 
         <div style="display:flex;gap:10px">
           <button type="submit" style="background:#d4a646;color:#fff;border:none">Save Payment</button>
@@ -1104,8 +1195,9 @@ function showPaymentForm(dealId) {
   const bankSelect = wrap.querySelector("#bank-select");
 
   modeSelect.addEventListener("change", () => {
-    if (modeSelect.value === "bank") bankWrapper.style.display = "block";
-    else {
+    if (modeSelect.value === "bank") {
+      bankWrapper.style.display = "block";
+    } else {
       bankWrapper.style.display = "none";
       if (bankSelect) bankSelect.value = "";
     }
