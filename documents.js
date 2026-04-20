@@ -24,24 +24,56 @@ function assetUrl(file) {
 const LOGO_URL = assetUrl("logo.PNG");
 const STAMP_URL = assetUrl("stamp.png");
 
-function openPrintWindow(html) {
-  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-  const blob = new Blob([html], { type: "text/html" });
-  const url = URL.createObjectURL(blob);
+function fileNameFromHtml(html, fallback = "document") {
+  const match = html.match(/<title>(.*?)<\/title>/i);
+  return (match?.[1] || fallback).replace(/[^\w\s-]/g, "").trim() || fallback;
+}
 
-  if (isMobile) {
+function openPrintWindow(html) {
+  const name = fileNameFromHtml(html, "document");
+
+  if (typeof html2pdf === "undefined") {
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
     return true;
   }
 
-  const w = window.open(url, "_blank", "width=1000,height=800");
-  if (!w) return false;
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.left = "-99999px";
+  container.style.top = "0";
+  container.style.width = "210mm";
+  container.style.background = "#fff";
+  container.innerHTML = html;
+  document.body.appendChild(container);
 
-  setTimeout(() => {
-    try {
-      w.print();
-    } catch (_) {}
-  }, 800);
+  const opt = {
+    margin: 0,
+    filename: `${name}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true
+    },
+    jsPDF: {
+      unit: "mm",
+      format: "a4",
+      orientation: "portrait"
+    }
+  };
+
+  html2pdf()
+    .set(opt)
+    .from(container)
+    .save()
+    .then(() => {
+      document.body.removeChild(container);
+    })
+    .catch(() => {
+      document.body.removeChild(container);
+    });
 
   return true;
 }
@@ -239,6 +271,7 @@ function footer(company = {}, date = "") {
   </div>
   `;
 }
+
 function buildPI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.created_at || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
