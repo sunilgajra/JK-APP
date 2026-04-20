@@ -11,6 +11,7 @@ const state = {
   supplierSearch: "",
   paymentsByDeal: {},
   documentsByDeal: {},
+  auditLogsByEntity: {},
   selectedDealId: null,
   company: {
     id: 1,
@@ -102,6 +103,27 @@ function paymentSummary(dealId, totalAmount, dealType = "sell") {
 
 function getSelectedDeal() {
   return state.deals.find((d) => String(d.id) === String(state.selectedDealId)) || null;
+}
+
+function formatAuditValue(v) {
+  if (v == null) return "—";
+  if (typeof v === "object") {
+    const values = Object.values(v);
+    if (values.length === 1) return String(values[0] ?? "—");
+    return JSON.stringify(v);
+  }
+  return String(v);
+}
+
+function dealAuditLogs(dealId) {
+  return state.auditLogsByEntity[`deals:${dealId}`] || [];
+}
+
+function formatAuditTime(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return ts;
+  return d.toLocaleString("en-IN");
 }
 
 function bindDealAutoTotal(edit = false, id = "") {
@@ -500,6 +522,10 @@ function dealDetailView() {
   const payments = paymentsForDeal(d.id);
   const documents = documentsForDeal(d.id);
   const s = paymentSummary(d.id, d.total_amount, d.type);
+  const showCurrency = d.document_currency || d.currency || d.base_currency || "AED";
+  const showTotal = showCurrency === "USD"
+    ? Number(d.total_amount_usd || d.total_amount || 0)
+    : Number(d.total_amount_aed || d.total_amount || 0);
 
   return `
     <div class="card">
@@ -512,8 +538,14 @@ function dealDetailView() {
         <div class="item"><div class="item-title">Product</div><div class="item-sub">${esc(d.product_name || "—")}</div></div>
         <div class="item"><div class="item-title">HSN Code</div><div class="item-sub">${esc(d.hsn_code || "—")}</div></div>
         <div class="item"><div class="item-title">Status</div><div class="item-sub">${esc(d.status || "active")}</div></div>
+        <div class="item"><div class="item-title">Approval Status</div><div class="item-sub">${esc(d.approval_status || "draft")}</div></div>
         <div class="item"><div class="item-title">Route</div><div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div></div>
-        <div class="item"><div class="item-title">Value</div><div class="item-sub">${esc(d.currency || "AED")} ${Number(d.total_amount || 0).toLocaleString("en-IN")}</div></div>
+        <div class="item"><div class="item-title">Value</div><div class="item-sub">${esc(showCurrency)} ${showTotal.toLocaleString("en-IN")}</div></div>
+        <div class="item"><div class="item-title">Base Currency</div><div class="item-sub">${esc(d.base_currency || "USD")}</div></div>
+        <div class="item"><div class="item-title">Document Currency</div><div class="item-sub">${esc(d.document_currency || d.currency || "AED")}</div></div>
+        <div class="item"><div class="item-title">Conversion Rate</div><div class="item-sub">${esc(d.conversion_rate || "—")}</div></div>
+        <div class="item"><div class="item-title">Total USD</div><div class="item-sub">USD ${Number(d.total_amount_usd || 0).toLocaleString("en-IN")}</div></div>
+        <div class="item"><div class="item-title">Total AED</div><div class="item-sub">AED ${Number(d.total_amount_aed || 0).toLocaleString("en-IN")}</div></div>
         <div class="item"><div class="item-title">Shipment Out Date</div><div class="item-sub">${esc(d.shipment_out_date || "—")}</div></div>
         <div class="item"><div class="item-title">ETA</div><div class="item-sub">${esc(d.eta || "—")}</div></div>
         <div class="item"><div class="item-title">BL No</div><div class="item-sub">${esc(d.bl_no || "—")}</div></div>
@@ -538,9 +570,9 @@ function dealDetailView() {
 
       <div class="item" style="margin-top:12px">
         <div class="item-title">Payment Summary</div>
-        <div class="item-sub">Received: ${esc(d.currency || "AED")} ${s.received.toLocaleString("en-IN")}</div>
-        <div class="item-sub">Sent: ${esc(d.currency || "AED")} ${s.sent.toLocaleString("en-IN")}</div>
-        <div class="item-sub">Balance: ${esc(d.currency || "AED")} ${s.balance.toLocaleString("en-IN")}</div>
+        <div class="item-sub">Received: ${esc(showCurrency)} ${s.received.toLocaleString("en-IN")}</div>
+        <div class="item-sub">Sent: ${esc(showCurrency)} ${s.sent.toLocaleString("en-IN")}</div>
+        <div class="item-sub">Balance: ${esc(showCurrency)} ${s.balance.toLocaleString("en-IN")}</div>
       </div>
 
       <div class="item" style="margin-top:12px">
@@ -571,32 +603,32 @@ function dealDetailView() {
           <input type="file" name="file">
 
           <div style="display:flex;gap:10px">
-            <button type="submit" style="background:#d4a646;color:#fff;border:none">Add Placeholder</button>
+            <button type="submit" style="background:#d4a646;color:#fff;border:none">Upload Document</button>
           </div>
         </form>
 
         <div class="list" style="margin-top:12px">
-  ${
-    documents.length
-      ? documents.map((doc, idx) => `
-    <div class="item" style="padding:10px">
-      <div class="item-title">${esc(doc.doc_type || doc.type || "Document")}</div>
-      <div class="item-sub">${esc(doc.file_name || "No file selected")}</div>
-      <div class="item-sub">${esc(doc.mime_type || "Uploaded file")}</div>
-      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-        ${
-          doc.file_url
-            ? `<a href="${doc.file_url}" target="_blank" rel="noopener noreferrer">View</a>
-               <a href="${doc.file_url}" download="${esc(doc.file_name || "file")}">Download</a>`
-            : `<span style="opacity:.6">No file URL</span>`
-        }
-        <button data-delete-placeholder-doc="${d.id}:${idx}" type="button">Delete</button>
-      </div>
-    </div>
-  `).join("")
-      : `<div class="item-sub">No documents added yet.</div>`
-  }
-</div>
+          ${
+            documents.length
+              ? documents.map((doc, idx) => `
+            <div class="item" style="padding:10px">
+              <div class="item-title">${esc(doc.doc_type || doc.type || "Document")}</div>
+              <div class="item-sub">${esc(doc.file_name || "No file selected")}</div>
+              <div class="item-sub">${esc(doc.mime_type || "Uploaded file")}</div>
+              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+                ${
+                  doc.file_url
+                    ? `<a href="${doc.file_url}" target="_blank" rel="noopener noreferrer">View</a>
+                       <a href="${doc.file_url}" download="${esc(doc.file_name || "file")}">Download</a>`
+                    : `<span style="opacity:.6">No file URL</span>`
+                }
+                <button data-delete-placeholder-doc="${d.id}:${idx}" type="button">Delete</button>
+              </div>
+            </div>
+          `).join("")
+              : `<div class="item-sub">No documents added yet.</div>`
+          }
+        </div>
       </div>
 
       <div class="item" style="margin-top:12px">
@@ -619,6 +651,24 @@ function dealDetailView() {
             </div>
           `).join("")
               : `<div class="item-sub">No payments yet.</div>`
+          }
+        </div>
+      </div>
+
+      <div class="item" style="margin-top:12px">
+        <div class="item-title">Activity History</div>
+        <div class="list" style="margin-top:10px">
+          ${
+            dealAuditLogs(d.id).length
+              ? dealAuditLogs(d.id).map((log) => `
+                <div class="item" style="padding:10px">
+                  <div class="item-title">${esc(log.action || "update")}${log.field_name ? ` · ${esc(log.field_name)}` : ""}</div>
+                  <div class="item-sub">Old: ${esc(formatAuditValue(log.old_value))}</div>
+                  <div class="item-sub">New: ${esc(formatAuditValue(log.new_value))}</div>
+                  <div class="item-sub">${esc(formatAuditTime(log.created_at))}</div>
+                </div>
+              `).join("")
+              : `<div class="item-sub">No activity yet.</div>`
           }
         </div>
       </div>
@@ -1862,12 +1912,13 @@ async function deleteDealDocument(doc) {
 }
 async function loadSupabaseData() {
   try {
-    const [buyersRes, suppliersRes, dealsRes, paymentsRes, documentsRes] = await Promise.all([
+    const [buyersRes, suppliersRes, dealsRes, paymentsRes, documentsRes, auditRes] = await Promise.all([
       supabase.from("buyers").select("*").order("id", { ascending: false }),
       supabase.from("suppliers").select("*").order("id", { ascending: false }),
       supabase.from("deals").select("*").order("id", { ascending: false }),
       supabase.from("payments").select("*").order("id", { ascending: false }),
-      supabase.from("deal_documents").select("*").eq("is_deleted", false).order("created_at", { ascending: false })
+      supabase.from("deal_documents").select("*").eq("is_deleted", false).order("created_at", { ascending: false }),
+      supabase.from("audit_logs").select("*").order("created_at", { ascending: false })
     ]);
 
     if (buyersRes.error) throw buyersRes.error;
@@ -1875,6 +1926,7 @@ async function loadSupabaseData() {
     if (dealsRes.error) throw dealsRes.error;
     if (paymentsRes.error) throw paymentsRes.error;
     if (documentsRes.error) throw documentsRes.error;
+    if (auditRes.error) throw auditRes.error;
 
     state.buyers = buyersRes.data || [];
     state.suppliers = suppliersRes.data || [];
@@ -1895,6 +1947,14 @@ async function loadSupabaseData() {
       groupedDocuments[key].push(doc);
     });
     state.documentsByDeal = groupedDocuments;
+
+    const groupedAudit = {};
+    (auditRes.data || []).forEach((log) => {
+      const key = `${log.entity_type}:${log.entity_id}`;
+      if (!groupedAudit[key]) groupedAudit[key] = [];
+      groupedAudit[key].push(log);
+    });
+    state.auditLogsByEntity = groupedAudit;
 
     await loadCompanySettings();
 
