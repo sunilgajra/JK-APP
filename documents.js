@@ -105,59 +105,38 @@ function previewScript() {
         const actions = document.querySelector(".previewActions");
         if (actions) actions.style.display = "none";
 
-        const source = document.querySelector(".doc");
+        const element = document.querySelector(".doc");
         const title = document.title || "document";
 
-        const wrapper = document.createElement("div");
-        wrapper.style.position = "fixed";
-        wrapper.style.left = "-99999px";
-        wrapper.style.top = "0";
-        wrapper.style.width = "210mm";
-        wrapper.style.minHeight = "297mm";
-        wrapper.style.padding = "10mm";
-        wrapper.style.background = "#fff";
-
-        const clone = source.cloneNode(true);
-        clone.style.width = "190mm";
-        clone.style.minWidth = "190mm";
-        clone.style.margin = "0";
-        clone.style.transform = "none";
-
-        wrapper.appendChild(clone);
-        document.body.appendChild(wrapper);
-
-        await waitForImages(wrapper);
+        await waitForImages(element);
+        await new Promise((r) => setTimeout(r, 500));
 
         const opt = {
-          margin: 0,
+          margin: [0, 0, 0, 0],
           filename: title + ".pdf",
           image: { type: "jpeg", quality: 1 },
           html2canvas: {
             scale: 2,
             useCORS: true,
             backgroundColor: "#ffffff",
-            scrollX: 0,
-            scrollY: 0
+            logging: false
           },
           jsPDF: {
             unit: "mm",
             format: "a4",
             orientation: "portrait"
-          },
-          pagebreak: { mode: ["avoid-all"] }
+          }
         };
 
         html2pdf()
+          .from(element)
           .set(opt)
-          .from(wrapper)
           .save()
           .then(() => {
-            document.body.removeChild(wrapper);
             if (actions) actions.style.display = "flex";
           })
           .catch((err) => {
             console.error(err);
-            document.body.removeChild(wrapper);
             if (actions) actions.style.display = "flex";
             alert("Failed to generate PDF");
           });
