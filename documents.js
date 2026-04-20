@@ -87,8 +87,26 @@ function commonStyle() {
     @page { size: A4; margin: 10mm; }
     * { box-sizing: border-box; }
     body { margin:0; font-family: Arial, sans-serif; color:#111; font-size:12px; }
-    .mobileBack { display:none; }
     .doc { width:100%; }
+    .previewActions {
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+    }
+    .previewActions button {
+      padding: 8px 12px;
+      border: none;
+      background: #2f9aa0;
+      color: #fff;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
     .top { display:grid; grid-template-columns: 1.05fr .8fr 1.2fr; gap:12px; align-items:start; margin-bottom:10px; }
     .logoBox { text-align:center; padding-top:10px; }
     .logoBox img { max-width:150px; max-height:140px; object-fit:contain; }
@@ -118,16 +136,6 @@ function commonStyle() {
 
     @media (max-width: 768px) {
       body { padding:10px; }
-      .mobileBack {
-        display:inline-block;
-        margin-bottom:10px;
-        padding:8px 12px;
-        border:none;
-        background:#2f9aa0;
-        color:#fff;
-        border-radius:6px;
-        font-size:14px;
-      }
       .top,
       .triple,
       .smallGrid,
@@ -139,8 +147,23 @@ function commonStyle() {
         text-align:left;
       }
     }
+
+    @media print {
+      .previewActions {
+        display: none;
+      }
+    }
   </style>
   <div class="doc">
+  `;
+}
+
+function previewActions() {
+  return `
+    <div class="previewActions">
+      <button onclick="window.print()">Print / Save PDF</button>
+      <button onclick="history.back()">Back</button>
+    </div>
   `;
 }
 
@@ -269,7 +292,7 @@ function buildPI(deal, buyer, supplier, company = {}) {
 
   return `
   <!DOCTYPE html><html><head><title>PI ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
-    <button class="mobileBack" onclick="history.back()">Back</button>
+    ${previewActions()}
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
@@ -357,7 +380,7 @@ function buildCI(deal, buyer, supplier, company = {}) {
 
   return `
   <!DOCTYPE html><html><head><title>CI ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
-    <button class="mobileBack" onclick="history.back()">Back</button>
+    ${previewActions()}
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
@@ -448,7 +471,7 @@ function buildPL(deal, buyer, supplier, company = {}) {
 
   return `
   <!DOCTYPE html><html><head><title>PL ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
-    <button class="mobileBack" onclick="history.back()">Back</button>
+    ${previewActions()}
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
@@ -507,7 +530,7 @@ function buildCOO(deal, buyer, supplier, company = {}) {
 
   return `
   <!DOCTYPE html><html><head><title>COO ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
-    <button class="mobileBack" onclick="history.back()">Back</button>
+    ${previewActions()}
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
