@@ -24,56 +24,27 @@ function assetUrl(file) {
 const LOGO_URL = assetUrl("logo.PNG");
 const STAMP_URL = assetUrl("stamp.png");
 
-function fileNameFromHtml(html, fallback = "document") {
-  const match = html.match(/<title>(.*?)<\/title>/i);
-  return (match?.[1] || fallback).replace(/[^\w\s-]/g, "").trim() || fallback;
-}
-
 function openPrintWindow(html) {
-  const name = fileNameFromHtml(html, "document");
+  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 
-  if (typeof html2pdf === "undefined") {
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+
+  if (isMobile) {
     window.open(url, "_blank");
     return true;
   }
 
-  const container = document.createElement("div");
-  container.style.position = "fixed";
-  container.style.left = "-99999px";
-  container.style.top = "0";
-  container.style.width = "210mm";
-  container.style.background = "#fff";
-  container.innerHTML = html;
-  document.body.appendChild(container);
+  const w = window.open(url, "_blank", "width=1000,height=800");
+  if (!w) return false;
 
-  const opt = {
-    margin: 0,
-    filename: `${name}.pdf`,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true
-    },
-    jsPDF: {
-      unit: "mm",
-      format: "a4",
-      orientation: "portrait"
-    }
+  w.onload = () => {
+    setTimeout(() => {
+      try {
+        w.print();
+      } catch (_) {}
+    }, 500);
   };
-
-  html2pdf()
-    .set(opt)
-    .from(container)
-    .save()
-    .then(() => {
-      document.body.removeChild(container);
-    })
-    .catch(() => {
-      document.body.removeChild(container);
-    });
 
   return true;
 }

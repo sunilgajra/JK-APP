@@ -1476,7 +1476,7 @@ function printDoc(type, dealId) {
 
   if (!html) return;
   const ok = openPrintWindow(html);
-  if (!ok) alert("Popup blocked. Please allow popups for this site.");
+ if (!ok) alert("Failed to open document preview.");
 }
 
 async function saveBuyer(e) {
