@@ -1728,7 +1728,57 @@ function deletePlaceholderDocument(dealId, index) {
   state.documentsByDeal[String(dealId)].splice(index, 1);
   render();
 }
+async function uploadDealDocument(file, dealId, docType = "Other") {
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${Date.now()}-${file.name}`;
+  const filePath = `${dealId}/${fileName}`;
 
+  const { error: uploadError } = await supabase.storage
+    .from("deal-documents")
+    .upload(filePath, file, {
+      upsert: false
+    });
+
+  if (uploadError) throw uploadError;
+
+  const { data: publicUrlData } = supabase.storage
+    .from("deal-documents")
+    .getPublicUrl(filePath);
+
+  const fileUrl = publicUrlData?.publicUrl || null;
+
+  const { error: dbError } = await supabase
+    .from("deal_documents")
+    .insert({
+      deal_id: dealId,
+      doc_type: docType,
+      file_name: file.name,
+      file_path: filePath,
+      file_url: fileUrl,
+      mime_type: file.type || null,
+      file_size: file.size || null
+    });
+
+  if (dbError) throw dbError;
+
+  return { filePath, fileUrl };
+}
+async function deleteDealDocument(doc) {
+  if (doc.file_path) {
+    const { error: storageError } = await supabase.storage
+      .from("deal-documents")
+      .remove([doc.file_path]);
+
+    if (storageError) throw storageError;
+  }
+
+  const { error: dbError } = await supabase
+    .from("deal_documents")
+    .delete()
+    .eq("id", doc.id);
+
+  if (dbError) throw dbError;
+}
 async function loadSupabaseData() {
   try {
     const [buyersRes, suppliersRes, dealsRes, paymentsRes] = await Promise.all([
