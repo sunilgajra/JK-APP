@@ -43,6 +43,48 @@ function openPrintWindow(html) {
   return true;
 }
 
+function downloadExactPdf() {
+  if (typeof html2pdf === "undefined") {
+    alert("PDF library not loaded");
+    return;
+  }
+
+  const actions = document.querySelector(".previewActions");
+  if (actions) actions.style.display = "none";
+
+  const element = document.querySelector(".doc");
+  const title = document.title || "document";
+
+  const opt = {
+    margin: 10,
+    filename: `${title}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      scrollX: 0,
+      scrollY: 0
+    },
+    jsPDF: {
+      unit: "mm",
+      format: "a4",
+      orientation: "portrait"
+    },
+    pagebreak: { mode: ["avoid-all", "css", "legacy"] }
+  };
+
+  html2pdf()
+    .set(opt)
+    .from(element)
+    .save()
+    .then(() => {
+      if (actions) actions.style.display = "flex";
+    })
+    .catch(() => {
+      if (actions) actions.style.display = "flex";
+    });
+}
+
 function amountWords(n) {
   n = Math.round(Number(n || 0));
   if (!n) return "ZERO";
@@ -85,9 +127,28 @@ function commonStyle() {
   return `
   <style>
     @page { size: A4; margin: 10mm; }
+
     * { box-sizing: border-box; }
-    body { margin:0; font-family: Arial, sans-serif; color:#111; font-size:12px; }
-    .doc { width:100%; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: #111;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+    }
+
+    body {
+      overflow-x: auto;
+    }
+
+    .doc {
+      width: 190mm;
+      min-width: 190mm;
+      margin: 0 auto;
+    }
+
     .previewActions {
       position: sticky;
       top: 0;
@@ -98,6 +159,7 @@ function commonStyle() {
       background: #fff;
       border-bottom: 1px solid #ddd;
     }
+
     .previewActions button {
       padding: 8px 12px;
       border: none;
@@ -107,50 +169,153 @@ function commonStyle() {
       font-size: 14px;
       cursor: pointer;
     }
-    .top { display:grid; grid-template-columns: 1.05fr .8fr 1.2fr; gap:12px; align-items:start; margin-bottom:10px; }
-    .logoBox { text-align:center; padding-top:10px; }
-    .logoBox img { max-width:150px; max-height:140px; object-fit:contain; }
-    .docTitle { color:#2f9aa0; font-size:30px; font-weight:800; text-align:right; line-height:1; margin-bottom:10px; }
-    .bar { background:#2f9aa0; color:#fff; font-weight:700; padding:4px 6px; font-size:12px; text-transform:uppercase; }
-    .panel { min-height:120px; }
-    .panelBody { padding:6px 2px 0; line-height:1.55; font-size:11px; }
-    .smallGrid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-    .triple { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; margin-bottom:10px; }
-    table { width:100%; border-collapse:collapse; }
-    th, td { border:2px solid #222; padding:5px 6px; vertical-align:top; }
-    th { background:#2f9aa0; color:#fff; font-weight:700; font-size:11px; }
-    .thin td, .thin th { border-width:1.5px; }
-    .meta td { padding:3px 6px; }
-    .right { text-align:right; }
-    .center { text-align:center; }
-    .box { border:2px solid #222; margin-top:8px; }
-    .boxHead { background:#2f9aa0; color:#fff; padding:4px 6px; font-weight:700; text-transform:uppercase; }
-    .boxBody { padding:8px; min-height:70px; }
-    .footer { margin-top:18px; display:grid; grid-template-columns: 1.2fr .8fr .8fr; gap:16px; align-items:end; }
-    .signLine { border-top:2px solid #222; padding-top:4px; font-size:11px; }
-    .stamp { text-align:center; }
-    .stamp img { width:115px; opacity:.9; }
-    .note { text-align:center; font-size:11px; font-weight:700; margin-top:12px; }
-    .red { color:#c62828; font-weight:700; }
-    .tight { line-height:1.35; }
 
-    @media (max-width: 768px) {
-      body { padding:10px; }
-      .top,
-      .triple,
-      .smallGrid,
-      .footer {
-        grid-template-columns: 1fr;
-      }
-      .docTitle {
-        font-size:22px;
-        text-align:left;
-      }
+    .top {
+      display: grid;
+      grid-template-columns: 1.05fr .8fr 1.2fr;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 10px;
     }
+
+    .logoBox {
+      text-align: center;
+      padding-top: 10px;
+    }
+
+    .logoBox img {
+      max-width: 150px;
+      max-height: 140px;
+      object-fit: contain;
+    }
+
+    .docTitle {
+      color: #2f9aa0;
+      font-size: 30px;
+      font-weight: 800;
+      text-align: right;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .bar {
+      background: #2f9aa0;
+      color: #fff;
+      font-weight: 700;
+      padding: 4px 6px;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .panel { min-height: 120px; }
+
+    .panelBody {
+      padding: 6px 2px 0;
+      line-height: 1.55;
+      font-size: 11px;
+    }
+
+    .smallGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .triple {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 2px solid #222;
+      padding: 5px 6px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #2f9aa0;
+      color: #fff;
+      font-weight: 700;
+      font-size: 11px;
+    }
+
+    .thin td, .thin th { border-width: 1.5px; }
+    .meta td { padding: 3px 6px; }
+    .right { text-align: right; }
+    .center { text-align: center; }
+
+    .box {
+      border: 2px solid #222;
+      margin-top: 8px;
+    }
+
+    .boxHead {
+      background: #2f9aa0;
+      color: #fff;
+      padding: 4px 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .boxBody {
+      padding: 8px;
+      min-height: 70px;
+    }
+
+    .footer {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1.2fr .8fr .8fr;
+      gap: 16px;
+      align-items: end;
+    }
+
+    .signLine {
+      border-top: 2px solid #222;
+      padding-top: 4px;
+      font-size: 11px;
+    }
+
+    .stamp { text-align: center; }
+
+    .stamp img {
+      width: 115px;
+      opacity: .9;
+    }
+
+    .note {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 12px;
+    }
+
+    .red {
+      color: #c62828;
+      font-weight: 700;
+    }
+
+    .tight { line-height: 1.35; }
 
     @media print {
       .previewActions {
-        display: none;
+        display: none !important;
+      }
+
+      body {
+        overflow: visible;
+      }
+
+      .doc {
+        width: 190mm;
+        min-width: 190mm;
       }
     }
   </style>
@@ -161,6 +326,7 @@ function commonStyle() {
 function previewActions() {
   return `
     <div class="previewActions">
+      <button onclick="downloadExactPdf()">Download PDF</button>
       <button onclick="window.print()">Print / Save PDF</button>
       <button onclick="history.back()">Back</button>
     </div>
