@@ -960,28 +960,37 @@ function dealFormHtml(d = {}, edit = false, id = "") {
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-          <div>
-            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Conversion Rate (USD → AED)</label>
-            <input name="conversion_rate" id="${edit ? `conversion-rate-${id}` : "conversion-rate"}" type="number" step="0.0001" value="${esc(d.conversion_rate || "")}" placeholder="e.g. 3.6725">
-          </div>
-          <div>
-            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Document Currency</label>
-            <select name="document_currency">
-              <option value="AED" ${currentDocCurrency === "AED" ? "selected" : ""}>AED</option>
-              <option value="USD" ${currentDocCurrency === "USD" ? "selected" : ""}>USD</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Status</label>
-            <select name="status">
-              <option value="active" ${d.status === "active" ? "selected" : ""}>active</option>
-              <option value="shipped" ${d.status === "shipped" ? "selected" : ""}>shipped</option>
-              <option value="invoiced" ${d.status === "invoiced" ? "selected" : ""}>invoiced</option>
-              <option value="completed" ${d.status === "completed" ? "selected" : ""}>completed</option>
-            </select>
-          </div>
-        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
+  <div>
+    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Conversion Rate (USD → AED)</label>
+    <input name="conversion_rate" id="${edit ? `conversion-rate-${id}` : "conversion-rate"}" type="number" step="0.0001" value="${esc(d.conversion_rate || "")}" placeholder="e.g. 3.6725">
+  </div>
+  <div>
+    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Document Currency</label>
+    <select name="document_currency">
+      <option value="AED" ${currentDocCurrency === "AED" ? "selected" : ""}>AED</option>
+      <option value="USD" ${currentDocCurrency === "USD" ? "selected" : ""}>USD</option>
+    </select>
+  </div>
+  <div>
+    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Status</label>
+    <select name="status">
+      <option value="active" ${d.status === "active" ? "selected" : ""}>active</option>
+      <option value="shipped" ${d.status === "shipped" ? "selected" : ""}>shipped</option>
+      <option value="invoiced" ${d.status === "invoiced" ? "selected" : ""}>invoiced</option>
+      <option value="completed" ${d.status === "completed" ? "selected" : ""}>completed</option>
+    </select>
+  </div>
+  <div>
+    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Approval Status</label>
+    <select name="approval_status">
+      <option value="draft" ${(d.approval_status || "draft") === "draft" ? "selected" : ""}>draft</option>
+      <option value="under_review" ${d.approval_status === "under_review" ? "selected" : ""}>under_review</option>
+      <option value="approved" ${d.approval_status === "approved" ? "selected" : ""}>approved</option>
+      <option value="locked" ${d.approval_status === "locked" ? "selected" : ""}>locked</option>
+    </select>
+  </div>
+</div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
           <div>
@@ -1586,8 +1595,8 @@ function validateDeal(fd) {
 
   const total_amount = document_currency === "USD" ? total_amount_usd : total_amount_aed;
   const currency = document_currency;
-
   const status = cleanText(fd.get("status") || "active");
+  const approval_status = cleanText(fd.get("approval_status") || "draft");
   const loading_port = cleanText(fd.get("loading_port"));
   const discharge_port = cleanText(fd.get("discharge_port"));
   const buyer_id = cleanText(fd.get("buyer_id"));
@@ -1613,13 +1622,14 @@ function validateDeal(fd) {
     conversion_rate,
     currency,
     quantity,
-    rate,       // original rate as entered
+    rate,
     rate_usd,
     rate_aed,
     total_amount,
     total_amount_usd,
     total_amount_aed,
     status,
+    approval_status,
     loading_port,
     discharge_port,
     buyer_id: buyer_id || null,
@@ -1673,10 +1683,20 @@ async function updateDeal(e, id) {
 
   try {
     const existing = state.deals.find((d) => String(d.id) === String(id));
+
+    if (existing?.approval_status === "locked") {
+      alert("Locked deals cannot be edited");
+      return;
+    }
+
     let payload = validateDeal(fd);
     payload = ensureDocNumbers(payload, existing);
 
-    const { error } = await supabase.from("deals").update(payload).eq("id", id);
+    const { error } = await supabase
+      .from("deals")
+      .update(payload)
+      .eq("id", id);
+
     if (error) throw error;
 
     await loadSupabaseData();
