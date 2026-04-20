@@ -576,23 +576,27 @@ function dealDetailView() {
         </form>
 
         <div class="list" style="margin-top:12px">
-          ${
-            documents.length
-              ? documents.map((doc, idx) => `
-            <div class="item" style="padding:10px">
-              <div class="item-title">${esc(doc.type || "Document")}</div>
-              <div class="item-sub">${esc(doc.file_name || doc.fileName || "No file selected")}</div>
-              <div class="item-sub">Status: Placeholder only</div>
-              <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-                <button type="button" disabled>View</button>
-                <button type="button" disabled>Download</button>
-                <button data-delete-placeholder-doc="${d.id}:${idx}" type="button">Delete</button>
-              </div>
-            </div>
-          `).join("")
-              : `<div class="item-sub">No documents added yet.</div>`
-          }
-        </div>
+  ${
+    documents.length
+      ? documents.map((doc, idx) => `
+    <div class="item" style="padding:10px">
+      <div class="item-title">${esc(doc.doc_type || doc.type || "Document")}</div>
+      <div class="item-sub">${esc(doc.file_name || "No file selected")}</div>
+      <div class="item-sub">${esc(doc.mime_type || "Uploaded file")}</div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        ${
+          doc.file_url
+            ? `<a href="${doc.file_url}" target="_blank" rel="noopener noreferrer">View</a>
+               <a href="${doc.file_url}" download="${esc(doc.file_name || "file")}">Download</a>`
+            : `<span style="opacity:.6">No file URL</span>`
+        }
+        <button data-delete-placeholder-doc="${d.id}:${idx}" type="button">Delete</button>
+      </div>
+    </div>
+  `).join("")
+      : `<div class="item-sub">No documents added yet.</div>`
+  }
+</div>
       </div>
 
       <div class="item" style="margin-top:12px">
