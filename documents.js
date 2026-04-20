@@ -43,73 +43,6 @@ function openPrintWindow(html) {
   return true;
 }
 
-function downloadExactPdf() {
-  if (typeof html2pdf === "undefined") {
-    alert("PDF library not loaded");
-    return;
-  }
-
-  const actions = document.querySelector(".previewActions");
-  if (actions) actions.style.display = "none";
-
-  const source = document.querySelector(".doc");
-  const title = document.title || "document";
-
-  const clone = source.cloneNode(true);
-  clone.style.margin = "0";
-  clone.style.width = "190mm";
-  clone.style.minWidth = "190mm";
-
-  const wrapper = document.createElement("div");
-  wrapper.style.position = "fixed";
-  wrapper.style.left = "-99999px";
-  wrapper.style.top = "0";
-  wrapper.style.width = "210mm";
-  wrapper.style.padding = "10mm";
-  wrapper.style.background = "#fff";
-  wrapper.appendChild(clone);
-  document.body.appendChild(wrapper);
-
-  const contentHeight = clone.scrollHeight;
-  const a4HeightPx = 1122; // approx A4 height in px at screen scale
-  const scaleFactor = Math.min(1, a4HeightPx / contentHeight);
-
-  clone.style.transform = `scale(${scaleFactor})`;
-  clone.style.transformOrigin = "top left";
-  clone.style.width = `${190 / scaleFactor}mm`;
-
-  const opt = {
-    margin: 0,
-    filename: `${title}.pdf`,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      scrollX: 0,
-      scrollY: 0
-    },
-    jsPDF: {
-      unit: "mm",
-      format: "a4",
-      orientation: "portrait"
-    },
-    pagebreak: { mode: ["avoid-all"] }
-  };
-
-  html2pdf()
-    .set(opt)
-    .from(wrapper)
-    .save()
-    .then(() => {
-      document.body.removeChild(wrapper);
-      if (actions) actions.style.display = "flex";
-    })
-    .catch(() => {
-      document.body.removeChild(wrapper);
-      if (actions) actions.style.display = "flex";
-    });
-}
-
 function amountWords(n) {
   n = Math.round(Number(n || 0));
   if (!n) return "ZERO";
@@ -146,6 +79,75 @@ function amountWords(n) {
 
 function docCurrency(deal = {}) {
   return deal.document_currency || deal.currency || deal.base_currency || "AED";
+}
+
+function previewScript() {
+  return `
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+      function downloadExactPdf() {
+        const actions = document.querySelector(".previewActions");
+        if (actions) actions.style.display = "none";
+
+        const source = document.querySelector(".doc");
+        const title = document.title || "document";
+
+        const clone = source.cloneNode(true);
+        clone.style.margin = "0";
+        clone.style.width = "190mm";
+        clone.style.minWidth = "190mm";
+
+        const wrapper = document.createElement("div");
+        wrapper.style.position = "fixed";
+        wrapper.style.left = "-99999px";
+        wrapper.style.top = "0";
+        wrapper.style.width = "210mm";
+        wrapper.style.padding = "10mm";
+        wrapper.style.background = "#fff";
+        wrapper.appendChild(clone);
+        document.body.appendChild(wrapper);
+
+        const contentHeight = clone.scrollHeight;
+        const a4HeightPx = 1122;
+        const scaleFactor = Math.min(1, a4HeightPx / contentHeight);
+
+        clone.style.transform = "scale(" + scaleFactor + ")";
+        clone.style.transformOrigin = "top left";
+        clone.style.width = (190 / scaleFactor) + "mm";
+
+        const opt = {
+          margin: 0,
+          filename: title + ".pdf",
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            scrollX: 0,
+            scrollY: 0
+          },
+          jsPDF: {
+            unit: "mm",
+            format: "a4",
+            orientation: "portrait"
+          },
+          pagebreak: { mode: ["avoid-all"] }
+        };
+
+        html2pdf()
+          .set(opt)
+          .from(wrapper)
+          .save()
+          .then(() => {
+            document.body.removeChild(wrapper);
+            if (actions) actions.style.display = "flex";
+          })
+          .catch(() => {
+            document.body.removeChild(wrapper);
+            if (actions) actions.style.display = "flex";
+          });
+      }
+    </script>
+  `;
 }
 
 function commonStyle() {
@@ -482,7 +484,7 @@ function buildPI(deal, buyer, supplier, company = {}) {
   const currency = docCurrency(deal);
 
   return `
-  <!DOCTYPE html><html><head><title>PI ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
+  <!DOCTYPE html><html><head><title>PI ${esc(deal.dealNo || "")}</title>${commonStyle()}${previewScript()}</head><body>
     ${previewActions()}
     <div class="top">
       ${shipperBlock(company)}
@@ -570,7 +572,7 @@ function buildCI(deal, buyer, supplier, company = {}) {
   const currency = docCurrency(deal);
 
   return `
-  <!DOCTYPE html><html><head><title>CI ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
+  <!DOCTYPE html><html><head><title>CI ${esc(deal.dealNo || "")}</title>${commonStyle()}${previewScript()}</head><body>
     ${previewActions()}
     <div class="top">
       ${shipperBlock(company)}
@@ -661,7 +663,7 @@ function buildPL(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || new Date().toISOString();
 
   return `
-  <!DOCTYPE html><html><head><title>PL ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
+  <!DOCTYPE html><html><head><title>PL ${esc(deal.dealNo || "")}</title>${commonStyle()}${previewScript()}</head><body>
     ${previewActions()}
     <div class="top">
       ${shipperBlock(company)}
@@ -720,7 +722,7 @@ function buildCOO(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || new Date().toISOString();
 
   return `
-  <!DOCTYPE html><html><head><title>COO ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
+  <!DOCTYPE html><html><head><title>COO ${esc(deal.dealNo || "")}</title>${commonStyle()}${previewScript()}</head><body>
     ${previewActions()}
     <div class="top">
       ${shipperBlock(company)}
