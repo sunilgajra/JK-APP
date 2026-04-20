@@ -190,12 +190,35 @@ function dashboardView() {
   const totalDeals = state.deals.length;
   const totalBuyers = state.buyers.length;
   const totalSuppliers = state.suppliers.length;
-  const totalValue = state.deals.reduce((sum, d) => sum + Number(d.total_amount || 0), 0);
-  const totalReceived = state.deals.reduce((sum, d) => {
-    const s = paymentSummary(d.id, d.total_amount, d.type);
-    return sum + s.received;
+
+  const totalValueAed = state.deals.reduce(
+    (sum, d) => sum + Number(d.total_amount_aed || d.total_amount || 0),
+    0
+  );
+
+  const totalReceivedAed = state.deals.reduce((sum, d) => {
+    const payments = paymentsForDeal(d.id);
+    const dealCurrency = d.document_currency || d.currency || d.base_currency || "AED";
+    const conv = Number(d.conversion_rate || 0);
+
+    const receivedAed = payments.reduce((acc, p) => {
+      if (p.direction !== "in") return acc;
+
+      const amount = Number(p.amount || 0);
+      const paymentCurrency = p.currency || dealCurrency;
+
+      if (paymentCurrency === "AED") return acc + amount;
+      if (paymentCurrency === "USD") return acc + (conv > 0 ? amount * conv : 0);
+      return acc;
+    }, 0);
+
+    return sum + receivedAed;
   }, 0);
-  const activeDeals = state.deals.filter((d) => (d.status || "").toLowerCase() !== "completed").length;
+
+  const activeDeals = state.deals.filter(
+    (d) => (d.status || "").toLowerCase() !== "completed"
+  ).length;
+
   const recentDeals = [...state.deals].slice(0, 5);
 
   return `
@@ -208,13 +231,13 @@ function dashboardView() {
 
       <div class="card">
         <div class="stat-label">Total Value</div>
-        <div class="stat-value" style="font-size:20px">AED ${totalValue.toLocaleString("en-IN")}</div>
+        <div class="stat-value" style="font-size:20px">AED ${totalValueAed.toLocaleString("en-IN")}</div>
         <div class="item-sub">Across all deals</div>
       </div>
 
       <div class="card">
         <div class="stat-label">Received Payments</div>
-        <div class="stat-value" style="font-size:20px;color:#22c55e">AED ${totalReceived.toLocaleString("en-IN")}</div>
+        <div class="stat-value" style="font-size:20px;color:#22c55e">AED ${totalReceivedAed.toLocaleString("en-IN")}</div>
         <div class="item-sub">Payments received</div>
       </div>
 
@@ -235,7 +258,18 @@ function dashboardView() {
         ${
           recentDeals.length
             ? recentDeals.map((d) => {
-                const s = paymentSummary(d.id, d.total_amount, d.type);
+                const dealCurrency = d.document_currency || d.currency || d.base_currency || "AED";
+                const displayTotal =
+                  dealCurrency === "USD"
+                    ? Number(d.total_amount_usd || d.total_amount || 0)
+                    : Number(d.total_amount_aed || d.total_amount || 0);
+
+                const payments = paymentsForDeal(d.id);
+                const received = payments.reduce((acc, p) => {
+                  if (p.direction !== "in") return acc;
+                  return acc + Number(p.amount || 0);
+                }, 0);
+
                 return `
               <div class="item" style="padding:14px">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
@@ -246,8 +280,8 @@ function dashboardView() {
                     <div class="item-sub">${esc(d.type || "sell")} · ${esc(d.status || "active")}</div>
                   </div>
                   <div style="text-align:right;min-width:150px">
-                    <div style="font-size:15px;font-weight:800;color:#d4a646">${esc(d.currency || "AED")} ${Number(d.total_amount || 0).toLocaleString("en-IN")}</div>
-                    <div class="item-sub">Received: ${esc(d.currency || "AED")} ${s.received.toLocaleString("en-IN")}</div>
+                    <div style="font-size:15px;font-weight:800;color:#d4a646">${esc(dealCurrency)} ${displayTotal.toLocaleString("en-IN")}</div>
+                    <div class="item-sub">Received: ${esc(dealCurrency)} ${received.toLocaleString("en-IN")}</div>
                   </div>
                 </div>
               </div>
@@ -1709,27 +1743,50 @@ async function deletePayment(dealId, paymentId) {
   else setPage("deals");
 }
 
-function savePlaceholderDocument(e, dealId) {
+async function savePlaceholderDocument(e, dealId) {
   e.preventDefault();
-  const fd = new FormData(e.target);
-  const docType = cleanText(fd.get("docType"));
-  const file = fd.get("file");
 
-  if (!state.documentsByDeal[String(dealId)]) state.documentsByDeal[String(dealId)] = [];
-  state.documentsByDeal[String(dealId)].push({
-    type: docType,
-    fileName: file && file.name ? file.name : "No file selected"
-  });
-  render();
+  try {
+    const fd = new FormData(e.target);
+    const docType = cleanText(fd.get("docType"));
+    const file = fd.get("file");
+
+    if (!file || !file.name) {
+      alert("Please select a file");
+      return;
+    }
+
+    await uploadDealDocument(file, dealId, docType || "Other");
+
+    alert("Document uploaded successfully ✅");
+    await loadSupabaseData();
+
+    if (state.page === "dealDetail") render();
+    else setPage("deals");
+
+    e.target.reset();
+  } catch (err) {
+    alert(err.message || "Failed to upload document");
+  }
 }
 
-function deletePlaceholderDocument(dealId, index) {
-  if (!state.documentsByDeal[String(dealId)]) return;
-  state.documentsByDeal[String(dealId)].splice(index, 1);
-  render();
+async function deletePlaceholderDocument(dealId, index) {
+  const list = state.documentsByDeal[String(dealId)] || [];
+  const doc = list[index];
+  if (!doc) return;
+
+  if (!confirm("Delete this document?")) return;
+
+  try {
+    await deleteDealDocument(doc);
+    await loadSupabaseData();
+    if (state.page === "dealDetail") render();
+    else setPage("deals");
+  } catch (err) {
+    alert(err.message || "Failed to delete document");
+  }
 }
 async function uploadDealDocument(file, dealId, docType = "Other") {
-  const fileExt = file.name.split(".").pop();
   const fileName = `${Date.now()}-${file.name}`;
   const filePath = `${dealId}/${fileName}`;
 
@@ -1781,17 +1838,19 @@ async function deleteDealDocument(doc) {
 }
 async function loadSupabaseData() {
   try {
-    const [buyersRes, suppliersRes, dealsRes, paymentsRes] = await Promise.all([
+    const [buyersRes, suppliersRes, dealsRes, paymentsRes, documentsRes] = await Promise.all([
       supabase.from("buyers").select("*").order("id", { ascending: false }),
       supabase.from("suppliers").select("*").order("id", { ascending: false }),
       supabase.from("deals").select("*").order("id", { ascending: false }),
-      supabase.from("payments").select("*").order("id", { ascending: false })
+      supabase.from("payments").select("*").order("id", { ascending: false }),
+      supabase.from("deal_documents").select("*").eq("is_deleted", false).order("created_at", { ascending: false })
     ]);
 
     if (buyersRes.error) throw buyersRes.error;
     if (suppliersRes.error) throw suppliersRes.error;
     if (dealsRes.error) throw dealsRes.error;
     if (paymentsRes.error) throw paymentsRes.error;
+    if (documentsRes.error) throw documentsRes.error;
 
     state.buyers = buyersRes.data || [];
     state.suppliers = suppliersRes.data || [];
@@ -1804,6 +1863,14 @@ async function loadSupabaseData() {
       groupedPayments[key].push(p);
     });
     state.paymentsByDeal = groupedPayments;
+
+    const groupedDocuments = {};
+    (documentsRes.data || []).forEach((doc) => {
+      const key = String(doc.deal_id);
+      if (!groupedDocuments[key]) groupedDocuments[key] = [];
+      groupedDocuments[key].push(doc);
+    });
+    state.documentsByDeal = groupedDocuments;
 
     await loadCompanySettings();
 
