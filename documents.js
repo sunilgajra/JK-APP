@@ -85,43 +85,57 @@ function previewScript() {
   return `
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
-      function downloadExactPdf() {
+      async function waitForImages(root) {
+        const images = Array.from(root.querySelectorAll("img"));
+        await Promise.all(images.map((img) => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        }));
+      }
+
+      async function downloadExactPdf() {
+        if (typeof html2pdf === "undefined") {
+          alert("PDF library not loaded");
+          return;
+        }
+
         const actions = document.querySelector(".previewActions");
         if (actions) actions.style.display = "none";
 
         const source = document.querySelector(".doc");
         const title = document.title || "document";
 
-        const clone = source.cloneNode(true);
-        clone.style.margin = "0";
-        clone.style.width = "190mm";
-        clone.style.minWidth = "190mm";
-
         const wrapper = document.createElement("div");
         wrapper.style.position = "fixed";
         wrapper.style.left = "-99999px";
         wrapper.style.top = "0";
         wrapper.style.width = "210mm";
+        wrapper.style.minHeight = "297mm";
         wrapper.style.padding = "10mm";
         wrapper.style.background = "#fff";
+
+        const clone = source.cloneNode(true);
+        clone.style.width = "190mm";
+        clone.style.minWidth = "190mm";
+        clone.style.margin = "0";
+        clone.style.transform = "none";
+
         wrapper.appendChild(clone);
         document.body.appendChild(wrapper);
 
-        const contentHeight = clone.scrollHeight;
-        const a4HeightPx = 1122;
-        const scaleFactor = Math.min(1, a4HeightPx / contentHeight);
-
-        clone.style.transform = "scale(" + scaleFactor + ")";
-        clone.style.transformOrigin = "top left";
-        clone.style.width = (190 / scaleFactor) + "mm";
+        await waitForImages(wrapper);
 
         const opt = {
           margin: 0,
           filename: title + ".pdf",
-          image: { type: "jpeg", quality: 0.98 },
+          image: { type: "jpeg", quality: 1 },
           html2canvas: {
             scale: 2,
             useCORS: true,
+            backgroundColor: "#ffffff",
             scrollX: 0,
             scrollY: 0
           },
@@ -141,9 +155,11 @@ function previewScript() {
             document.body.removeChild(wrapper);
             if (actions) actions.style.display = "flex";
           })
-          .catch(() => {
+          .catch((err) => {
+            console.error(err);
             document.body.removeChild(wrapper);
             if (actions) actions.style.display = "flex";
+            alert("Failed to generate PDF");
           });
       }
     </script>
@@ -351,15 +367,16 @@ function commonStyle() {
 }
 
 function previewActions() {
+  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
   return `
     <div class="previewActions">
       <button onclick="downloadExactPdf()">Download PDF</button>
-      <button onclick="window.print()">Print / Save PDF</button>
+      ${isMobile ? "" : `<button onclick="window.print()">Print / Save PDF</button>`}
       <button onclick="history.back()">Back</button>
     </div>
   `;
 }
-
 function shipperBlock(company = {}) {
   return `
     <div class="panel">
