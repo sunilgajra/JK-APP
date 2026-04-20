@@ -1,4 +1,4 @@
-import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js?v=2";
+import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js?v=3";
 import { supabase } from "./supabase.js";
 
 const state = {

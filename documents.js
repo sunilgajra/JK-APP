@@ -27,21 +27,19 @@ const STAMP_URL = assetUrl("stamp.png");
 function openPrintWindow(html) {
   const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 
+  if (isMobile) {
+    const newDoc = document.open("text/html", "replace");
+    newDoc.write(html);
+    newDoc.close();
+    return true;
+  }
+
   const w = window.open("", "_blank");
   if (!w) return false;
 
   w.document.open();
   w.document.write(html);
   w.document.close();
-
-  if (!isMobile) {
-    setTimeout(() => {
-      try {
-        w.focus();
-      } catch (_) {}
-    }, 300);
-  }
-
   return true;
 }
 
@@ -89,6 +87,7 @@ function commonStyle() {
     @page { size: A4; margin: 10mm; }
     * { box-sizing: border-box; }
     body { margin:0; font-family: Arial, sans-serif; color:#111; font-size:12px; }
+    .mobileBack { display:none; }
     .doc { width:100%; }
     .top { display:grid; grid-template-columns: 1.05fr .8fr 1.2fr; gap:12px; align-items:start; margin-bottom:10px; }
     .logoBox { text-align:center; padding-top:10px; }
@@ -116,6 +115,30 @@ function commonStyle() {
     .note { text-align:center; font-size:11px; font-weight:700; margin-top:12px; }
     .red { color:#c62828; font-weight:700; }
     .tight { line-height:1.35; }
+
+    @media (max-width: 768px) {
+      body { padding:10px; }
+      .mobileBack {
+        display:inline-block;
+        margin-bottom:10px;
+        padding:8px 12px;
+        border:none;
+        background:#2f9aa0;
+        color:#fff;
+        border-radius:6px;
+        font-size:14px;
+      }
+      .top,
+      .triple,
+      .smallGrid,
+      .footer {
+        grid-template-columns: 1fr;
+      }
+      .docTitle {
+        font-size:22px;
+        text-align:left;
+      }
+    }
   </style>
   <div class="doc">
   `;
@@ -246,6 +269,7 @@ function buildPI(deal, buyer, supplier, company = {}) {
 
   return `
   <!DOCTYPE html><html><head><title>PI ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
+    <button class="mobileBack" onclick="history.back()">Back</button>
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
@@ -333,6 +357,7 @@ function buildCI(deal, buyer, supplier, company = {}) {
 
   return `
   <!DOCTYPE html><html><head><title>CI ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
+    <button class="mobileBack" onclick="history.back()">Back</button>
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
@@ -423,6 +448,7 @@ function buildPL(deal, buyer, supplier, company = {}) {
 
   return `
   <!DOCTYPE html><html><head><title>PL ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
+    <button class="mobileBack" onclick="history.back()">Back</button>
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
@@ -481,6 +507,7 @@ function buildCOO(deal, buyer, supplier, company = {}) {
 
   return `
   <!DOCTYPE html><html><head><title>COO ${esc(deal.dealNo || "")}</title>${commonStyle()}</head><body>
+    <button class="mobileBack" onclick="history.back()">Back</button>
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
