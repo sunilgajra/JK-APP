@@ -52,11 +52,34 @@ function downloadExactPdf() {
   const actions = document.querySelector(".previewActions");
   if (actions) actions.style.display = "none";
 
-  const element = document.querySelector(".doc");
+  const source = document.querySelector(".doc");
   const title = document.title || "document";
 
+  const clone = source.cloneNode(true);
+  clone.style.margin = "0";
+  clone.style.width = "190mm";
+  clone.style.minWidth = "190mm";
+
+  const wrapper = document.createElement("div");
+  wrapper.style.position = "fixed";
+  wrapper.style.left = "-99999px";
+  wrapper.style.top = "0";
+  wrapper.style.width = "210mm";
+  wrapper.style.padding = "10mm";
+  wrapper.style.background = "#fff";
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+
+  const contentHeight = clone.scrollHeight;
+  const a4HeightPx = 1122; // approx A4 height in px at screen scale
+  const scaleFactor = Math.min(1, a4HeightPx / contentHeight);
+
+  clone.style.transform = `scale(${scaleFactor})`;
+  clone.style.transformOrigin = "top left";
+  clone.style.width = `${190 / scaleFactor}mm`;
+
   const opt = {
-    margin: 10,
+    margin: 0,
     filename: `${title}.pdf`,
     image: { type: "jpeg", quality: 0.98 },
     html2canvas: {
@@ -70,17 +93,19 @@ function downloadExactPdf() {
       format: "a4",
       orientation: "portrait"
     },
-    pagebreak: { mode: ["avoid-all", "css", "legacy"] }
+    pagebreak: { mode: ["avoid-all"] }
   };
 
   html2pdf()
     .set(opt)
-    .from(element)
+    .from(wrapper)
     .save()
     .then(() => {
+      document.body.removeChild(wrapper);
       if (actions) actions.style.display = "flex";
     })
     .catch(() => {
+      document.body.removeChild(wrapper);
       if (actions) actions.style.display = "flex";
     });
 }
