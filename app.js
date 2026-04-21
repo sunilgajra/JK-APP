@@ -1,4 +1,4 @@
-import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js?v=3";
+import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js?v=4";
 import { supabase } from "./supabase.js";
 
 const state = {
@@ -1152,8 +1152,20 @@ function dealFormHtml(d = {}, edit = false, id = "") {
             </div>
           </div>
           <div style="margin-top:10px">
-            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Container Numbers (comma separated)</label>
-            <textarea name="container_numbers" style="min-height:90px">${esc(d.container_numbers || "")}</textarea>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Container Numbers (one per line or comma separated)</label>
+            <textarea
+  name="container_numbers"
+  style="min-height:110px"
+  placeholder="Enter one container number per line&#10;Example:&#10;RLTU2087940&#10;RLTU2038966&#10;RLTU2106736"
+>${esc(
+  Array.isArray(d.container_numbers)
+    ? d.container_numbers.join("\n")
+    : String(d.container_numbers || "")
+        .split(/[,\n]+/)
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .join("\n")
+)}</textarea>
           </div>
         </div>
 
@@ -1772,7 +1784,12 @@ function validateDeal(fd) {
     net_weight: cleanNumber(fd.get("net_weight")) || null,
     package_details: cleanText(fd.get("package_details")),
     loaded_on: cleanText(fd.get("loaded_on")),
-    container_numbers: cleanText(fd.get("container_numbers")),
+    container_numbers: [...new Set(
+  String(fd.get("container_numbers") || "")
+    .split(/[\n,]+/)
+    .map((x) => x.trim().toUpperCase())
+    .filter(Boolean)
+)].join("\n"),
     bl_no: cleanText(fd.get("bl_no")),
     cfs: cleanText(fd.get("cfs")),
     country_of_origin: cleanText(fd.get("country_of_origin")),
