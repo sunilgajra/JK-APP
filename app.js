@@ -1628,10 +1628,6 @@ function getShipperForDeal(company = {}, deal = {}) {
 }
 
 function printDoc(type, dealId) {
-  
-}
-
-function printDoc(type, dealId) {
   const deal = state.deals.find((d) => String(d.id) === String(dealId));
   if (!deal) return;
 
