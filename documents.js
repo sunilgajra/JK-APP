@@ -243,6 +243,11 @@ function commonStyle() {
       font-weight: 700;
     }
 
+    .smallGrid {
+      display: grid;
+      gap: 12px;
+    }
+
     .triple {
       display: grid;
       grid-template-columns: 1fr .95fr 1fr;
@@ -384,6 +389,7 @@ function previewActions() {
     </div>
   `;
 }
+
 function shipperBlock(company = {}) {
   return `
     <div class="panel">
@@ -523,6 +529,7 @@ function footer(company = {}, date = "", showSignatory = false) {
   </div>
   `;
 }
+
 function buildPI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.created_at || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
