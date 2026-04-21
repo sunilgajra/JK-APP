@@ -697,14 +697,30 @@ function settingsView() {
 
           <div>
             <div style="font-weight:800;margin-bottom:10px;color:#d4a646">Bank Accounts</div>
-            <div id="bank-list">
+
+            <div id="bank-list" style="display:grid;gap:10px">
               ${(c.bankAccounts || []).map((b, i) => `
-                <div class="item" style="margin-bottom:10px">
-                  <div><b>${esc(b.bankName)}</b></div>
-                  <div>A/C: ${esc(b.account)}</div>
-                  <div>IBAN: ${esc(b.iban || "-")}</div>
-                  <div>SWIFT: ${esc(b.swift || "-")}</div>
-                  <button type="button" data-delete-bank="${i}" style="margin-top:6px">Delete</button>
+                <div class="item" style="margin-bottom:0">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div>
+                      <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Bank Name</label>
+                      <input value="${esc(b.bankName || "")}" data-bank-field="bankName" data-bank-index="${i}" placeholder="Bank name">
+                    </div>
+                    <div>
+                      <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Account Number</label>
+                      <input value="${esc(b.account || "")}" data-bank-field="account" data-bank-index="${i}" placeholder="Account number">
+                    </div>
+                    <div>
+                      <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">IBAN</label>
+                      <input value="${esc(b.iban || "")}" data-bank-field="iban" data-bank-index="${i}" placeholder="IBAN">
+                    </div>
+                    <div>
+                      <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">SWIFT</label>
+                      <input value="${esc(b.swift || "")}" data-bank-field="swift" data-bank-index="${i}" placeholder="SWIFT">
+                    </div>
+                  </div>
+
+                  <button type="button" data-delete-bank="${i}" style="margin-top:10px">Delete</button>
                 </div>
               `).join("")}
             </div>
@@ -718,7 +734,6 @@ function settingsView() {
     </div>
   `;
 }
-
 function render() {
   if (state.page === "dashboard") content.innerHTML = dashboardView();
   if (state.page === "buyers") content.innerHTML = buyersView();
@@ -830,6 +845,8 @@ function bindUI() {
   document.querySelectorAll("[data-print-coo]").forEach((btn) =>
     btn.addEventListener("click", () => printDoc("coo", btn.dataset.printCoo))
   );
+
+  bindBankInputs();
 }
 
 function buyerFormHtml(b = {}, edit = false, id = "") {
@@ -1364,24 +1381,40 @@ function showPaymentForm(dealId) {
 
 async function saveCompanySettings(e) {
   e.preventDefault();
+
   const fd = new FormData(e.target);
 
-  const companyData = {
+  const payload = {
     id: 1,
-    name: fd.get("name") || "",
-    address: fd.get("address") || "",
-    bank_accounts: state.company.bankAccounts || []
+    name: cleanText(fd.get("name")),
+    address: cleanText(fd.get("address")),
+    mobile: state.company.mobile || "+971524396170",
+    email: state.company.email || "info@jkpetrochem.com",
+    bank_accounts: Array.isArray(state.company.bankAccounts)
+      ? state.company.bankAccounts
+      : []
   };
 
-  const { error } = await supabase.from("company_settings").upsert(companyData, { onConflict: "id" });
-  if (error) return alert(error.message);
+  const { data, error } = await supabase
+    .from("company_settings")
+    .upsert(payload, { onConflict: "id" })
+    .select()
+    .single();
+
+  if (error) {
+    console.error(error);
+    alert(error.message);
+    return;
+  }
 
   state.company = {
     ...state.company,
-    id: 1,
-    name: companyData.name,
-    address: companyData.address,
-    bankAccounts: companyData.bank_accounts
+    id: data.id,
+    name: data.name || "",
+    address: data.address || "",
+    mobile: data.mobile || "",
+    email: data.email || "",
+    bankAccounts: Array.isArray(data.bank_accounts) ? data.bank_accounts : []
   };
 
   alert("Saved successfully ✅");
@@ -1389,35 +1422,55 @@ async function saveCompanySettings(e) {
 }
 
 async function loadCompanySettings() {
-  const { data, error } = await supabase.from("company_settings").select("*").eq("id", 1).maybeSingle();
-  if (error) return;
+  const { data, error } = await supabase
+    .from("company_settings")
+    .select("*")
+    .eq("id", 1)
+    .maybeSingle();
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
   if (data) {
     state.company = {
       ...state.company,
       id: data.id,
       name: data.name || state.company.name,
       address: data.address || state.company.address,
-      bankAccounts: data.bank_accounts || []
+      mobile: data.mobile || state.company.mobile,
+      email: data.email || state.company.email,
+      bankAccounts: Array.isArray(data.bank_accounts) ? data.bank_accounts : []
     };
   }
 }
 
 function addBankAccount() {
-  const bankName = prompt("Enter Bank Name");
-  const account = prompt("Enter Account Number");
-  const iban = prompt("Enter IBAN");
-  const swift = prompt("Enter SWIFT");
-
-  if (!bankName || !account) {
-    alert("Bank name and account are required");
-    return;
+  if (!Array.isArray(state.company.bankAccounts)) {
+    state.company.bankAccounts = [];
   }
 
-  if (!state.company.bankAccounts) state.company.bankAccounts = [];
-  state.company.bankAccounts.push({ bankName, account, iban, swift });
+  state.company.bankAccounts.push({
+    bankName: "",
+    account: "",
+    iban: "",
+    swift: ""
+  });
+
   render();
 }
+function bindBankInputs() {
+  document.querySelectorAll("[data-bank-field]").forEach((input) => {
+    input.addEventListener("input", (e) => {
+      const index = Number(e.target.dataset.bankIndex);
+      const field = e.target.dataset.bankField;
 
+      if (!state.company.bankAccounts[index]) return;
+      state.company.bankAccounts[index][field] = e.target.value;
+    });
+  });
+}
 function getPrimaryBank(company = {}) {
   const first = company.bankAccounts?.[0];
   if (!first) return company;
