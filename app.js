@@ -14,13 +14,14 @@ const state = {
   auditLogsByEntity: {},
   selectedDealId: null,
   company: {
-    id: 1,
-    name: "JK PETROCHEM INTERNATIONAL FZE",
-    address: "OFFICE NO:E2-110G-02, HAMARIYA FREE ZONE, SHARJAH, UAE",
-    bankAccounts: [],
-    mobile: "+971524396170",
-    email: "info@jkpetrochem.com"
-  },
+  id: 1,
+  name: "JK PETROCHEM INTERNATIONAL FZE",
+  address: "OFFICE NO:E2-110G-02, HAMARIYA FREE ZONE, SHARJAH, UAE",
+  bankAccounts: [],
+  shippers: [],
+  mobile: "+971524396170",
+  email: "info@jkpetrochem.com"
+},
   error: "",
   ready: false
 };
@@ -736,6 +737,39 @@ function settingsView() {
             <button type="button" id="add-bank-btn" style="margin-top:10px">+ Add Bank</button>
           </div>
 
+          <div>
+            <div style="font-weight:800;margin-bottom:10px;color:#d4a646">Saved Shippers</div>
+
+            <div id="shipper-list" style="display:grid;gap:10px">
+              ${(c.shippers || []).map((s, i) => `
+                <div class="item" style="margin-bottom:0">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div>
+                      <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Shipper Name</label>
+                      <input value="${esc(s.name || "")}" data-shipper-field="name" data-shipper-index="${i}" placeholder="Shipper name">
+                    </div>
+                    <div>
+                      <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Mobile</label>
+                      <input value="${esc(s.mobile || "")}" data-shipper-field="mobile" data-shipper-index="${i}" placeholder="Mobile">
+                    </div>
+                    <div style="grid-column:1 / -1">
+                      <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Address</label>
+                      <textarea data-shipper-field="address" data-shipper-index="${i}" placeholder="Address" style="min-height:80px">${esc(s.address || "")}</textarea>
+                    </div>
+                    <div style="grid-column:1 / -1">
+                      <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Email</label>
+                      <input value="${esc(s.email || "")}" data-shipper-field="email" data-shipper-index="${i}" placeholder="Email">
+                    </div>
+                  </div>
+
+                  <button type="button" data-delete-shipper="${i}" style="margin-top:10px">Delete</button>
+                </div>
+              `).join("")}
+            </div>
+
+            <button type="button" id="add-shipper-btn" style="margin-top:10px">+ Add Shipper</button>
+          </div>
+
           <button type="submit" style="background:#d4a646;color:#fff;border:none">Save Settings</button>
         </div>
       </form>
@@ -1425,6 +1459,7 @@ async function saveCompanySettings(e) {
     bank_accounts: Array.isArray(state.company.bankAccounts)
       ? state.company.bankAccounts
       : []
+      shippers: Array.isArray(state.company.shippers) ? state.company.shippers : []
   };
 
   const { data, error } = await supabase
@@ -1474,6 +1509,7 @@ async function loadCompanySettings() {
       mobile: data.mobile || state.company.mobile,
       email: data.email || state.company.email,
       bankAccounts: Array.isArray(data.bank_accounts) ? data.bank_accounts : []
+      shippers: Array.isArray(data.shippers) ? data.shippers : []
     };
   }
 }
@@ -1523,6 +1559,30 @@ function getBankForDeal(company = {}, deal = {}) {
   };
 }
 
+function getShipperForDeal(company = {}, deal = {}) {
+  const shippers = company.shippers || [];
+  const selected =
+    deal?.shipper_index != null
+      ? shippers[Number(deal.shipper_index)]
+      : null;
+
+  const shipper = selected || null;
+
+  if (!shipper) return company;
+
+  return {
+    ...company,
+    name: shipper.name || company.name || "",
+    address: shipper.address || company.address || "",
+    mobile: shipper.mobile || company.mobile || "",
+    email: shipper.email || company.email || ""
+  };
+}
+
+function printDoc(type, dealId) {
+  ...
+}
+
 function printDoc(type, dealId) {
   const deal = state.deals.find((d) => String(d.id) === String(dealId));
   if (!deal) return;
@@ -1556,10 +1616,11 @@ function printDoc(type, dealId) {
     productName: deal.product_name,
     loadingPort: deal.loading_port,
     dischargePort: deal.discharge_port,
-    hsn: deal.hsn_code
+    hsn: deal.hsn_code  
   };
 
-  const companyForDocs = getBankForDeal(state.company, deal);
+  const companyWithBank = getBankForDeal(state.company, deal);
+  const companyForDocs = getShipperForDeal(companyWithBank, deal);
 
   let html = "";
   if (type === "pi") html = buildPI(dealDoc, buyer, supplier, companyForDocs);
@@ -1722,7 +1783,8 @@ function validateDeal(fd) {
   const document_bank_index_raw = cleanText(fd.get("document_bank_index"));
   const document_bank_index =
     document_bank_index_raw === "" ? null : Number(document_bank_index_raw);
-
+  const shipper_index_raw = cleanText(fd.get("shipper_index"));
+  const shipper_index = shipper_index_raw === "" ? null : Number(shipper_index_raw);
   let total_amount_usd = 0;
   let total_amount_aed = 0;
   let rate_usd = 0;
@@ -1768,6 +1830,7 @@ function validateDeal(fd) {
     document_currency,
     conversion_rate,
     document_bank_index,
+    shipper_index,
     currency,
     quantity,
     rate,
