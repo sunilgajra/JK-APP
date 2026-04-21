@@ -166,10 +166,9 @@ function commonStyle() {
     }
 
     .doc {
-      width: 194mm;
-      min-width: 194mm;
+      width: 190mm;
+      min-width: 190mm;
       margin: 0 auto;
-      padding: 0 2mm;
     }
 
     .previewActions {
@@ -195,31 +194,31 @@ function commonStyle() {
 
     .top {
       display: grid;
-      grid-template-columns: 1.05fr 0.72fr 1.05fr;
-      gap: 10px;
+      grid-template-columns: 1fr 0.62fr 1fr;
+      gap: 8px;
       align-items: start;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .logoBox {
       text-align: center;
-      padding-top: 12px;
+      padding-top: 10px;
     }
 
     .logoBox img {
-      width: 118px;
-      max-width: 118px;
+      width: 100px;
+      max-width: 100px;
       object-fit: contain;
     }
 
     .docTitle {
       color: #3b9da2;
-      font-size: 28px;
+      font-size: 22px;
       font-weight: 800;
       text-align: right;
       line-height: 1;
       margin: 0 0 8px 0;
-      letter-spacing: .3px;
+      letter-spacing: .2px;
     }
 
     .bar {
@@ -233,12 +232,12 @@ function commonStyle() {
     }
 
     .panel {
-      min-height: 110px;
+      min-height: 118px;
     }
 
     .panelBody {
       padding: 5px 2px 0;
-      line-height: 1.5;
+      line-height: 1.45;
       font-size: 10px;
       font-weight: 700;
     }
@@ -317,7 +316,7 @@ function commonStyle() {
     }
 
     .footer {
-      margin-top: 14px;
+      margin-top: 8px;
       display: grid;
       grid-template-columns: 1.2fr .8fr .8fr;
       gap: 16px;
@@ -346,7 +345,7 @@ function commonStyle() {
       text-align: center;
       font-size: 11px;
       font-weight: 700;
-      margin-top: 10px;
+      margin-top: 6px;
     }
 
     .red {
@@ -369,8 +368,8 @@ function commonStyle() {
       .previewActions { display: none !important; }
       body { overflow: visible; }
       .doc {
-        width: 194mm;
-        min-width: 194mm;
+        width: 190mm;
+        min-width: 190mm;
       }
     }
   </style>
@@ -674,7 +673,7 @@ function buildCI(deal, buyer, supplier, company = {}) {
         <th style="width:6%">TAX</th>
         <th style="width:17%">TOTAL AMOUNT (${esc(currency)})</th>
       </tr>
-      <tr style="height:130px">
+      <tr style="height:145px">
         <td>
           <b>${esc(deal.productName || "")}</b><br>
           HS CODE : : ${esc(deal.hsn || "—")}<br><br>
@@ -688,7 +687,7 @@ function buildCI(deal, buyer, supplier, company = {}) {
       </tr>
     </table>
 
-    <div class="smallGrid" style="margin-top:8px; align-items:start; grid-template-columns: 1.15fr .9fr .7fr;">
+    <div style="display:grid;grid-template-columns:1.18fr .88fr .64fr;gap:4px;align-items:start;margin-top:6px;">
       <div class="box">
         <div class="boxHead">Terms of Sale and Other Comments</div>
         <div class="boxBody tight">
@@ -706,7 +705,7 @@ function buildCI(deal, buyer, supplier, company = {}) {
 
       ${containerBlock(deal)}
 
-      <table class="thin">
+      <table class="thin" style="font-size:10px;">
         <tr><td>Subtotal</td><td class="right">${fmt(total)}</td></tr>
         <tr><td>Taxable</td><td class="right">-</td></tr>
         <tr><td>Tax rate</td><td class="right">-</td></tr>
@@ -721,7 +720,7 @@ function buildCI(deal, buyer, supplier, company = {}) {
       </table>
     </div>
 
-    <div class="box">
+    <div class="box" style="margin-top:6px;">
       <div class="boxHead">Additional Details</div>
       <div class="boxBody tight">
         <div>Country of Origin ${esc(deal.country_of_origin || supplier?.country || "UAE")}</div>
