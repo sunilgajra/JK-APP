@@ -1194,9 +1194,21 @@ function dealFormHtml(d = {}, edit = false, id = "") {
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Payment Terms</label>
             <input name="payment_terms" value="${esc(d.payment_terms || "")}">
           </div>
-          <div style="margin-top:10px">
+                    <div style="margin-top:10px">
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Bank Terms</label>
             <input name="bank_terms" value="${esc(d.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}">
+          </div>
+
+          <div style="margin-top:10px">
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Document Bank Account</label>
+            <select name="document_bank_index">
+              <option value="">Primary Bank</option>
+              ${(state.company.bankAccounts || []).map((b, i) => `
+                <option value="${i}" ${String(d.document_bank_index ?? "") === String(i) ? "selected" : ""}>
+                  ${esc(b.bankName || "Bank")} - ${esc(b.account || "")}
+                </option>
+              `).join("")}
+            </select>
           </div>
         </div>
 
@@ -1471,15 +1483,23 @@ function bindBankInputs() {
     });
   });
 }
-function getPrimaryBank(company = {}) {
-  const first = company.bankAccounts?.[0];
-  if (!first) return company;
+function getBankForDeal(company = {}, deal = {}) {
+  const banks = company.bankAccounts || [];
+  const selected =
+    deal?.document_bank_index != null
+      ? banks[Number(deal.document_bank_index)]
+      : null;
+
+  const bank = selected || banks[0] || null;
+
+  if (!bank) return company;
+
   return {
     ...company,
-    bankName: first.bankName || "",
-    bankAccount: first.account || "",
-    bankIBAN: first.iban || "",
-    bankSWIFT: first.swift || ""
+    bankName: bank.bankName || "",
+    bankAccount: bank.account || "",
+    bankIBAN: bank.iban || "",
+    bankSWIFT: bank.swift || ""
   };
 }
 
@@ -1519,7 +1539,7 @@ function printDoc(type, dealId) {
     hsn: deal.hsn_code
   };
 
-  const companyForDocs = getPrimaryBank(state.company);
+  const companyForDocs = getBankForDeal(state.company, deal);
 
   let html = "";
   if (type === "pi") html = buildPI(dealDoc, buyer, supplier, companyForDocs);
@@ -1679,6 +1699,10 @@ function validateDeal(fd) {
   const quantity = cleanNumber(fd.get("quantity"));
   const rate = cleanNumber(fd.get("rate"));
 
+  const document_bank_index_raw = cleanText(fd.get("document_bank_index"));
+  const document_bank_index =
+    document_bank_index_raw === "" ? null : Number(document_bank_index_raw);
+
   let total_amount_usd = 0;
   let total_amount_aed = 0;
   let rate_usd = 0;
@@ -1723,6 +1747,7 @@ function validateDeal(fd) {
     base_currency,
     document_currency,
     conversion_rate,
+    document_bank_index,
     currency,
     quantity,
     rate,
