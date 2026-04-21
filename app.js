@@ -40,6 +40,14 @@ function cleanText(v) {
   return String(v || "").trim();
 }
 
+function cleanUpper(v) {
+  return String(v || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\s*,\s*/g, ", ")
+    .toUpperCase();
+}
+
 function cleanNumber(v) {
   const n = Number(v || 0);
   return Number.isFinite(n) ? n : 0;
@@ -1736,8 +1744,8 @@ function validateDeal(fd) {
   const currency = document_currency;
   const status = cleanText(fd.get("status") || "active");
   const approval_status = cleanText(fd.get("approval_status") || "draft");
-  const loading_port = cleanText(fd.get("loading_port"));
-  const discharge_port = cleanText(fd.get("discharge_port"));
+  const loading_port = cleanUpper(fd.get("loading_port"));
+  const discharge_port = cleanUpper(fd.get("discharge_port"));
   const buyer_id = cleanText(fd.get("buyer_id"));
   const supplier_id = cleanText(fd.get("supplier_id"));
 
@@ -1774,8 +1782,8 @@ function validateDeal(fd) {
     discharge_port,
     buyer_id: buyer_id || null,
     supplier_id: supplier_id || null,
-    vessel: cleanText(fd.get("vessel")),
-    vessel_voyage: cleanText(fd.get("vessel_voyage")),
+    vessel: cleanUpper(fd.get("vessel")),
+    vessel_voyage: cleanUpper(fd.get("vessel_voyage")),
     shipment_out_date: cleanText(fd.get("shipment_out_date")) || null,
     eta: cleanText(fd.get("eta")) || null,
     freight_type: cleanText(fd.get("freight_type") || "BY SEA"),
@@ -1790,10 +1798,10 @@ function validateDeal(fd) {
     .map((x) => x.trim().toUpperCase())
     .filter(Boolean)
 )].join("\n"),
-    bl_no: cleanText(fd.get("bl_no")),
+    bl_no: cleanUpper(fd.get("bl_no")),
     cfs: cleanText(fd.get("cfs")),
-    country_of_origin: cleanText(fd.get("country_of_origin")),
-    terms_delivery: cleanText(fd.get("terms_delivery")),
+    country_of_origin: cleanUpper(fd.get("country_of_origin")),
+    terms_delivery: cleanUpper(fd.get("terms_delivery")),
     payment_terms: cleanText(fd.get("payment_terms")),
     bank_terms: cleanText(fd.get("bank_terms")),
     pi_no: cleanText(fd.get("pi_no")),
