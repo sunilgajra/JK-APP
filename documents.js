@@ -148,7 +148,7 @@ function previewScript() {
 function commonStyle() {
   return `
   <style>
-    @page { size: A4; margin: 10mm; }
+    @page { size: A4; margin: 8mm; }
 
     * { box-sizing: border-box; }
 
@@ -157,8 +157,8 @@ function commonStyle() {
       padding: 0;
       background: #fff;
       color: #111;
-      font-family: Arial, sans-serif;
-      font-size: 12px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
     }
 
     body {
@@ -166,9 +166,10 @@ function commonStyle() {
     }
 
     .doc {
-      width: 190mm;
-      min-width: 190mm;
+      width: 194mm;
+      min-width: 194mm;
       margin: 0 auto;
+      padding: 0 2mm;
     }
 
     .previewActions {
@@ -194,60 +195,60 @@ function commonStyle() {
 
     .top {
       display: grid;
-      grid-template-columns: 1.05fr .8fr 1.2fr;
-      gap: 12px;
+      grid-template-columns: 1.05fr 0.72fr 1.05fr;
+      gap: 10px;
       align-items: start;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .logoBox {
       text-align: center;
-      padding-top: 10px;
+      padding-top: 12px;
     }
 
     .logoBox img {
-      max-width: 150px;
-      max-height: 140px;
+      width: 118px;
+      max-width: 118px;
       object-fit: contain;
     }
 
     .docTitle {
-      color: #2f9aa0;
-      font-size: 30px;
+      color: #3b9da2;
+      font-size: 28px;
       font-weight: 800;
       text-align: right;
       line-height: 1;
-      margin-bottom: 10px;
+      margin: 0 0 8px 0;
+      letter-spacing: .3px;
     }
 
     .bar {
-      background: #2f9aa0;
+      background: #3b9da2;
       color: #fff;
       font-weight: 700;
-      padding: 4px 6px;
-      font-size: 12px;
+      padding: 3px 6px;
+      font-size: 11px;
       text-transform: uppercase;
+      line-height: 1.1;
     }
 
-    .panel { min-height: 120px; }
+    .panel {
+      min-height: 110px;
+    }
 
     .panelBody {
-      padding: 6px 2px 0;
-      line-height: 1.55;
-      font-size: 11px;
-    }
-
-    .smallGrid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      padding: 5px 2px 0;
+      line-height: 1.5;
+      font-size: 10px;
+      font-weight: 700;
     }
 
     .triple {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 10px;
+      grid-template-columns: 1fr .95fr 1fr;
+      gap: 8px;
+      margin-bottom: 0;
+      align-items: start;
     }
 
     table {
@@ -257,42 +258,61 @@ function commonStyle() {
 
     th, td {
       border: 2px solid #222;
-      padding: 5px 6px;
+      padding: 4px 5px;
       vertical-align: top;
     }
 
     th {
-      background: #2f9aa0;
+      background: #3b9da2;
       color: #fff;
       font-weight: 700;
-      font-size: 11px;
+      font-size: 10px;
+      text-transform: uppercase;
+      text-align: center;
     }
 
-    .thin td, .thin th { border-width: 1.5px; }
-    .meta td { padding: 3px 6px; }
+    .thin td, .thin th {
+      border-width: 1.5px;
+    }
+
+    .meta td {
+      padding: 3px 6px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .meta td:first-child {
+      width: 54%;
+    }
+
     .right { text-align: right; }
     .center { text-align: center; }
+    .tight { line-height: 1.35; }
 
     .box {
       border: 2px solid #222;
-      margin-top: 8px;
+      margin-top: 0;
     }
 
     .boxHead {
-      background: #2f9aa0;
+      background: #3b9da2;
       color: #fff;
-      padding: 4px 6px;
+      padding: 3px 6px;
       font-weight: 700;
       text-transform: uppercase;
+      line-height: 1.1;
+      font-size: 11px;
     }
 
     .boxBody {
-      padding: 8px;
-      min-height: 70px;
+      padding: 6px 8px;
+      min-height: 60px;
+      font-size: 10px;
+      font-weight: 700;
     }
 
     .footer {
-      margin-top: 18px;
+      margin-top: 14px;
       display: grid;
       grid-template-columns: 1.2fr .8fr .8fr;
       gap: 16px;
@@ -301,14 +321,19 @@ function commonStyle() {
 
     .signLine {
       border-top: 2px solid #222;
-      padding-top: 4px;
-      font-size: 11px;
+      padding-top: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      min-height: 22px;
     }
 
-    .stamp { text-align: center; }
+    .stamp {
+      text-align: center;
+      transform: translateY(6px);
+    }
 
     .stamp img {
-      width: 115px;
+      width: 100px;
       opacity: .9;
     }
 
@@ -316,7 +341,7 @@ function commonStyle() {
       text-align: center;
       font-size: 11px;
       font-weight: 700;
-      margin-top: 12px;
+      margin-top: 10px;
     }
 
     .red {
@@ -324,20 +349,23 @@ function commonStyle() {
       font-weight: 700;
     }
 
-    .tight { line-height: 1.35; }
+    .plainTable td {
+      border: none !important;
+      padding: 2px 0 !important;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .descTable td {
+      height: 90px;
+    }
 
     @media print {
-      .previewActions {
-        display: none !important;
-      }
-
-      body {
-        overflow: visible;
-      }
-
+      .previewActions { display: none !important; }
+      body { overflow: visible; }
       .doc {
-        width: 190mm;
-        min-width: 190mm;
+        width: 194mm;
+        min-width: 194mm;
       }
     }
   </style>
@@ -371,13 +399,29 @@ function shipperBlock(company = {}) {
 }
 
 function rightHeader(title, docNo, customerId, date) {
+  const label =
+    title === "PRO FORMA INVOICE"
+      ? "Proforma Invoice #"
+      : title === "PACKING LIST"
+      ? "P.L.Invoice #"
+      : "Invoice #";
+
   return `
     <div>
       <div class="docTitle">${title}</div>
       <table class="meta thin">
-        <tr><td><b>Date</b></td><td class="center">${esc(fmtDate(date) || "")}</td></tr>
-        <tr><td><b>${title === "PRO FORMA INVOICE" ? "Proforma Invoice #" : title === "PACKING LIST" ? "P.L.Invoice #" : "Invoice #"}</b></td><td class="center">${esc(docNo || "")}</td></tr>
-        <tr><td><b>Customer ID</b></td><td class="center">${esc(customerId || "")}</td></tr>
+        <tr>
+          <td><b>Date</b></td>
+          <td class="center">${esc(fmtDate(date) || "")}</td>
+        </tr>
+        <tr>
+          <td><b>${label}</b></td>
+          <td class="center">${esc(String(docNo || "").replace(/\s+/g, " ").trim())}</td>
+        </tr>
+        <tr>
+          <td><b>Customer ID</b></td>
+          <td class="center">${esc(customerId || "")}</td>
+        </tr>
       </table>
     </div>
   `;
@@ -398,10 +442,10 @@ function consigneeBlock(buyer = {}) {
       <div class="panelBody tight">
         <div><b>${esc(buyer?.name || "—")}</b></div>
         <div>${esc(buyer?.address || "")}</div>
-        <div>GST - ${esc(buyer?.gst || "—")}</div>
-        <div>PAN - ${esc(buyer?.pan || "—")}</div>
-        <div>IEC - ${esc(buyer?.iec || "—")}</div>
-        <div>TEL: ${esc(buyer?.phone || "—")}</div>
+        <div>GST NO: ${esc(buyer?.gst || "—")}</div>
+        <div>IEC NO: ${esc(buyer?.iec || "—")}</div>
+        <div>PAN: ${esc(buyer?.pan || "—")}</div>
+        ${buyer?.email ? `<div>Email:${esc(buyer.email)}</div>` : ``}
       </div>
     </div>
   `;
@@ -414,10 +458,10 @@ function notifyBlock(buyer = {}) {
       <div class="panelBody tight">
         <div><b>${esc(buyer?.name || "—")}</b></div>
         <div>${esc(buyer?.address || "")}</div>
-        <div>GST - ${esc(buyer?.gst || "—")}</div>
-        <div>PAN - ${esc(buyer?.pan || "—")}</div>
-        <div>IEC - ${esc(buyer?.iec || "—")}</div>
-        <div>TEL: ${esc(buyer?.phone || "—")}</div>
+        <div>GST NO: ${esc(buyer?.gst || "—")}</div>
+        <div>IEC NO: ${esc(buyer?.iec || "—")}</div>
+        <div>PAN: ${esc(buyer?.pan || "—")}</div>
+        ${buyer?.email ? `<div>Email:${esc(buyer.email)}</div>` : ``}
       </div>
     </div>
   `;
@@ -451,8 +495,8 @@ function shippingBlock(deal = {}) {
     <div class="panel">
       <div class="bar">Shipping Details</div>
       <div class="panelBody tight">
-        <div><b>Freight Type</b> &nbsp;&nbsp;&nbsp;&nbsp; ${esc(deal.freight_type || "BY SEA")}</div>
-        <div><b>Shippment Date</b> &nbsp;&nbsp; [ ${esc(fmtDate(deal.shipment_out_date || "") || "--------------")} ]</div>
+        <div><b>Freight Type</b> &nbsp;&nbsp;&nbsp; ${esc(deal.freight_type || "BY SEA")}</div>
+        <div><b>Shippment Date</b> &nbsp; [ ${esc(fmtDate(deal.shipment_out_date || "") || "--------------")} ]</div>
         <div><b>Gross Weight</b> &nbsp;&nbsp; [${esc(deal.gross_weight || "")}${deal.gross_weight ? " KGS" : ""}]</div>
         <div><b>Net Weight</b> &nbsp;&nbsp;&nbsp;&nbsp; [${esc(deal.net_weight || "")}${deal.net_weight ? " KGS" : ""}]</div>
         <div><b>Total Packages</b> &nbsp; ${esc(deal.package_details || "20ft x 10 Containers")}</div>
@@ -462,18 +506,23 @@ function shippingBlock(deal = {}) {
   `;
 }
 
-function footer(company = {}, date = "") {
+function footer(company = {}, date = "", showSignatory = false) {
   return `
     <div class="footer">
-      <div class="signLine">FOR ${esc(company.name || "")}</div>
+      <div>
+        <div class="signLine">FOR ${esc(company.name || "")}</div>
+        ${showSignatory ? `<div style="font-size:10px;font-weight:700;margin-top:4px;">Authorised Signatory</div>` : ``}
+      </div>
       <div class="stamp"><img src="${STAMP_URL}" alt="stamp"></div>
-      <div class="signLine">${esc(fmtDate(date) || "")}<br>Date</div>
+      <div>
+        <div class="signLine">${esc(fmtDate(date) || "")}</div>
+        <div style="font-size:10px;font-weight:700;margin-top:4px;">Date</div>
+      </div>
     </div>
     <div class="note">This is computer generated Document, No signature required</div>
   </div>
   `;
 }
-
 function buildPI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.created_at || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
@@ -493,7 +542,7 @@ function buildPI(deal, buyer, supplier, company = {}) {
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
-      ${rightHeader("PRO FORMA INVOICE", (deal.pi_no || deal.dealNo || "").replace(/^PI\s*/i, ""), buyer?.customer_id || "", date)}
+      ${rightHeader("PRO FORMA INVOICE", String(deal.pi_no || deal.dealNo || "").replace(/^PI\s*/i, ""), buyer?.customer_id || "", date)}
     </div>
 
     <div class="triple">
@@ -502,7 +551,7 @@ function buildPI(deal, buyer, supplier, company = {}) {
       ${shippingBlock(deal)}
     </div>
 
-    <table>
+    <table class="descTable" style="margin-top:0;">
       <tr>
         <th style="width:45%">DESCRIPTION</th>
         <th style="width:10%">UNIT</th>
@@ -511,10 +560,10 @@ function buildPI(deal, buyer, supplier, company = {}) {
         <th style="width:5%">TAX</th>
         <th style="width:22%">TOTAL AMOUNT (${esc(currency)})</th>
       </tr>
-      <tr style="height:150px">
+      <tr style="height:138px">
         <td>
           <b>${esc(deal.productName || "")}</b><br>
-          HS CODE : : ${esc(deal.hsn || "—")}<br><br><br><br><br>
+          HS CODE : : ${esc(deal.hsn || "—")}<br><br><br><br>
           ${esc(currency)} : ${esc(amountWords(total))} ONLY
         </td>
         <td class="center">${esc(deal.unit || "MTON")}</td>
@@ -525,13 +574,13 @@ function buildPI(deal, buyer, supplier, company = {}) {
       </tr>
     </table>
 
-    <div class="smallGrid" style="margin-top:8px; align-items:start; grid-template-columns: 1.35fr .75fr;">
+    <div class="smallGrid" style="margin-top:0; align-items:start; grid-template-columns: 1.35fr .75fr;">
       <div class="box">
         <div class="boxHead">Terms of Sale and Other Comments</div>
         <div class="boxBody tight">
           <div><b>Terms of Delivery / Payment :</b></div>
-          <div>
-            ${esc(deal.terms_delivery || (deal.dischargePort ? `CFR ${deal.dischargePort}` : "CFR MUNDRA PORT,INDIA"))}
+          <div style="margin-top:3px">
+            ${esc(deal.terms_delivery || (deal.dischargePort ? `CFR ${deal.dischargePort},INDIA` : "CFR MUNDRA PORT,INDIA"))}
             / <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span>
           </div>
 
@@ -542,8 +591,8 @@ function buildPI(deal, buyer, supplier, company = {}) {
           <div>Account Number (${esc(currency)}): ${esc(company.bankAccount || "")}</div>
           <div>IBAN: ${esc(company.bankIBAN || "")}</div>
           <div>SWIFT ID: ${esc(company.bankSWIFT || "")}</div>
-          <div>Bank Name: ${esc(company.bankName || "")}</div>
-          ${company.branchName ? `<div>Branch: ${esc(company.branchName)}</div>` : ""}
+          <div>Bank Name: ${esc(company.bankName || "")}${company.branchName ? ` / Branch: ${esc(company.branchName)}` : ""}</div>
+
           <div style="margin-top:8px"><b>BANK TERMS:</b> ${esc(deal.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}</div>
         </div>
       </div>
@@ -564,27 +613,27 @@ function buildPI(deal, buyer, supplier, company = {}) {
       </table>
     </div>
 
-    <div class="box">
+    <div class="box" style="margin-top:0;">
       <div class="boxHead">Additional Details</div>
       <div class="boxBody tight">
-        <table style="width:100%; border-collapse:collapse;">
+        <table class="plainTable">
           <tr>
-            <td style="border:none; padding:2px 0; width:160px;">Country of Origin</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.country_of_origin || supplier?.country || "—")}</td>
+            <td style="width:150px;">Country of Origin</td>
+            <td>${esc(deal.country_of_origin || supplier?.country || "")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Port of Loading</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.loadingPort || "—")}</td>
+            <td>Port of Loading</td>
+            <td>${esc(deal.loadingPort || "")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Port of Discharge</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.dischargePort || "—")}</td>
+            <td>Port of Discharge</td>
+            <td>${esc(deal.dischargePort || "")}</td>
           </tr>
         </table>
       </div>
     </div>
 
-    ${footer(company, date)}
+    ${footer(company, date, true)}
   </body>
   </html>`;
 }
@@ -608,7 +657,7 @@ function buildCI(deal, buyer, supplier, company = {}) {
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
-      ${rightHeader("COMMERCIAL INVOICE", (deal.ci_no || deal.dealNo || "").replace(/^CI\s*/i, ""), buyer?.customer_id || "", date)}
+      ${rightHeader("COMMERCIAL INVOICE", String(deal.ci_no || deal.dealNo || "").replace(/^CI\s*/i, ""), buyer?.customer_id || "", date)}
     </div>
 
     <div class="triple">
@@ -617,7 +666,7 @@ function buildCI(deal, buyer, supplier, company = {}) {
       ${shippingBlock(deal)}
     </div>
 
-    <table>
+    <table class="descTable" style="margin-top:0;">
       <tr>
         <th style="width:45%">DESCRIPTION</th>
         <th style="width:14%">UNIT</th>
@@ -626,7 +675,7 @@ function buildCI(deal, buyer, supplier, company = {}) {
         <th style="width:6%">TAX</th>
         <th style="width:17%">TOTAL AMOUNT (${esc(currency)})</th>
       </tr>
-      <tr style="height:130px">
+      <tr style="height:128px">
         <td>
           <b>${esc(deal.productName || "")}</b><br>
           HS CODE : : ${esc(deal.hsn || "—")}<br><br><br>
@@ -640,12 +689,12 @@ function buildCI(deal, buyer, supplier, company = {}) {
       </tr>
     </table>
 
-    <div class="smallGrid" style="margin-top:8px; align-items:start; grid-template-columns: 1.15fr .9fr .7fr;">
+    <div class="smallGrid" style="margin-top:0; align-items:start; grid-template-columns: 1.15fr .9fr .7fr;">
       <div class="box">
         <div class="boxHead">Terms of Sale and Other Comments</div>
         <div class="boxBody tight">
           <div><b>Terms of Delivery / Payment :</b></div>
-          <div>
+          <div style="margin-top:3px">
             ${esc(deal.terms_delivery || `CFR ${deal.dischargePort || "MUNDRA PORT"}`)}
             / <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span>
           </div>
@@ -656,7 +705,6 @@ function buildCI(deal, buyer, supplier, company = {}) {
           <div>IBAN: ${esc(company.bankIBAN || "")}</div>
           <div>SWIFT ID: ${esc(company.bankSWIFT || "")}</div>
           <div>Bank Name: ${esc(company.bankName || "")}${company.branchName ? ` / Branch: ${esc(company.branchName)}` : ""}</div>
-
           <div style="margin-top:8px"><b>BANK TERMS:</b> ${esc(deal.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}</div>
         </div>
       </div>
@@ -671,50 +719,50 @@ function buildCI(deal, buyer, supplier, company = {}) {
         <tr><td>Insurance</td><td class="right">-</td></tr>
         <tr><td>Legal/Consular</td><td class="right">-</td></tr>
         <tr><td>Inspection/Cert.</td><td class="right">-</td></tr>
-        <tr><td>Rounded off</td><td class="right">-</td></tr>
+        <tr><td>Rounded off:</td><td class="right">-</td></tr>
         <tr><td>Other (specify)</td><td class="right">-</td></tr>
         <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(total)}</b></td></tr>
         <tr><td>Currency</td><td class="right">${esc(currency)}</td></tr>
       </table>
     </div>
 
-    <div class="box">
+    <div class="box" style="margin-top:0;">
       <div class="boxHead">Additional Details</div>
       <div class="boxBody tight">
-        <table style="width:100%; border-collapse:collapse;">
+        <table class="plainTable">
           <tr>
-            <td style="border:none; padding:2px 0; width:160px;">Country of Origin</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.country_of_origin || supplier?.country || "UAE")}</td>
+            <td style="width:150px;">Country of Origin</td>
+            <td>${esc(deal.country_of_origin || supplier?.country || "UAE")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Packing list No. Date:</td>
-            <td style="border:none; padding:2px 0;">${esc((deal.pl_no || "—").replace(/\s+/g, ""))}</td>
+            <td>Packing list No. Date:</td>
+            <td>${esc(String(deal.pl_no || "—").replace(/\s+/g, ""))}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Port of Loading</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.loadingPort || "—")}</td>
+            <td>Port of Loading</td>
+            <td>${esc(deal.loadingPort || "—")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Port of Discharge</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.dischargePort || "—")}</td>
+            <td>Port of Discharge</td>
+            <td>${esc(deal.dischargePort || "—")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">BL NO:</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.bl_no || "—")}</td>
+            <td>BL NO:</td>
+            <td>${esc(deal.bl_no || "—")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Vessel / Voyage No.</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.vessel_voyage || deal.vessel || "—")}</td>
+            <td>Vessel / Voyage No.</td>
+            <td>${esc(deal.vessel_voyage || deal.vessel || "—")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">CFS:</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.cfs || "-")}</td>
+            <td>CFS:</td>
+            <td>${esc(deal.cfs || "-")}</td>
           </tr>
         </table>
       </div>
     </div>
 
-    ${footer(company, date)}
+    ${footer(company, date, false)}
   </body>
   </html>`;
 }
@@ -745,13 +793,13 @@ function buildPL(deal, buyer, supplier, company = {}) {
       ${shippingBlock(deal)}
     </div>
 
-    <table>
+    <table class="descTable" style="margin-top:0;">
       <tr>
         <th style="width:60%">DESCRIPTION</th>
         <th style="width:14%">UNIT</th>
         <th style="width:26%">QTY</th>
       </tr>
-      <tr style="height:120px">
+      <tr style="height:122px">
         <td>
           <b>${esc(deal.productName || "")}</b><br>
           HS CODE : : ${esc(deal.hsn || "—")}
@@ -761,51 +809,51 @@ function buildPL(deal, buyer, supplier, company = {}) {
       </tr>
     </table>
 
-    <div class="box">
+    <div class="box" style="margin-top:0;">
       <div class="boxHead">Terms of Sale and Other Comments</div>
       <div class="boxBody tight">
         <div><b>Terms of Delivery</b></div>
-        <div>${esc(deal.terms_delivery || `CFR ${deal.dischargePort || "MUNDRA PORT"}`)}</div>
+        <div style="margin-top:4px">${esc(deal.terms_delivery || `CFR ${deal.dischargePort || "MUNDRA PORT"}`)}</div>
       </div>
     </div>
 
-    <div class="box">
+    <div class="box" style="margin-top:0;">
       <div class="boxHead">Additional Details</div>
       <div class="boxBody tight">
-        <table style="width:100%; border-collapse:collapse;">
+        <table class="plainTable">
           <tr>
-            <td style="border:none; padding:2px 0; width:140px;">Country of Origin</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.country_of_origin || supplier?.country || "UAE")}</td>
+            <td style="width:140px;">Country of Origin</td>
+            <td>${esc(deal.country_of_origin || supplier?.country || "UAE")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Delivery Order No. Date:</td>
-            <td style="border:none; padding:2px 0;">${esc((deal.pl_no || "—").replace(/\s+/g, ""))}</td>
+            <td>Delivery Order No. Date:</td>
+            <td>${esc(String(deal.pl_no || "—").replace(/\s+/g, ""))}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Port of Loading</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.loadingPort || "—")}</td>
+            <td>Port of Loading</td>
+            <td>${esc(deal.loadingPort || "—")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Port of Discharge</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.dischargePort || "—")}</td>
+            <td>Port of Discharge</td>
+            <td>${esc(deal.dischargePort || "—")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">BL NO:</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.bl_no || "—")}</td>
+            <td>BL NO:</td>
+            <td>${esc(deal.bl_no || "—")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Vessel / Voyage No.</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.vessel_voyage || deal.vessel || "—")}</td>
+            <td>Vessel / Voyage No.</td>
+            <td>${esc(deal.vessel_voyage || deal.vessel || "—")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">CFS:</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.cfs || "-")}</td>
+            <td>CFS:</td>
+            <td>${esc(deal.cfs || "-")}</td>
           </tr>
         </table>
       </div>
     </div>
 
-    ${footer(company, date)}
+    ${footer(company, date, false)}
   </body>
   </html>`;
 }
@@ -836,51 +884,51 @@ function buildCOO(deal, buyer, supplier, company = {}) {
       ${shippingBlock(deal)}
     </div>
 
-    <div class="box">
+    <div class="box" style="margin-top:0;">
       <div class="boxBody center" style="font-weight:700; min-height:auto; padding:18px 12px;">
         CERTIFY THAT THE GOODS SHIPPED ARE UNDER NON-NEGATIVE LIST OF IMPORT AND EXPORT POLICY 2015-2020.
       </div>
     </div>
 
-    <div class="box">
+    <div class="box" style="margin-top:0;">
       <div class="boxBody center" style="font-weight:700; min-height:auto; padding:14px 12px;">
         DESCRIPTION OF GOODS : ${esc(deal.productName || "—")}
       </div>
     </div>
 
-    <div class="box">
+    <div class="box" style="margin-top:0;">
       <div class="boxBody center" style="font-weight:800; font-size:18px; min-height:auto; padding:14px 12px;">
         QUANTITY (MTONS): ${esc(deal.quantity || "—")}
       </div>
     </div>
 
-    <div class="box">
+    <div class="box" style="margin-top:0;">
       <div class="boxHead">Additional Details</div>
       <div class="boxBody tight">
-        <table style="width:100%; border-collapse:collapse;">
+        <table class="plainTable">
           <tr>
-            <td style="border:none; padding:2px 0; width:170px;">Country of Origin</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.country_of_origin || supplier?.country || "UAE")}</td>
+            <td style="width:160px;">Country of Origin</td>
+            <td>${esc(deal.country_of_origin || supplier?.country || "UAE")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Invoice No. Date:</td>
-            <td style="border:none; padding:2px 0;">${esc((deal.ci_no || deal.dealNo || "—").replace(/^CI\s*/i, "").replace(/\s+/g, ""))}</td>
+            <td>Invoice No. Date:</td>
+            <td>${esc(String(deal.ci_no || deal.dealNo || "—").replace(/^CI\s*/i, "").replace(/\s+/g, ""))}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Port of Loading</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.loadingPort || "—")}</td>
+            <td>Port of Loading</td>
+            <td>${esc(deal.loadingPort || "—")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Port of Discharge</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.dischargePort || "—")}</td>
+            <td>Port of Discharge</td>
+            <td>${esc(deal.dischargePort || "—")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">BL NO:</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.bl_no || "—")}</td>
+            <td>BL NO:</td>
+            <td>${esc(deal.bl_no || "—")}</td>
           </tr>
           <tr>
-            <td style="border:none; padding:2px 0;">Vessel / Voyage No</td>
-            <td style="border:none; padding:2px 0;">${esc(deal.vessel_voyage || deal.vessel || "—")}</td>
+            <td>Vessel / Voyage No</td>
+            <td>${esc(deal.vessel_voyage || deal.vessel || "—")}</td>
           </tr>
         </table>
 
@@ -890,7 +938,7 @@ function buildCOO(deal, buyer, supplier, company = {}) {
       </div>
     </div>
 
-    ${footer(company, date)}
+    ${footer(company, date, false)}
   </body>
   </html>`;
 }
