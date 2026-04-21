@@ -495,8 +495,8 @@ function shippingBlock(deal = {}) {
     <div class="panel">
       <div class="bar">Shipping Details</div>
       <div class="panelBody tight">
-        <div><b>Freight Type</b> &nbsp;&nbsp;&nbsp; ${esc(deal.freight_type || "BY SEA")}</div>
-        <div><b>Shippment Date</b> &nbsp; [ ${esc(fmtDate(deal.shipment_out_date || "") || "--------------")} ]</div>
+        <div><b>Freight Type</b> &nbsp;&nbsp;&nbsp;&nbsp; ${esc(deal.freight_type || "BY SEA")}</div>
+        <div><b>Shippment Date</b> &nbsp;&nbsp; [--------------]</div>
         <div><b>Gross Weight</b> &nbsp;&nbsp; [${esc(deal.gross_weight || "")}${deal.gross_weight ? " KGS" : ""}]</div>
         <div><b>Net Weight</b> &nbsp;&nbsp;&nbsp;&nbsp; [${esc(deal.net_weight || "")}${deal.net_weight ? " KGS" : ""}]</div>
         <div><b>Total Packages</b> &nbsp; ${esc(deal.package_details || "20ft x 10 Containers")}</div>
@@ -644,20 +644,12 @@ function buildCI(deal, buyer, supplier, company = {}) {
   const currency = docCurrency(deal);
 
   return `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <title>CI ${esc(deal.dealNo || "")}</title>
-    ${commonStyle()}
-    ${previewScript()}
-  </head>
-  <body>
+  <!DOCTYPE html><html><head><title>CI ${esc(deal.dealNo || "")}</title>${commonStyle()}${previewScript()}</head><body>
     ${previewActions()}
-
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
-      ${rightHeader("COMMERCIAL INVOICE", String(deal.ci_no || deal.dealNo || "").replace(/^CI\s*/i, ""), buyer?.customer_id || "", date)}
+      ${rightHeader("COMMERCIAL INVOICE", deal.ci_no || deal.dealNo || "", buyer?.customer_id || "", date)}
     </div>
 
     <div class="triple">
@@ -666,19 +658,19 @@ function buildCI(deal, buyer, supplier, company = {}) {
       ${shippingBlock(deal)}
     </div>
 
-    <table class="descTable" style="margin-top:0;">
+    <table>
       <tr>
         <th style="width:45%">DESCRIPTION</th>
         <th style="width:14%">UNIT</th>
         <th style="width:8%">QTY</th>
-        <th style="width:10%">RATE (${esc(currency)})</th>
+        <th style="width:10%">RATE<br>(${esc(currency)})</th>
         <th style="width:6%">TAX</th>
         <th style="width:17%">TOTAL AMOUNT (${esc(currency)})</th>
       </tr>
-      <tr style="height:128px">
+      <tr style="height:130px">
         <td>
           <b>${esc(deal.productName || "")}</b><br>
-          HS CODE : : ${esc(deal.hsn || "—")}<br><br><br>
+          HS CODE : : ${esc(deal.hsn || "—")}<br><br>
           ${esc(currency)} : ${esc(amountWords(total))} ONLY
         </td>
         <td class="center">${esc(deal.unit || "MTON")}</td>
@@ -689,22 +681,18 @@ function buildCI(deal, buyer, supplier, company = {}) {
       </tr>
     </table>
 
-    <div class="smallGrid" style="margin-top:0; align-items:start; grid-template-columns: 1.15fr .9fr .7fr;">
+    <div class="smallGrid" style="margin-top:8px; align-items:start; grid-template-columns: 1.15fr .9fr .7fr;">
       <div class="box">
         <div class="boxHead">Terms of Sale and Other Comments</div>
         <div class="boxBody tight">
           <div><b>Terms of Delivery / Payment :</b></div>
-          <div style="margin-top:3px">
-            ${esc(deal.terms_delivery || `CFR ${deal.dischargePort || "MUNDRA PORT"}`)}
-            / <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span>
-          </div>
-
+          <div>${esc(deal.terms_delivery || `CFR ${deal.dischargePort || "MUNDRA PORT"}`)} / <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span></div>
           <div style="margin-top:8px"><b>Our Bank Details:-</b></div>
           <div>Account Name: ${esc(company.name || "")}</div>
           <div>Account Number (${esc(currency)}): ${esc(company.bankAccount || "")}</div>
           <div>IBAN: ${esc(company.bankIBAN || "")}</div>
           <div>SWIFT ID: ${esc(company.bankSWIFT || "")}</div>
-          <div>Bank Name: ${esc(company.bankName || "")}${company.branchName ? ` / Branch: ${esc(company.branchName)}` : ""}</div>
+          <div>Bank Name: ${esc(company.bankName || "")}</div>
           <div style="margin-top:8px"><b>BANK TERMS:</b> ${esc(deal.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}</div>
         </div>
       </div>
@@ -726,45 +714,21 @@ function buildCI(deal, buyer, supplier, company = {}) {
       </table>
     </div>
 
-    <div class="box" style="margin-top:0;">
+    <div class="box">
       <div class="boxHead">Additional Details</div>
       <div class="boxBody tight">
-        <table class="plainTable">
-          <tr>
-            <td style="width:150px;">Country of Origin</td>
-            <td>${esc(deal.country_of_origin || supplier?.country || "UAE")}</td>
-          </tr>
-          <tr>
-            <td>Packing list No. Date:</td>
-            <td>${esc(String(deal.pl_no || "—").replace(/\s+/g, ""))}</td>
-          </tr>
-          <tr>
-            <td>Port of Loading</td>
-            <td>${esc(deal.loadingPort || "—")}</td>
-          </tr>
-          <tr>
-            <td>Port of Discharge</td>
-            <td>${esc(deal.dischargePort || "—")}</td>
-          </tr>
-          <tr>
-            <td>BL NO:</td>
-            <td>${esc(deal.bl_no || "—")}</td>
-          </tr>
-          <tr>
-            <td>Vessel / Voyage No.</td>
-            <td>${esc(deal.vessel_voyage || deal.vessel || "—")}</td>
-          </tr>
-          <tr>
-            <td>CFS:</td>
-            <td>${esc(deal.cfs || "-")}</td>
-          </tr>
-        </table>
+        <div>Country of Origin ${esc(deal.country_of_origin || supplier?.country || "UAE")}</div>
+        <div>Packing list No. Date: ${esc(String(deal.pl_no || "—").replace(/\s+/g, ""))}</div>
+        <div>Port of Loading ${esc(deal.loadingPort || "—")}</div>
+        <div>Port of Discharge ${esc(deal.dischargePort || "—")}</div>
+        <div>BL NO: ${esc(deal.bl_no || "—")}</div>
+        <div>Vessel / Voyage No. ${esc(deal.vessel_voyage || deal.vessel || "—")}</div>
+        <div>CFS: ${esc(deal.cfs || "-")}</div>
       </div>
     </div>
 
-    ${footer(company, date, false)}
-  </body>
-  </html>`;
+    ${footer(company, date)}
+  </body></html>`;
 }
 
 function buildPL(deal, buyer, supplier, company = {}) {
