@@ -480,16 +480,30 @@ function containerBlock(deal = {}) {
         .map((x) => x.trim())
         .filter(Boolean);
 
+  const minItems = 20;
+  const totalItems = Math.max(minItems, list.length);
+  const evenTotal = totalItems % 2 === 0 ? totalItems : totalItems + 1;
+
+  const normalized = [...list];
+  while (normalized.length < evenTotal) {
+    normalized.push("-");
+  }
+
   const rows = [];
-  for (let i = 0; i < Math.max(list.length, 10); i += 2) {
-    rows.push([list[i] || "-", list[i + 1] || "-"]);
+  for (let i = 0; i < normalized.length; i += 2) {
+    rows.push([normalized[i], normalized[i + 1]]);
   }
 
   return `
     <div class="panel">
       <div class="bar">Container Nos:</div>
       <table class="thin">
-        ${rows.map((r) => `<tr><td class="center">${esc(r[0])}</td><td class="center">${esc(r[1])}</td></tr>`).join("")}
+        ${rows.map((r) => `
+          <tr style="height:22px">
+            <td class="center">${esc(r[0] || "-")}</td>
+            <td class="center">${esc(r[1] || "-")}</td>
+          </tr>
+        `).join("")}
       </table>
     </div>
   `;
