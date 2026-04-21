@@ -794,6 +794,7 @@ function bindUI() {
   document.getElementById("open-company-settings")?.addEventListener("click", () => setPage("settings"));
   document.getElementById("company-settings-form")?.addEventListener("submit", saveCompanySettings);
   document.getElementById("add-bank-btn")?.addEventListener("click", addBankAccount);
+  document.getElementById("add-shipper-btn")?.addEventListener("click", addShipper);
   document.getElementById("export-deals-csv")?.addEventListener("click", exportDealsCsv);
 
   document.querySelectorAll("[data-delete-bank]").forEach((btn) => {
@@ -803,6 +804,13 @@ function bindUI() {
       render();
     });
   });
+  document.querySelectorAll("[data-delete-shipper]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const index = Number(btn.dataset.deleteShipper);
+    state.company.shippers.splice(index, 1);
+    render();
+  });
+});
 
   document.getElementById("deal-search")?.addEventListener("input", (e) => {
     state.dealSearch = e.target.value;
@@ -889,6 +897,7 @@ function bindUI() {
   );
 
   bindBankInputs();
+  bindShipperInputs();
 }
 
 function buyerFormHtml(b = {}, edit = false, id = "") {
@@ -1266,6 +1275,18 @@ function dealFormHtml(d = {}, edit = false, id = "") {
           </div>
         </div>
 
+        <div style="margin-top:10px">
+  <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Document Shipper</label>
+  <select name="shipper_index">
+    <option value="">Default Company</option>
+    ${(state.company.shippers || []).map((s, i) => `
+      <option value="${i}" ${String(d.shipper_index ?? "") === String(i) ? "selected" : ""}>
+        ${esc(s.name || "Shipper")} - ${esc(s.mobile || "")}
+      </option>
+    `).join("")}
+  </select>
+</div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Buyer</label>
@@ -1457,9 +1478,11 @@ async function saveCompanySettings(e) {
     mobile: state.company.mobile || "+971524396170",
     email: state.company.email || "info@jkpetrochem.com",
     bank_accounts: Array.isArray(state.company.bankAccounts)
-      ? state.company.bankAccounts
-      : []
-      shippers: Array.isArray(state.company.shippers) ? state.company.shippers : []
+  ? state.company.bankAccounts
+  : [],
+shippers: Array.isArray(state.company.shippers)
+  ? state.company.shippers
+  : []
   };
 
   const { data, error } = await supabase
@@ -1508,7 +1531,7 @@ async function loadCompanySettings() {
       address: data.address || state.company.address,
       mobile: data.mobile || state.company.mobile,
       email: data.email || state.company.email,
-      bankAccounts: Array.isArray(data.bank_accounts) ? data.bank_accounts : []
+      bankAccounts: Array.isArray(data.bank_accounts) ? data.bank_accounts : [],
       shippers: Array.isArray(data.shippers) ? data.shippers : []
     };
   }
@@ -1528,6 +1551,20 @@ function addBankAccount() {
 
   render();
 }
+function addShipper() {
+  if (!Array.isArray(state.company.shippers)) {
+    state.company.shippers = [];
+  }
+
+  state.company.shippers.push({
+    name: "",
+    address: "",
+    mobile: "",
+    email: ""
+  });
+
+  render();
+}
 function bindBankInputs() {
   document.querySelectorAll("[data-bank-field]").forEach((input) => {
     input.addEventListener("input", (e) => {
@@ -1536,6 +1573,17 @@ function bindBankInputs() {
 
       if (!state.company.bankAccounts[index]) return;
       state.company.bankAccounts[index][field] = e.target.value;
+    });
+  });
+}
+function bindShipperInputs() {
+  document.querySelectorAll("[data-shipper-field]").forEach((input) => {
+    input.addEventListener("input", (e) => {
+      const index = Number(e.target.dataset.shipperIndex);
+      const field = e.target.dataset.shipperField;
+
+      if (!state.company.shippers[index]) return;
+      state.company.shippers[index][field] = e.target.value;
     });
   });
 }
@@ -1580,7 +1628,7 @@ function getShipperForDeal(company = {}, deal = {}) {
 }
 
 function printDoc(type, dealId) {
-  ...
+  
 }
 
 function printDoc(type, dealId) {
