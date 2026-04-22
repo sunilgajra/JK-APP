@@ -151,32 +151,38 @@ function buildShippingInstructionText(values) {
   const shipper = values.shipper || {};
   const buyer = values.buyer || {};
 
-  return `SHIPPER:
+  const lines = [
+    "SHIPPER:",
+    shipper.name || "",
+    shipper.address || "",
+    shipper.mobile ? `TEL: ${shipper.mobile}` : "",
+    shipper.email ? `EMAIL: ${shipper.email}` : "",
 
-${shipper.name || ""}
+    "",
+    "CONSIGNEE:",
+    buyer.name || "",
+    buyer.address || "",
+    `IEC: ${buyer.iec || ""}`,
+    `GST: ${buyer.gst || ""}`,
+    `PAN: ${buyer.pan || ""}`,
+    `TEL: ${buyer.phone || ""}`,
+    `EMAIL: ${buyer.email || ""}`,
 
-${shipper.address || ""}
+    "",
+    `PRODUCT: ${values.product || ""}`,
+    `HSN CODE: ${values.hsn_code || ""}`,
+    values.supplier_name ? `SUPPLIER: ${values.supplier_name}` : "",
 
-${shipper.mobile ? `TEL: ${shipper.mobile}` : ""}
-${shipper.email ? `EMAIL: ${shipper.email}` : ""}
+    "",
+    values.free_days_text || "",
+    values.detention_text || "",
+    values.other_instructions || ""
+  ].filter((line, index, arr) => {
+    if (line !== "") return true;
+    return arr[index - 1] !== "";
+  });
 
-CONSIGNEE:
-
-${buyer.name || ""}
-
-${buyer.address || ""}
-
-IEC: ${buyer.iec || ""}
-GST: ${buyer.gst || ""}
-PAN: ${buyer.pan || ""}
-TEL: ${buyer.phone || ""}
-EMAIL: ${buyer.email || ""}
-
-PRODUCT: ${values.product || ""}
-HSN CODE: ${values.hsn_code || ""}
-
-${values.free_days_text || ""}
-${values.detention_text || ""}`.replace(/\n{3,}/g, "\n\n");
+  return lines.join("\n");
 }
 
 function downloadShippingInstruction(text, fileName = "shipping-instruction.txt") {
@@ -839,6 +845,7 @@ function shippingInstructionsView() {
   const shippers = getShipperOptions();
   const buyers = state.buyers || [];
   const deals = state.deals || [];
+  const suppliers = state.suppliers || [];
 
   return `
     <div class="card">
@@ -848,7 +855,7 @@ function shippingInstructionsView() {
 
       <form id="shipping-instruction-form" class="item" style="margin-top:12px">
         <div style="display:grid;gap:10px">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
             <div>
               <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Shipper</label>
               <select name="shipper_index" id="si-shipper">
@@ -878,6 +885,16 @@ function shippingInstructionsView() {
                 `).join("")}
               </select>
             </div>
+
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Supplier</label>
+              <select name="supplier_id" id="si-supplier">
+                <option value="">Select supplier</option>
+                ${suppliers.map((s) => `
+                  <option value="${s.id}">${esc(s.name || "Supplier")}</option>
+                `).join("")}
+              </select>
+            </div>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -902,6 +919,11 @@ function shippingInstructionsView() {
             <input name="detention_text" value="THEREAFTER USD 25/ DAY/TANK">
           </div>
 
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Other Instructions</label>
+            <textarea name="other_instructions" style="min-height:90px" placeholder="Other instructions"></textarea>
+          </div>
+
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <button type="submit" style="background:#d4a646;color:#fff;border:none">Save</button>
             <button type="button" id="download-shipping-instruction">Download</button>
@@ -916,7 +938,6 @@ function bindShippingInstructionForm() {
   const form = document.getElementById("shipping-instruction-form");
   if (!form) return;
 
-  const shipperEl = document.getElementById("si-shipper");
   const buyerEl = document.getElementById("si-buyer");
   const dealEl = document.getElementById("si-deal");
   const productEl = document.getElementById("si-product");
@@ -935,14 +956,17 @@ function bindShippingInstructionForm() {
     const fd = new FormData(form);
     const shipper = getShipperOptions()[Number(fd.get("shipper_index"))] || {};
     const buyer = getBuyerById(fd.get("buyer_id")) || {};
+    const supplier = state.suppliers.find((s) => String(s.id) === String(fd.get("supplier_id"))) || {};
 
     const text = buildShippingInstructionText({
       shipper,
       buyer,
+      supplier_name: supplier.name || "",
       product: cleanText(fd.get("product")),
       hsn_code: cleanText(fd.get("hsn_code")),
       free_days_text: cleanText(fd.get("free_days_text")),
-      detention_text: cleanText(fd.get("detention_text"))
+      detention_text: cleanText(fd.get("detention_text")),
+      other_instructions: cleanText(fd.get("other_instructions"))
     });
 
     const deal = getDealById(fd.get("deal_id"));
@@ -954,14 +978,17 @@ function bindShippingInstructionForm() {
     const fd = new FormData(form);
     const shipper = getShipperOptions()[Number(fd.get("shipper_index"))] || {};
     const buyer = getBuyerById(fd.get("buyer_id")) || {};
+    const supplier = state.suppliers.find((s) => String(s.id) === String(fd.get("supplier_id"))) || {};
 
     const text = buildShippingInstructionText({
       shipper,
       buyer,
+      supplier_name: supplier.name || "",
       product: cleanText(fd.get("product")),
       hsn_code: cleanText(fd.get("hsn_code")),
       free_days_text: cleanText(fd.get("free_days_text")),
-      detention_text: cleanText(fd.get("detention_text"))
+      detention_text: cleanText(fd.get("detention_text")),
+      other_instructions: cleanText(fd.get("other_instructions"))
     });
 
     sendShippingInstructionToWhatsApp(text);
@@ -973,15 +1000,19 @@ async function saveShippingInstruction(e) {
   e.preventDefault();
 
   const fd = new FormData(e.target);
+  const supplier = state.suppliers.find((s) => String(s.id) === String(fd.get("supplier_id")));
 
   const payload = {
     shipper_index: cleanText(fd.get("shipper_index")) === "" ? null : Number(fd.get("shipper_index")),
     buyer_id: cleanText(fd.get("buyer_id")) === "" ? null : Number(fd.get("buyer_id")),
+    supplier_id: cleanText(fd.get("supplier_id")) === "" ? null : Number(fd.get("supplier_id")),
+    supplier_name: supplier?.name || "",
     deal_id: cleanText(fd.get("deal_id")) === "" ? null : Number(fd.get("deal_id")),
     product: cleanText(fd.get("product")),
     hsn_code: cleanText(fd.get("hsn_code")),
     free_days_text: cleanText(fd.get("free_days_text")),
-    detention_text: cleanText(fd.get("detention_text"))
+    detention_text: cleanText(fd.get("detention_text")),
+    other_instructions: cleanText(fd.get("other_instructions"))
   };
 
   const { error } = await supabase.from("shipping_instructions").insert(payload);
@@ -1707,11 +1738,11 @@ async function saveCompanySettings(e) {
     mobile: state.company.mobile || "+971524396170",
     email: state.company.email || "info@jkpetrochem.com",
     bank_accounts: Array.isArray(state.company.bankAccounts)
-  ? state.company.bankAccounts
-  : [],
-shippers: Array.isArray(state.company.shippers)
-  ? state.company.shippers
-  : []
+      ? state.company.bankAccounts
+      : [],
+    shippers: Array.isArray(state.company.shippers)
+      ? state.company.shippers
+      : []
   };
 
   const { data, error } = await supabase
@@ -1733,7 +1764,8 @@ shippers: Array.isArray(state.company.shippers)
     address: data.address || "",
     mobile: data.mobile || "",
     email: data.email || "",
-    bankAccounts: Array.isArray(data.bank_accounts) ? data.bank_accounts : []
+    bankAccounts: Array.isArray(data.bank_accounts) ? data.bank_accounts : [],
+    shippers: Array.isArray(data.shippers) ? data.shippers : []
   };
 
   alert("Saved successfully ✅");
