@@ -6,6 +6,7 @@ const state = {
   buyers: [],
   suppliers: [],
   shippingInstructions: [],
+  products: [],
   deals: [],
   dealSearch: "",
   buyerSearch: "",
@@ -1034,14 +1035,82 @@ async function loadShippingInstructions() {
 
   state.shippingInstructions = data || [];
 }
+async function loadProducts() {
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  state.products = data || [];
+}
+function productsView() {
+  return `
+    <div class="card">
+      <div class="title" style="margin-bottom:12px">Products</div>
+
+      <form id="product-form" class="item" style="margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Product Name</label>
+            <input name="name" placeholder="Product name" required>
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">HSN Code</label>
+            <input name="hsn_code" placeholder="HSN Code">
+          </div>
+
+          <button type="submit" style="background:#d4a646;color:#fff;border:none">Save Product</button>
+        </div>
+      </form>
+
+      <div class="list">
+        ${
+          state.products.length
+            ? state.products.map((p) => `
+              <div class="item">
+                <div class="item-title">${esc(p.name || "—")}</div>
+                <div class="item-sub">HSN: ${esc(p.hsn_code || "—")}</div>
+              </div>
+            `).join("")
+            : `<div class="empty">No products saved yet.</div>`
+        }
+      </div>
+    </div>
+  `;
+}
+async function saveProduct(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+
+  const payload = {
+    name: cleanText(fd.get("name")),
+    hsn_code: cleanText(fd.get("hsn_code"))
+  };
+
+  const { error } = await supabase.from("products").insert(payload);
+  if (error) return alert(error.message);
+
+  alert("Product saved successfully ✅");
+  e.target.reset();
+  await loadProducts();
+  render();
+}
+
 function render() {
   if (state.page === "dashboard") content.innerHTML = dashboardView();
   if (state.page === "buyers") content.innerHTML = buyersView();
   if (state.page === "suppliers") content.innerHTML = suppliersView();
   if (state.page === "deals") content.innerHTML = dealsView();
   if (state.page === "dealDetail") content.innerHTML = dealDetailView();
-  if (state.page === "settings") content.innerHTML = settingsView();
   if (state.page === "shippingInstructions") content.innerHTML = shippingInstructionsView();
+  if (state.page === "products") content.innerHTML = productsView();
+  if (state.page === "settings") content.innerHTML = settingsView();
   bindUI();
 }
 
@@ -1055,6 +1124,7 @@ function bindUI() {
   document.getElementById("add-bank-btn")?.addEventListener("click", addBankAccount);
   document.getElementById("add-shipper-btn")?.addEventListener("click", addShipper);
   document.getElementById("export-deals-csv")?.addEventListener("click", exportDealsCsv);
+  document.getElementById("product-form")?.addEventListener("submit", saveProduct);
 
   document.querySelectorAll("[data-delete-bank]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -1063,13 +1133,14 @@ function bindUI() {
       render();
     });
   });
+
   document.querySelectorAll("[data-delete-shipper]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const index = Number(btn.dataset.deleteShipper);
-    state.company.shippers.splice(index, 1);
-    render();
+    btn.addEventListener("click", () => {
+      const index = Number(btn.dataset.deleteShipper);
+      state.company.shippers.splice(index, 1);
+      render();
+    });
   });
-});
 
   document.getElementById("deal-search")?.addEventListener("input", (e) => {
     state.dealSearch = e.target.value;
@@ -2429,6 +2500,7 @@ async function loadSupabaseData() {
 
     await loadCompanySettings();
     await loadShippingInstructions();
+    await loadProducts();
 
     state.error = "";
     state.ready = true;
