@@ -5,6 +5,7 @@ const state = {
   page: "dashboard",
   buyers: [],
   suppliers: [],
+  shippingInstructions: [],
   deals: [],
   dealSearch: "",
   buyerSearch: "",
@@ -134,7 +135,65 @@ function formatAuditTime(ts) {
   if (Number.isNaN(d.getTime())) return ts;
   return d.toLocaleString("en-IN");
 }
+function getShipperOptions() {
+  return state.company.shippers || [];
+}
 
+function getBuyerById(id) {
+  return state.buyers.find((b) => String(b.id) === String(id)) || null;
+}
+
+function getDealById(id) {
+  return state.deals.find((d) => String(d.id) === String(id)) || null;
+}
+
+function buildShippingInstructionText(values) {
+  const shipper = values.shipper || {};
+  const buyer = values.buyer || {};
+
+  return `SHIPPER:
+
+${shipper.name || ""}
+
+${shipper.address || ""}
+
+${shipper.mobile ? `TEL: ${shipper.mobile}` : ""}
+${shipper.email ? `EMAIL: ${shipper.email}` : ""}
+
+CONSIGNEE:
+
+${buyer.name || ""}
+
+${buyer.address || ""}
+
+IEC: ${buyer.iec || ""}
+GST: ${buyer.gst || ""}
+PAN: ${buyer.pan || ""}
+TEL: ${buyer.phone || ""}
+EMAIL: ${buyer.email || ""}
+
+PRODUCT: ${values.product || ""}
+HSN CODE: ${values.hsn_code || ""}
+
+${values.free_days_text || ""}
+${values.detention_text || ""}`.replace(/\n{3,}/g, "\n\n");
+}
+
+function downloadShippingInstruction(text, fileName = "shipping-instruction.txt") {
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function sendShippingInstructionToWhatsApp(text) {
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+}
 function bindDealAutoTotal(edit = false, id = "") {
   const qtyEl = document.getElementById(edit ? `quantity-${id}` : "quantity");
   const rateEl = document.getElementById(edit ? `rate-${id}` : "rate");
@@ -776,6 +835,174 @@ function settingsView() {
     </div>
   `;
 }
+function shippingInstructionsView() {
+  const shippers = getShipperOptions();
+  const buyers = state.buyers || [];
+  const deals = state.deals || [];
+
+  return `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div class="title" style="margin-bottom:0">Shipping Instructions</div>
+      </div>
+
+      <form id="shipping-instruction-form" class="item" style="margin-top:12px">
+        <div style="display:grid;gap:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Shipper</label>
+              <select name="shipper_index" id="si-shipper">
+                <option value="">Select shipper</option>
+                ${shippers.map((s, i) => `
+                  <option value="${i}">${esc(s.name || "Shipper")} - ${esc(s.mobile || "")}</option>
+                `).join("")}
+              </select>
+            </div>
+
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Buyer / Consignee</label>
+              <select name="buyer_id" id="si-buyer">
+                <option value="">Select buyer</option>
+                ${buyers.map((b) => `
+                  <option value="${b.id}">${esc(b.name || "Buyer")}</option>
+                `).join("")}
+              </select>
+            </div>
+
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Deal</label>
+              <select name="deal_id" id="si-deal">
+                <option value="">Select deal</option>
+                ${deals.map((d) => `
+                  <option value="${d.id}">${esc(d.deal_no || "—")} - ${esc(d.product_name || "")}</option>
+                `).join("")}
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Product</label>
+              <input name="product" id="si-product" placeholder="Product">
+            </div>
+
+            <div>
+              <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">HSN Code</label>
+              <input name="hsn_code" id="si-hsn" placeholder="HSN Code">
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Free Days Text</label>
+            <input name="free_days_text" value="21 FREE DAYS AT POD">
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Detention Text</label>
+            <input name="detention_text" value="THEREAFTER USD 25/ DAY/TANK">
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button type="submit" style="background:#d4a646;color:#fff;border:none">Save</button>
+            <button type="button" id="download-shipping-instruction">Download</button>
+            <button type="button" id="whatsapp-shipping-instruction">Send to WhatsApp</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  `;
+}
+function bindShippingInstructionForm() {
+  const form = document.getElementById("shipping-instruction-form");
+  if (!form) return;
+
+  const shipperEl = document.getElementById("si-shipper");
+  const buyerEl = document.getElementById("si-buyer");
+  const dealEl = document.getElementById("si-deal");
+  const productEl = document.getElementById("si-product");
+  const hsnEl = document.getElementById("si-hsn");
+
+  dealEl?.addEventListener("change", () => {
+    const deal = getDealById(dealEl.value);
+    if (!deal) return;
+
+    if (productEl && !productEl.value) productEl.value = deal.product_name || "";
+    if (hsnEl && !hsnEl.value) hsnEl.value = deal.hsn_code || "";
+    if (buyerEl && !buyerEl.value && deal.buyer_id) buyerEl.value = String(deal.buyer_id);
+  });
+
+  document.getElementById("download-shipping-instruction")?.addEventListener("click", () => {
+    const fd = new FormData(form);
+    const shipper = getShipperOptions()[Number(fd.get("shipper_index"))] || {};
+    const buyer = getBuyerById(fd.get("buyer_id")) || {};
+
+    const text = buildShippingInstructionText({
+      shipper,
+      buyer,
+      product: cleanText(fd.get("product")),
+      hsn_code: cleanText(fd.get("hsn_code")),
+      free_days_text: cleanText(fd.get("free_days_text")),
+      detention_text: cleanText(fd.get("detention_text"))
+    });
+
+    const deal = getDealById(fd.get("deal_id"));
+    const fileName = deal?.deal_no ? `${deal.deal_no}-shipping-instruction.txt` : "shipping-instruction.txt";
+    downloadShippingInstruction(text, fileName);
+  });
+
+  document.getElementById("whatsapp-shipping-instruction")?.addEventListener("click", () => {
+    const fd = new FormData(form);
+    const shipper = getShipperOptions()[Number(fd.get("shipper_index"))] || {};
+    const buyer = getBuyerById(fd.get("buyer_id")) || {};
+
+    const text = buildShippingInstructionText({
+      shipper,
+      buyer,
+      product: cleanText(fd.get("product")),
+      hsn_code: cleanText(fd.get("hsn_code")),
+      free_days_text: cleanText(fd.get("free_days_text")),
+      detention_text: cleanText(fd.get("detention_text"))
+    });
+
+    sendShippingInstructionToWhatsApp(text);
+  });
+
+  form.addEventListener("submit", saveShippingInstruction);
+}
+async function saveShippingInstruction(e) {
+  e.preventDefault();
+
+  const fd = new FormData(e.target);
+
+  const payload = {
+    shipper_index: cleanText(fd.get("shipper_index")) === "" ? null : Number(fd.get("shipper_index")),
+    buyer_id: cleanText(fd.get("buyer_id")) === "" ? null : Number(fd.get("buyer_id")),
+    deal_id: cleanText(fd.get("deal_id")) === "" ? null : Number(fd.get("deal_id")),
+    product: cleanText(fd.get("product")),
+    hsn_code: cleanText(fd.get("hsn_code")),
+    free_days_text: cleanText(fd.get("free_days_text")),
+    detention_text: cleanText(fd.get("detention_text"))
+  };
+
+  const { error } = await supabase.from("shipping_instructions").insert(payload);
+  if (error) return alert(error.message);
+
+  alert("Shipping instruction saved successfully ✅");
+  await loadShippingInstructions();
+}
+async function loadShippingInstructions() {
+  const { data, error } = await supabase
+    .from("shipping_instructions")
+    .select("*")
+    .order("id", { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  state.shippingInstructions = data || [];
+}
 function render() {
   if (state.page === "dashboard") content.innerHTML = dashboardView();
   if (state.page === "buyers") content.innerHTML = buyersView();
@@ -783,6 +1010,7 @@ function render() {
   if (state.page === "deals") content.innerHTML = dealsView();
   if (state.page === "dealDetail") content.innerHTML = dealDetailView();
   if (state.page === "settings") content.innerHTML = settingsView();
+  if (state.page === "shippingInstructions") content.innerHTML = shippingInstructionsView();
   bindUI();
 }
 
@@ -898,6 +1126,7 @@ function bindUI() {
 
   bindBankInputs();
   bindShipperInputs();
+  bindShippingInstructionForm();
 }
 
 function buyerFormHtml(b = {}, edit = false, id = "") {
@@ -2167,6 +2396,7 @@ async function loadSupabaseData() {
     state.auditLogsByEntity = groupedAudit;
 
     await loadCompanySettings();
+    await loadShippingInstructions();
 
     state.error = "";
     state.ready = true;
