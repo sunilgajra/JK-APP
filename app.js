@@ -1206,12 +1206,12 @@ function bindProductSelectors() {
       if (!form) return;
 
       const hsnInput = form.querySelector('input[name="hsn_code"]');
-      const selectedOption = select.options[select.selectedIndex];
-      const hsn = selectedOption?.dataset?.hsn || "";
+      if (!hsnInput) return;
 
-      if (hsnInput) {
-        hsnInput.value = hsn;
-      }
+      const selectedOption = select.options[select.selectedIndex];
+      const hsn = selectedOption?.getAttribute("data-hsn") || "";
+
+      hsnInput.value = hsn;
     });
   });
 }
@@ -1819,6 +1819,7 @@ function showDealForm() {
   document.getElementById("deal-form").addEventListener("submit", saveDeal);
   document.getElementById("cancel-deal-form").addEventListener("click", () => (wrap.innerHTML = ""));
   bindDealAutoTotal(false);
+  bindProductSelectors();
 }
 
 function showEditBuyerForm(id) {
@@ -1847,6 +1848,7 @@ function showEditDealForm(id) {
   document.getElementById(`deal-edit-form-${id}`).addEventListener("submit", (e) => updateDeal(e, id));
   document.getElementById(`cancel-deal-edit-${id}`)?.addEventListener("click", () => (wrap.innerHTML = ""));
   bindDealAutoTotal(true, id);
+  bindProductSelectors();
 }
 
 function showPaymentForm(dealId) {
