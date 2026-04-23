@@ -13,7 +13,7 @@ import { settingsView } from "./settings.js";
 import { shippingInstructionsView } from "./shipping.js";
 import { productsView, productEditFormHtml } from "./products.js";
 
-console.log("APP STARTING - VERSION 8");
+console.log("APP STARTING - VERSION 9");
 
 const content = document.getElementById("content");
 
@@ -638,11 +638,16 @@ function bindShippingInstructionForm() {
 async function saveShippingInstruction(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
+  const getVal = (k) => {
+    const v = fd.get(k);
+    return v && v.trim() !== "" ? parseInt(v, 10) : null;
+  };
+
   const { error } = await supabase.from("shipping_instructions").insert({
-    shipper_index: fd.get("shipper_index"),
-    buyer_id: fd.get("buyer_id"),
-    deal_id: fd.get("deal_id"),
-    supplier_id: fd.get("supplier_id"),
+    shipper_index: getVal("shipper_index"),
+    buyer_id: getVal("buyer_id"),
+    deal_id: getVal("deal_id"),
+    supplier_id: getVal("supplier_id"),
     product: fd.get("product"),
     hsn_code: fd.get("hsn_code"),
     free_days_text: fd.get("free_days_text"),
@@ -658,19 +663,69 @@ async function saveShippingInstruction(e) {
 
 function whatsappShippingInstruction() {
   const fd = new FormData(document.getElementById("shipping-instruction-form"));
-  const text = `*SHIPPING INSTRUCTIONS*\n\nProduct: ${fd.get("product")}\nHSN: ${fd.get("hsn_code")}\nFree Days: ${fd.get("free_days_text")}\n\n${fd.get("other_instructions")}`;
+  const buyer = getBuyerById(fd.get("buyer_id"))?.name || "—";
+  const supplier = state.suppliers.find(s => String(s.id) === String(fd.get("supplier_id")))?.name || "—";
+  const deal = getDealById(fd.get("deal_id"))?.deal_no || "—";
+
+  const shipperIdx = fd.get("shipper_index");
+  const shipper = state.company.shippers?.[shipperIdx] || state.company;
+
+  const text = `*SHIPPING INSTRUCTIONS*
+  
+*Deal No:* ${deal}
+*Shipper:* ${shipper.name || "—"} (${shipper.mobile || ""})
+*Buyer:* ${buyer}
+*Supplier:* ${supplier}
+
+*Product:* ${fd.get("product")}
+*HSN:* ${fd.get("hsn_code")}
+
+*Free Days:* ${fd.get("free_days_text")}
+*Detention:* ${fd.get("detention_text")}
+
+*Other Instructions:*
+${fd.get("other_instructions")}
+
+Generated via JK Trade Manager`;
+
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
 }
 
 function downloadShippingInstruction() {
   const fd = new FormData(document.getElementById("shipping-instruction-form"));
-  const si = Object.fromEntries(fd.entries());
-  const buyer = getBuyerById(si.buyer_id);
-  const supplier = state.suppliers.find(s => String(s.id) === String(si.supplier_id));
-  const deal = getDealById(si.deal_id);
-  
-  const html = buildShippingInstruction(si, buyer, supplier, deal, state.company);
-  openPrintWindow(html);
+  const buyer = getBuyerById(fd.get("buyer_id"))?.name || "—";
+  const supplier = state.suppliers.find(s => String(s.id) === String(fd.get("supplier_id")))?.name || "—";
+  const deal = getDealById(fd.get("deal_id"))?.deal_no || "—";
+
+  const shipperIdx = fd.get("shipper_index");
+  const shipper = state.company.shippers?.[shipperIdx] || state.company;
+
+  const text = `SHIPPING INSTRUCTIONS
+
+Deal No: ${deal}
+Shipper: ${shipper.name || "—"} (${shipper.mobile || ""})
+Buyer: ${buyer}
+Supplier: ${supplier}
+
+Product: ${fd.get("product")}
+HSN: ${fd.get("hsn_code")}
+
+Free Days: ${fd.get("free_days_text")}
+Detention: ${fd.get("detention_text")}
+
+Other Instructions:
+${fd.get("other_instructions")}
+
+-------------------------------
+Generated via JK Trade Manager`;
+
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `shipping-instruction-${deal}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // Document Actions
