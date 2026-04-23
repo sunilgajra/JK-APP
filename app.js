@@ -13,7 +13,7 @@ import { settingsView } from "./settings.js";
 import { shippingInstructionsView } from "./shipping.js";
 import { productsView, productEditFormHtml } from "./products.js";
 
-console.log("APP STARTING - VERSION 9");
+console.log("APP STARTING - VERSION 10");
 
 const content = document.getElementById("content");
 
@@ -663,18 +663,27 @@ async function saveShippingInstruction(e) {
 
 function whatsappShippingInstruction() {
   const fd = new FormData(document.getElementById("shipping-instruction-form"));
-  const buyer = getBuyerById(fd.get("buyer_id"))?.name || "—";
+  const shipperIdx = fd.get("shipper_index");
+  const shipper = state.company.shippers?.[shipperIdx] || state.company;
+  const b = getBuyerById(fd.get("buyer_id"));
   const supplier = state.suppliers.find(s => String(s.id) === String(fd.get("supplier_id")))?.name || "—";
   const deal = getDealById(fd.get("deal_id"))?.deal_no || "—";
 
-  const shipperIdx = fd.get("shipper_index");
-  const shipper = state.company.shippers?.[shipperIdx] || state.company;
-
   const text = `*SHIPPING INSTRUCTIONS*
   
+*SHIPPER DETAILS:*
+${shipper.name || "—"}
+${shipper.address || "—"}
+Mobile: ${shipper.mobile || "—"}
+Email: ${shipper.email || "—"}
+
+*CONSIGNEE DETAILS:*
+${b?.name || "—"}
+${b?.address || "—"}
+GST: ${b?.gst || "—"}
+IEC: ${b?.iec || "—"}
+
 *Deal No:* ${deal}
-*Shipper:* ${shipper.name || "—"} (${shipper.mobile || ""})
-*Buyer:* ${buyer}
 *Supplier:* ${supplier}
 
 *Product:* ${fd.get("product")}
@@ -693,18 +702,27 @@ Generated via JK Trade Manager`;
 
 function downloadShippingInstruction() {
   const fd = new FormData(document.getElementById("shipping-instruction-form"));
-  const buyer = getBuyerById(fd.get("buyer_id"))?.name || "—";
+  const shipperIdx = fd.get("shipper_index");
+  const shipper = state.company.shippers?.[shipperIdx] || state.company;
+  const b = getBuyerById(fd.get("buyer_id"));
   const supplier = state.suppliers.find(s => String(s.id) === String(fd.get("supplier_id")))?.name || "—";
   const deal = getDealById(fd.get("deal_id"))?.deal_no || "—";
 
-  const shipperIdx = fd.get("shipper_index");
-  const shipper = state.company.shippers?.[shipperIdx] || state.company;
-
   const text = `SHIPPING INSTRUCTIONS
 
+SHIPPER DETAILS:
+${shipper.name || "—"}
+${shipper.address || "—"}
+Mobile: ${shipper.mobile || "—"}
+Email: ${shipper.email || "—"}
+
+CONSIGNEE DETAILS:
+${b?.name || "—"}
+${b?.address || "—"}
+GST: ${b?.gst || "—"}
+IEC: ${b?.iec || "—"}
+
 Deal No: ${deal}
-Shipper: ${shipper.name || "—"} (${shipper.mobile || ""})
-Buyer: ${buyer}
 Supplier: ${supplier}
 
 Product: ${fd.get("product")}
