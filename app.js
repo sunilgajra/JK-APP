@@ -2,6 +2,7 @@ import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./document
 import { supabase } from "./supabase.js";
 
 const state = {
+  authUser: null,
   page: "dashboard",
   buyers: [],
   suppliers: [],
@@ -1017,6 +1018,51 @@ function bindShippingInstructionForm() {
 
   form.addEventListener("submit", saveShippingInstruction);
 }
+async function loginUser(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+
+  const email = String(fd.get("email") || "").trim();
+  const password = String(fd.get("password") || "").trim();
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  state.authUser = data.user || null;
+  await loadSupabaseData();
+}
+async function logoutUser() {
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  state.authUser = null;
+  render();
+}
+async function loadSession() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  state.authUser = data.session?.user || null;
+
+  if (state.authUser) {
+    await loadSupabaseData();
+  } else {
+    render();
+  }
+}
 async function saveShippingInstruction(e) {
   e.preventDefault();
 
@@ -1216,6 +1262,12 @@ function bindProductSelectors() {
   });
 }
 function render() {
+  if (!state.authUser) {
+    content.innerHTML = loginView();
+    bindUI();
+    return;
+  }
+
   if (state.page === "dashboard") content.innerHTML = dashboardView();
   if (state.page === "buyers") content.innerHTML = buyersView();
   if (state.page === "suppliers") content.innerHTML = suppliersView();
@@ -1228,6 +1280,8 @@ function render() {
 }
 
 function bindUI() {
+  document.getElementById("login-form")?.addEventListener("submit", loginUser);
+  document.getElementById("logout-btn")?.addEventListener("click", logoutUser);
   document.getElementById("show-buyer-form")?.addEventListener("click", showBuyerForm);
   document.getElementById("show-supplier-form")?.addEventListener("click", showSupplierForm);
   document.getElementById("show-deal-form")?.addEventListener("click", showDealForm);
@@ -1795,7 +1849,29 @@ function dealFormHtml(d = {}, edit = false, id = "") {
     </form>
   `;
 }
+function loginView() {
+  return `
+    <div class="card" style="max-width:420px;margin:40px auto">
+      <div class="title" style="margin-bottom:12px">Login</div>
 
+      <form id="login-form" class="item">
+        <div style="display:grid;gap:10px">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Email</label>
+            <input name="email" type="email" placeholder="Email" required>
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Password</label>
+            <input name="password" type="password" placeholder="Password" required>
+          </div>
+
+          <button type="submit" style="background:#d4a646;color:#fff;border:none">Login</button>
+        </div>
+      </form>
+    </div>
+  `;
+}
 function showBuyerForm() {
   const wrap = document.getElementById("buyer-form-wrap");
   if (!wrap) return;
@@ -1811,7 +1887,20 @@ function showSupplierForm() {
   document.getElementById("supplier-form").addEventListener("submit", saveSupplier);
   document.getElementById("cancel-supplier-form").addEventListener("click", () => (wrap.innerHTML = ""));
 }
+function bindDealProductHsn(edit = false, id = "") {
+  const productEl = document.getElementById(edit ? `product-name-${id}` : "product-name");
+  const hsnEl = document.getElementById(edit ? `hsn-code-${id}` : "hsn-code");
 
+  if (!productEl || !hsnEl) return;
+
+  function syncHsn() {
+    const selectedOption = productEl.options[productEl.selectedIndex];
+    const hsn = selectedOption?.getAttribute("data-hsn") || "";
+    hsnEl.value = hsn;
+  }
+
+  productEl.addEventListener("change", syncHsn);
+}
 function showDealForm() {
   const wrap = document.getElementById("deal-form-wrap");
   if (!wrap) return;
@@ -1819,7 +1908,7 @@ function showDealForm() {
   document.getElementById("deal-form").addEventListener("submit", saveDeal);
   document.getElementById("cancel-deal-form").addEventListener("click", () => (wrap.innerHTML = ""));
   bindDealAutoTotal(false);
-  bindProductSelectors();
+  bindDealProductHsn(false);
 }
 
 function showEditBuyerForm(id) {
@@ -1848,7 +1937,7 @@ function showEditDealForm(id) {
   document.getElementById(`deal-edit-form-${id}`).addEventListener("submit", (e) => updateDeal(e, id));
   document.getElementById(`cancel-deal-edit-${id}`)?.addEventListener("click", () => (wrap.innerHTML = ""));
   bindDealAutoTotal(true, id);
-  bindProductSelectors();
+  bindDealProductHsn(true, id);
 }
 
 function showPaymentForm(dealId) {
@@ -2721,5 +2810,4 @@ function exportDealsCsv() {
   URL.revokeObjectURL(url);
 }
 
-render();
-loadSupabaseData();
+loadSession();
