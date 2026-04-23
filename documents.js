@@ -77,6 +77,75 @@ function amountWords(n) {
   return out.join(" ").trim();
 }
 
+function buildShippingInstruction(si, buyer, supplier, deal, company = {}) {
+  const date = new Date().toISOString();
+  const shipper = company.shippers?.[si.shipper_index] || company;
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Shipping Instruction</title>
+    ${commonStyle()}
+    ${previewScript()}
+  </head>
+  <body>
+    ${previewActions()}
+    <div class="top">
+      <div class="panel">
+        <div class="bar">Shipper</div>
+        <div class="panelBody tight">
+          <div><b>${esc(shipper.name || company.name)}</b></div>
+          <div>${esc(shipper.address || company.address)}</div>
+          <div>Mobil ${esc(shipper.mobile || company.mobile)}</div>
+          <div>Email: ${esc(shipper.email || company.email)}</div>
+        </div>
+      </div>
+      ${logoBlock()}
+      <div class="docTitle">SHIPPING INSTRUCTION</div>
+    </div>
+
+    <div class="triple">
+      <div class="panel">
+        <div class="bar">Buyer / Consignee</div>
+        <div class="panelBody tight">
+          <div><b>${esc(buyer?.name || "—")}</b></div>
+          <div>${esc(buyer?.address || "")}</div>
+          <div>GST: ${esc(buyer?.gst || "—")}</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="bar">Supplier</div>
+        <div class="panelBody tight">
+          <div><b>${esc(supplier?.name || "—")}</b></div>
+          <div>${esc(supplier?.company_name || "")}</div>
+          <div>Country: ${esc(supplier?.country || "")}</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="bar">Deal Info</div>
+        <div class="panelBody tight">
+          <div><b>Deal No:</b> ${esc(deal?.deal_no || "—")}</div>
+          <div><b>Product:</b> ${esc(si.product || "—")}</div>
+          <div><b>HSN:</b> ${esc(si.hsn_code || "—")}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="box" style="margin-top:20px">
+      <div class="boxHead">Instruction Details</div>
+      <div class="boxBody" style="font-size:12px; line-height:1.6">
+        <p><b>Free Days:</b> ${esc(si.free_days_text || "21 FREE DAYS AT POD")}</p>
+        <p><b>Detention:</b> ${esc(si.detention_text || "THEREAFTER USD 25/ DAY/TANK")}</p>
+        <div style="margin-top:20px; white-space:pre-wrap"><b>Other Instructions:</b>\n${esc(si.other_instructions || "")}</div>
+      </div>
+    </div>
+
+    ${footer(company, date)}
+  </body>
+  </html>`;
+}
+
 function docCurrency(deal = {}) {
   return deal.document_currency || deal.currency || deal.base_currency || "AED";
 }

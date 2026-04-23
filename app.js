@@ -1,4 +1,4 @@
-import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js";
+import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildShippingInstruction } from "./documents.js";
 import { supabase } from "./supabase.js";
 import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal } from "./state.js";
 import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js";
@@ -535,6 +535,7 @@ function showDealForm() {
   document.getElementById("deal-form").addEventListener("submit", saveDeal);
   document.getElementById("cancel-deal-form").addEventListener("click", () => wrap.innerHTML = "");
   bindDealAutoTotal();
+  bindProductHsnLookup();
 }
 function showEditDealForm(id) {
   const d = state.deals.find(x => String(x.id) === String(id));
@@ -544,6 +545,7 @@ function showEditDealForm(id) {
   document.getElementById(`deal-edit-form-${id}`).addEventListener("submit", (e) => updateDeal(e, id));
   document.getElementById(`cancel-deal-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
   bindDealAutoTotal(id);
+  bindProductHsnLookup(id);
 }
 
 function bindDealAutoTotal(id = null) {
@@ -660,7 +662,16 @@ function whatsappShippingInstruction() {
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
 }
 
-function downloadShippingInstruction() { alert("Download feature coming soon!"); }
+function downloadShippingInstruction() {
+  const fd = new FormData(document.getElementById("shipping-instruction-form"));
+  const si = Object.fromEntries(fd.entries());
+  const buyer = getBuyerById(si.buyer_id);
+  const supplier = state.suppliers.find(s => String(s.id) === String(si.supplier_id));
+  const deal = getDealById(si.deal_id);
+  
+  const html = buildShippingInstruction(si, buyer, supplier, deal, state.company);
+  openPrintWindow(html);
+}
 
 // Document Actions
 async function saveDealDocument(e) {
@@ -702,14 +713,15 @@ function exportDealsCsv() {
   a.click();
 }
 
-function bindProductHsnLookup() {
-  document.querySelectorAll("[id^='product-name']").forEach(select => {
-    select.addEventListener("change", (e) => {
-      const hsn = e.target.selectedOptions[0]?.dataset.hsn || "";
-      const id = e.target.id.replace("product-name", "");
-      const hsnInput = document.getElementById("hsn-code" + id);
-      if (hsnInput) hsnInput.value = hsn;
-    });
+function bindProductHsnLookup(id = null) {
+  const suffix = id ? `-${id}` : "";
+  const select = document.getElementById(`product-name${suffix}`);
+  if (!select) return;
+
+  select.addEventListener("change", (e) => {
+    const hsn = e.target.selectedOptions[0]?.dataset.hsn || "";
+    const hsnInput = document.getElementById(`hsn-code${suffix}`);
+    if (hsnInput) hsnInput.value = hsn;
   });
 }
 
