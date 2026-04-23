@@ -77,7 +77,7 @@ function amountWords(n) {
   return out.join(" ").trim();
 }
 
-function buildShippingInstruction(si, buyer, supplier, deal, company = {}) {
+export function buildShippingInstruction(si, buyer, supplier, deal, company = {}) {
   const date = new Date().toISOString();
   const shipper = company.shippers?.[si.shipper_index] || company;
 
