@@ -2603,8 +2603,9 @@ async function loadSupabaseData() {
     state.auditLogsByEntity = groupedAudit;
 
     await loadCompanySettings();
-    await loadShippingInstructions();
-    await loadProducts();
+
+    try { await loadProducts(); } catch (e) { console.error("loadProducts failed", e); state.products = []; }
+    try { await loadShippingInstructions(); } catch (e) { console.error("loadShippingInstructions failed", e); state.shippingInstructions = []; }
 
     state.error = "";
     state.ready = true;
