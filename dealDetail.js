@@ -1,5 +1,5 @@
-import { state, getSelectedDeal, paymentsForDeal, documentsForDeal, paymentSummary, dealAuditLogs } from "../state.js";
-import { esc, formatAuditValue, formatAuditTime } from "../utils.js";
+import { state, getSelectedDeal, paymentsForDeal, documentsForDeal, paymentSummary, dealAuditLogs } from "./state.js";
+import { esc, formatAuditValue, formatAuditTime } from "./utils.js";
 
 export function dealDetailView() {
   const d = getSelectedDeal();

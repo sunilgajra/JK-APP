@@ -1,5 +1,5 @@
-import { state } from "../state.js";
-import { esc } from "../utils.js";
+import { state } from "./state.js";
+import { esc } from "./utils.js";
 
 export function suppliersView() {
   const q = state.supplierSearch.trim().toLowerCase();

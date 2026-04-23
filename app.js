@@ -1,18 +1,17 @@
-import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js?v=5";
-import { supabase } from "./supabase.js?v=5";
-import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal } from "./state.js?v=5";
-import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js?v=5";
+import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js?v=7";
+import { supabase } from "./supabase.js?v=7";
+import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal } from "./state.js?v=7";
+import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js?v=7";
 
-// Import Views with versioning to bust cache
-const v = "5";
-import { dashboardView } from "./views/dashboard.js?v=5";
-import { buyersView, buyerFormHtml } from "./views/buyers.js?v=5";
-import { suppliersView, supplierFormHtml } from "./views/suppliers.js?v=5";
-import { dealsView, dealFormHtml } from "./views/deals.js?v=5";
-import { dealDetailView } from "./views/dealDetail.js?v=5";
-import { settingsView } from "./views/settings.js?v=5";
-import { shippingInstructionsView } from "./views/shipping.js?v=5";
-import { productsView, productEditFormHtml } from "./views/products.js?v=5";
+// Import Views (Now from the root folder)
+import { dashboardView } from "./dashboard.js?v=7";
+import { buyersView, buyerFormHtml } from "./buyers.js?v=7";
+import { suppliersView, supplierFormHtml } from "./suppliers.js?v=7";
+import { dealsView, dealFormHtml } from "./deals.js?v=7";
+import { dealDetailView } from "./dealDetail.js?v=7";
+import { settingsView } from "./settings.js?v=7";
+import { shippingInstructionsView } from "./shipping.js?v=7";
+import { productsView, productEditFormHtml } from "./products.js?v=7";
 
 const content = document.getElementById("content");
 

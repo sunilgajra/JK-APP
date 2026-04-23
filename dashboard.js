@@ -1,5 +1,5 @@
-import { state, paymentsForDeal } from "../state.js";
-import { esc } from "../utils.js";
+import { state, paymentsForDeal } from "./state.js";
+import { esc } from "./utils.js";
 
 export function dashboardView() {
   const totalDeals = state.deals.length;

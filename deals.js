@@ -1,5 +1,5 @@
-import { state, buyerName, supplierName, paymentSummary, paymentsForDeal } from "../state.js";
-import { esc, nextDealNo } from "../utils.js";
+import { state, buyerName, supplierName, paymentSummary, paymentsForDeal } from "./state.js";
+import { esc, nextDealNo } from "./utils.js";
 
 export function dealsView() {
   const q = state.dealSearch.trim().toLowerCase();

@@ -1,5 +1,5 @@
-import { state, getShipperOptions } from "../state.js";
-import { esc } from "../utils.js";
+import { state, getShipperOptions } from "./state.js";
+import { esc } from "./utils.js";
 
 export function shippingInstructionsView() {
   const shippers = getShipperOptions();

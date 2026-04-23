@@ -1,5 +1,5 @@
-import { state } from "../state.js";
-import { esc, nextCustomerId } from "../utils.js";
+import { state } from "./state.js";
+import { esc, nextCustomerId } from "./utils.js";
 
 export function buyersView() {
   const q = state.buyerSearch.trim().toLowerCase();
