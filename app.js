@@ -13,7 +13,7 @@ import { settingsView } from "./settings.js";
 import { shippingInstructionsView } from "./shipping.js";
 import { productsView, productEditFormHtml } from "./products.js";
 
-console.log("APP STARTING - VERSION 10");
+console.log("APP STARTING - VERSION 11");
 
 const content = document.getElementById("content");
 
@@ -683,14 +683,11 @@ ${b?.address || "—"}
 GST: ${b?.gst || "—"}
 IEC: ${b?.iec || "—"}
 
-*Deal No:* ${deal}
-*Supplier:* ${supplier}
-
 *Product:* ${fd.get("product")}
 *HSN:* ${fd.get("hsn_code")}
 
-*Free Days:* ${fd.get("free_days_text")}
-*Detention:* ${fd.get("detention_text")}
+${fd.get("free_days_text")}
+${fd.get("detention_text")}
 
 *Other Instructions:*
 ${fd.get("other_instructions")}
@@ -722,14 +719,11 @@ ${b?.address || "—"}
 GST: ${b?.gst || "—"}
 IEC: ${b?.iec || "—"}
 
-Deal No: ${deal}
-Supplier: ${supplier}
-
 Product: ${fd.get("product")}
 HSN: ${fd.get("hsn_code")}
 
-Free Days: ${fd.get("free_days_text")}
-Detention: ${fd.get("detention_text")}
+${fd.get("free_days_text")}
+${fd.get("detention_text")}
 
 Other Instructions:
 ${fd.get("other_instructions")}
