@@ -1095,6 +1095,13 @@ function productsView() {
               <div class="item">
                 <div class="item-title">${esc(p.name || "—")}</div>
                 <div class="item-sub">HSN: ${esc(p.hsn_code || "—")}</div>
+
+                <div style="margin-top:8px;display:flex;gap:8px">
+                  <button data-edit-product="${p.id}">Edit</button>
+                  <button data-delete-product="${p.id}">Delete</button>
+                </div>
+
+                <div id="product-edit-wrap-${p.id}" style="margin-top:10px"></div>
               </div>
             `).join("")
             : `<div class="empty">No products saved yet.</div>`
@@ -1117,6 +1124,75 @@ async function saveProduct(e) {
 
   alert("Product saved successfully ✅");
   e.target.reset();
+  await loadProducts();
+  render();
+}
+
+function productEditFormHtml(p = {}) {
+  return `
+    <form data-product-edit-form="${p.id}" class="item">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px;align-items:end">
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Product Name</label>
+          <input name="name" value="${esc(p.name || "")}" required>
+        </div>
+
+        <div>
+          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">HSN Code</label>
+          <input name="hsn_code" value="${esc(p.hsn_code || "")}">
+        </div>
+
+        <button type="submit" style="background:#d4a646;color:#fff;border:none">Update</button>
+        <button type="button" data-cancel-product-edit="${p.id}">Cancel</button>
+      </div>
+    </form>
+  `;
+}
+
+function showEditProductForm(id) {
+  const product = state.products.find((p) => String(p.id) === String(id));
+  const wrap = document.getElementById(`product-edit-wrap-${id}`);
+  if (!product || !wrap) return;
+
+  wrap.innerHTML = productEditFormHtml(product);
+
+  wrap.querySelector(`[data-product-edit-form="${id}"]`)?.addEventListener("submit", (e) => updateProduct(e, id));
+  wrap.querySelector(`[data-cancel-product-edit="${id}"]`)?.addEventListener("click", () => {
+    wrap.innerHTML = "";
+  });
+}
+
+async function updateProduct(e, id) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+
+  const payload = {
+    name: cleanText(fd.get("name")),
+    hsn_code: cleanText(fd.get("hsn_code"))
+  };
+
+  const { error } = await supabase
+    .from("products")
+    .update(payload)
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+
+  alert("Product updated successfully ✅");
+  await loadProducts();
+  render();
+}
+
+async function deleteProduct(id) {
+  if (!confirm("Delete this product?")) return;
+
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+
   await loadProducts();
   render();
 }
@@ -1243,6 +1319,14 @@ function bindUI() {
 
   document.querySelectorAll("[data-print-coo]").forEach((btn) =>
     btn.addEventListener("click", () => printDoc("coo", btn.dataset.printCoo))
+  );
+  
+  document.querySelectorAll("[data-edit-product]").forEach((btn) =>
+    btn.addEventListener("click", () => showEditProductForm(btn.dataset.editProduct))
+  );
+  
+  document.querySelectorAll("[data-delete-product]").forEach((btn) =>
+    btn.addEventListener("click", () => deleteProduct(btn.dataset.deleteProduct))
   );
 
   bindBankInputs();
