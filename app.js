@@ -857,6 +857,7 @@ function shippingInstructionsView() {
 
       <form id="shipping-instruction-form" class="item" style="margin-top:12px">
         <div style="display:grid;gap:10px">
+
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
             <div>
               <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Shipper</label>
