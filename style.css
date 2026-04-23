@@ -199,16 +199,10 @@ button:active{
   transform:scale(.985);
 }
 
-.btn-primary,
-button[style*="#d4a646"]{
-  box-shadow:0 8px 20px rgba(212,166,70,.18);
-}
-
 @media (max-width:900px){
   .grid-2{
     grid-template-columns:1fr;
   }
-
   #content{
     padding:14px;
   }
@@ -218,29 +212,24 @@ button[style*="#d4a646"]{
   .hdr{
     padding:16px 14px 12px;
   }
-
   .hdr h1{
     font-size:16px;
   }
-
   .nav{
     top:66px;
     padding:10px 14px;
   }
-
   .card{
     padding:14px;
   }
-
   .item{
     padding:12px;
   }
-
   .stat-value{
     font-size:22px;
   }
 }
-/* Better form spacing */
+
 form.item{
   padding:16px;
 }
@@ -256,7 +245,6 @@ form button{
   min-height:40px;
 }
 
-/* Better buttons */
 button{
   border-radius:10px;
   font-weight:700;
@@ -292,33 +280,55 @@ button[data-delete-payment]{
   border:1px solid #991b1b !important;
 }
 
-/* Better inputs in forms */
 form input,
 form textarea,
 form select{
   margin:0;
 }
 
-/* Better spacing for stacked field groups */
 form > div,
 form .grid,
 form .list{
   gap:10px;
 }
 
-/* Detail page blocks */
 .item .item-title + .item-sub{
   margin-top:6px;
 }
 
-/* Search bar polish */
 #deal-search{
   font-size:13px;
   padding:12px 14px;
 }
 
-/* Form containers inside list cards */
-[id$="-form-wrap"],
-[id$="-edit-wrap"]{
+[id$='-form-wrap'],
+[id$='-edit-wrap']{
   margin-top:10px;
 }
+
+/* --- UTILITY --- */
+.flex { display: flex; }
+.flex-between { justify-content: space-between; }
+.flex-center { align-items: center; }
+.flex-wrap { flex-wrap: wrap; }
+.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.gap-8 { gap: 8px; }
+.gap-10 { gap: 10px; }
+.gap-12 { gap: 12px; }
+.mb-0 { margin-bottom: 0; }
+.mb-12 { margin-bottom: 12px; }
+.mt-8 { margin-top: 8px; }
+.mt-10 { margin-top: 10px; }
+.mt-12 { margin-top: 12px; }
+.mt-14 { margin-top: 14px; }
+.form-label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.form-header { font-weight: 800; margin-bottom: 12px; color: var(--accent); }
+.text-muted { color: var(--muted); }
+.text-xs { font-size: 12px; }
+.min-h-80 { min-height: 80px; }
+.min-h-90 { min-height: 90px; }
+.btn-primary { background: var(--accent) !important; color: #fff !important; border: none !important; box-shadow: 0 8px 20px rgba(212,166,70,.18); }
+.btn-info { background: #2563eb !important; color: #fff !important; border: none !important; }
+.btn-danger { background: #7f1d1d !important; color: #fff !important; border: 1px solid #991b1b !important; }
+.btn-outline { background: #0b1220 !important; color: #fff !important; border: 1px solid var(--border) !important; }

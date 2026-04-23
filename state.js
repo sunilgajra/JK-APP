@@ -1,0 +1,79 @@
+export const state = {
+  authUser: null,
+  page: "dashboard",
+  buyers: [],
+  suppliers: [],
+  shippingInstructions: [],
+  products: [],
+  deals: [],
+  dealSearch: "",
+  buyerSearch: "",
+  supplierSearch: "",
+  paymentsByDeal: {},
+  documentsByDeal: {},
+  auditLogsByEntity: {},
+  selectedDealId: null,
+  company: {
+    id: 1,
+    name: "JK PETROCHEM INTERNATIONAL FZE",
+    address: "OFFICE NO:E2-110G-02, HAMARIYA FREE ZONE, SHARJAH, UAE",
+    bankAccounts: [],
+    shippers: [],
+    mobile: "+971524396170",
+    email: "info@jkpetrochem.com"
+  },
+  error: "",
+  ready: false
+};
+
+export function buyerName(id) {
+  return state.buyers.find((b) => String(b.id) === String(id))?.name || "—";
+}
+
+export function supplierName(id) {
+  return state.suppliers.find((s) => String(s.id) === String(id))?.name || "—";
+}
+
+export function paymentsForDeal(dealId) {
+  return state.paymentsByDeal[String(dealId)] || [];
+}
+
+export function documentsForDeal(dealId) {
+  return state.documentsByDeal[String(dealId)] || [];
+}
+
+export function paymentSummary(dealId, totalAmount, dealType = "sell") {
+  const list = paymentsForDeal(dealId);
+  let received = 0;
+  let sent = 0;
+
+  list.forEach((p) => {
+    if (p.direction === "out") sent += Number(p.amount || 0);
+    else received += Number(p.amount || 0);
+  });
+
+  const total = Number(totalAmount || 0);
+  const balance = dealType === "purchase" ? total - sent : total - received;
+
+  return { received, sent, balance };
+}
+
+export function getSelectedDeal() {
+  return state.deals.find((d) => String(d.id) === String(state.selectedDealId)) || null;
+}
+
+export function dealAuditLogs(dealId) {
+  return state.auditLogsByEntity[`deals:${dealId}`] || [];
+}
+
+export function getShipperOptions() {
+  return state.company.shippers || [];
+}
+
+export function getBuyerById(id) {
+  return state.buyers.find((b) => String(b.id) === String(id)) || null;
+}
+
+export function getDealById(id) {
+  return state.deals.find((d) => String(d.id) === String(id)) || null;
+}

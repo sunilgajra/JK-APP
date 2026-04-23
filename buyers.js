@@ -1,0 +1,107 @@
+import { state } from "../state.js";
+import { esc, nextCustomerId } from "../utils.js";
+
+export function buyersView() {
+  const q = state.buyerSearch.trim().toLowerCase();
+  const filteredBuyers = state.buyers.filter((b) => {
+    if (!q) return true;
+    const text = [b.name, b.address, b.gst, b.iec, b.customer_id, b.phone].join(" ").toLowerCase();
+    return text.includes(q);
+  });
+
+  return `
+    <div class="card">
+      <div class="flex flex-between flex-center gap-12 mb-12 flex-wrap">
+        <div class="title mb-0">Buyers</div>
+        <button id="show-buyer-form" class="btn-primary">Add Buyer</button>
+      </div>
+
+      <div class="mb-12">
+        <input id="buyer-search" value="${esc(state.buyerSearch || "")}" placeholder="Search buyers by name, address, GST, IEC..." />
+      </div>
+
+      <div id="buyer-form-wrap"></div>
+
+      <div class="list mt-12">
+        ${
+          filteredBuyers.length
+            ? filteredBuyers.map((b) => `
+          <div class="item">
+            <div class="item-title">${esc(b.name || "—")}</div>
+            <div class="item-sub">${esc(b.address || "—")}</div>
+            <div class="item-sub">GST: ${esc(b.gst || "—")} · IEC: ${esc(b.iec || "—")}</div>
+            <div class="item-sub">Customer ID: ${esc(b.customer_id || "—")}</div>
+            <div class="item-sub">Phone: ${esc(b.phone || "—")}</div>
+            <div class="mt-8 flex gap-8">
+              <button data-edit-buyer="${b.id}">Edit</button>
+              <button data-delete-buyer="${b.id}">Delete</button>
+            </div>
+            <div id="buyer-edit-wrap-${b.id}" class="mt-10"></div>
+          </div>
+        `).join("")
+            : `<div class="empty">No matching buyers found.</div>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+export function buyerFormHtml(b = {}, edit = false, id = "") {
+  return `
+    <form id="${edit ? `buyer-edit-form-${id}` : "buyer-form"}" class="item mb-12">
+      <div class="form-header">${edit ? "Edit Buyer" : "New Buyer"}</div>
+      <div class="grid gap-10">
+
+        <div>
+          <label class="form-label">Buyer Name</label>
+          <input name="name" value="${esc(b.name || "")}" placeholder="Buyer name" required>
+        </div>
+
+        <div>
+          <label class="form-label">Address</label>
+          <textarea name="address" placeholder="Address" class="min-h-80">${esc(b.address || "")}</textarea>
+        </div>
+
+        <div class="grid grid-2 gap-10">
+          <div>
+            <label class="form-label">GST</label>
+            <input name="gst" value="${esc(b.gst || "")}" placeholder="GST">
+          </div>
+          <div>
+            <label class="form-label">IEC</label>
+            <input name="iec" value="${esc(b.iec || "")}" placeholder="IEC">
+          </div>
+        </div>
+
+        <div class="grid grid-2 gap-10">
+          <div>
+            <label class="form-label">PAN</label>
+            <input name="pan" value="${esc(b.pan || "")}" placeholder="PAN">
+          </div>
+          <div>
+            <label class="form-label">Customer ID</label>
+            <input
+              name="customer_id"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              step="1"
+              value="${esc(b.customer_id || (edit ? "" : nextCustomerId()))}"
+              placeholder="Customer ID"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Phone</label>
+          <input name="phone" value="${esc(b.phone || "")}" placeholder="Phone">
+        </div>
+
+        <div class="flex gap-10">
+          <button type="submit" class="btn-primary">${edit ? "Update Buyer" : "Save Buyer"}</button>
+          <button type="button" id="${edit ? `cancel-buyer-edit-${id}` : "cancel-buyer-form"}">Cancel</button>
+        </div>
+      </div>
+    </form>
+  `;
+}
