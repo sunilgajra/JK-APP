@@ -1,17 +1,18 @@
-import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js?v=4";
-import { supabase } from "./supabase.js";
-import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal } from "./state.js";
-import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js";
+import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js?v=5";
+import { supabase } from "./supabase.js?v=5";
+import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal } from "./state.js?v=5";
+import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js?v=5";
 
-// Import Views
-import { dashboardView } from "./views/dashboard.js";
-import { buyersView, buyerFormHtml } from "./views/buyers.js";
-import { suppliersView, supplierFormHtml } from "./views/suppliers.js";
-import { dealsView, dealFormHtml } from "./views/deals.js";
-import { dealDetailView } from "./views/dealDetail.js";
-import { settingsView } from "./views/settings.js";
-import { shippingInstructionsView } from "./views/shipping.js";
-import { productsView, productEditFormHtml } from "./views/products.js";
+// Import Views with versioning to bust cache
+const v = "5";
+import { dashboardView } from "./views/dashboard.js?v=5";
+import { buyersView, buyerFormHtml } from "./views/buyers.js?v=5";
+import { suppliersView, supplierFormHtml } from "./views/suppliers.js?v=5";
+import { dealsView, dealFormHtml } from "./views/deals.js?v=5";
+import { dealDetailView } from "./views/dealDetail.js?v=5";
+import { settingsView } from "./views/settings.js?v=5";
+import { shippingInstructionsView } from "./views/shipping.js?v=5";
+import { productsView, productEditFormHtml } from "./views/products.js?v=5";
 
 const content = document.getElementById("content");
 
@@ -44,7 +45,6 @@ function handleRoute() {
     state.page = "dashboard";
   }
 
-  // Update active state in nav
   document.querySelectorAll(".nav-btn").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.page === state.page);
   });
@@ -55,7 +55,7 @@ function handleRoute() {
 window.addEventListener("hashchange", handleRoute);
 
 /**
- * AUTH LOGIC
+ * AUTH
  */
 async function loginUser(e) {
   e.preventDefault();
@@ -71,22 +71,20 @@ async function loginUser(e) {
 }
 
 async function logoutUser() {
-  const { error } = await supabase.auth.signOut();
-  if (error) return alert(error.message);
+  await supabase.auth.signOut();
   state.authUser = null;
   render();
 }
 
 async function loadSession() {
-  const { data, error } = await supabase.auth.getSession();
-  if (error) return console.error(error);
+  const { data } = await supabase.auth.getSession();
   state.authUser = data.session?.user || null;
   if (state.authUser) await loadSupabaseData();
   else render();
 }
 
 /**
- * DATA FETCHING
+ * DATA
  */
 async function loadSupabaseData() {
   try {
@@ -99,17 +97,10 @@ async function loadSupabaseData() {
       supabase.from("audit_logs").select("*").order("created_at", { ascending: false })
     ]);
 
-    if (buyersRes.error) throw buyersRes.error;
-    if (suppliersRes.error) throw suppliersRes.error;
-    if (dealsRes.error) throw dealsRes.error;
-    if (paymentsRes.error) throw paymentsRes.error;
-    if (documentsRes.error) throw documentsRes.error;
-
     state.buyers = buyersRes.data || [];
     state.suppliers = suppliersRes.data || [];
     state.deals = dealsRes.data || [];
 
-    // Grouping
     const groupedPayments = {};
     (paymentsRes.data || []).forEach(p => {
       const k = String(p.deal_id);
@@ -141,14 +132,12 @@ async function loadSupabaseData() {
     state.ready = true;
   } catch (err) {
     console.error(err);
-    state.error = err.message;
   }
   handleRoute();
 }
 
 async function loadCompanySettings() {
-  const { data, error } = await supabase.from("company_settings").select("*").eq("id", 1).maybeSingle();
-  if (error) return console.error(error);
+  const { data } = await supabase.from("company_settings").select("*").eq("id", 1).maybeSingle();
   if (data) {
     state.company = {
       ...state.company,
@@ -164,17 +153,17 @@ async function loadCompanySettings() {
 }
 
 async function loadProducts() {
-  const { data, error } = await supabase.from("products").select("*").order("name", { ascending: true });
-  if (!error) state.products = data || [];
+  const { data } = await supabase.from("products").select("*").order("name", { ascending: true });
+  if (data) state.products = data;
 }
 
 async function loadShippingInstructions() {
-  const { data, error } = await supabase.from("shipping_instructions").select("*").order("id", { ascending: false });
-  if (!error) state.shippingInstructions = data || [];
+  const { data } = await supabase.from("shipping_instructions").select("*").order("id", { ascending: false });
+  if (data) state.shippingInstructions = data;
 }
 
 /**
- * UI BINDING & ACTIONS
+ * RENDERING
  */
 function render() {
   if (!state.authUser) {
@@ -203,18 +192,13 @@ function bindUI() {
   document.getElementById("show-deal-form")?.addEventListener("click", showDealForm);
   document.getElementById("back-to-deals")?.addEventListener("click", () => navigate("#/deals"));
   document.getElementById("open-company-settings")?.addEventListener("click", () => navigate("#/settings"));
-  document.getElementById("company-settings-form")?.addEventListener("submit", saveCompanySettings);
-  document.getElementById("add-bank-btn")?.addEventListener("click", addBankAccount);
-  document.getElementById("add-shipper-btn")?.addEventListener("click", addShipper);
   document.getElementById("export-deals-csv")?.addEventListener("click", exportDealsCsv);
   document.getElementById("product-form")?.addEventListener("submit", saveProduct);
 
-  // Search
   document.getElementById("deal-search")?.addEventListener("input", (e) => { state.dealSearch = e.target.value; render(); });
   document.getElementById("buyer-search")?.addEventListener("input", (e) => { state.buyerSearch = e.target.value; render(); });
   document.getElementById("supplier-search")?.addEventListener("input", (e) => { state.supplierSearch = e.target.value; render(); });
 
-  // Dynamic Listeners
   document.querySelectorAll("[data-open-deal]").forEach(btn => btn.addEventListener("click", () => navigate("#/deals/" + btn.dataset.openDeal)));
   document.querySelectorAll("[data-edit-buyer]").forEach(btn => btn.addEventListener("click", () => showEditBuyerForm(btn.dataset.editBuyer)));
   document.querySelectorAll("[data-delete-buyer]").forEach(btn => btn.addEventListener("click", () => deleteBuyer(btn.dataset.deleteBuyer)));
@@ -223,32 +207,19 @@ function bindUI() {
   document.querySelectorAll("[data-edit-deal]").forEach(btn => btn.addEventListener("click", () => showEditDealForm(btn.dataset.editDeal)));
   document.querySelectorAll("[data-delete-deal]").forEach(btn => btn.addEventListener("click", () => deleteDeal(btn.dataset.deleteDeal)));
   
-  // Printing
   document.querySelectorAll("[data-print-pi]").forEach(btn => btn.addEventListener("click", () => printDoc("pi", btn.dataset.printPi)));
   document.querySelectorAll("[data-print-ci]").forEach(btn => btn.addEventListener("click", () => printDoc("ci", btn.dataset.printCi)));
   document.querySelectorAll("[data-print-pl]").forEach(btn => btn.addEventListener("click", () => printDoc("pl", btn.dataset.printPl)));
   document.querySelectorAll("[data-print-coo]").forEach(btn => btn.addEventListener("click", () => printDoc("coo", btn.dataset.printCoo)));
 
-  // Sub-forms
   document.querySelectorAll("[data-show-payment-form]").forEach(btn => btn.addEventListener("click", () => showPaymentForm(btn.dataset.showPaymentForm)));
-  document.querySelectorAll("[data-delete-payment]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const [did, pid] = btn.dataset.deletePayment.split(":");
-      deletePayment(did, pid);
-    });
-  });
-
-  // Settings helpers
-  bindBankInputs();
-  bindShipperInputs();
+  
   bindShippingInstructionForm();
-  bindProductSelectors();
 }
 
 /**
- * VIEW HELPERS & SUBMISSION HANDLERS
+ * UI HELPERS
  */
-
 function loginView() {
   return `
     <div class="card" style="max-width:420px;margin:40px auto">
@@ -270,7 +241,6 @@ function loginView() {
   `;
 }
 
-// Buyer Actions
 function showBuyerForm() {
   const wrap = document.getElementById("buyer-form-wrap");
   if (!wrap) return;
@@ -278,6 +248,7 @@ function showBuyerForm() {
   document.getElementById("buyer-form").addEventListener("submit", saveBuyer);
   document.getElementById("cancel-buyer-form").addEventListener("click", () => wrap.innerHTML = "");
 }
+
 function showEditBuyerForm(id) {
   const b = state.buyers.find(x => String(x.id) === String(id));
   const wrap = document.getElementById(`buyer-edit-wrap-${id}`);
@@ -286,6 +257,7 @@ function showEditBuyerForm(id) {
   document.getElementById(`buyer-edit-form-${id}`).addEventListener("submit", (e) => updateBuyer(e, id));
   document.getElementById(`cancel-buyer-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
 }
+
 async function saveBuyer(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
@@ -296,6 +268,7 @@ async function saveBuyer(e) {
   if (error) return alert(error.message);
   await loadSupabaseData();
 }
+
 async function updateBuyer(e, id) {
   e.preventDefault();
   const fd = new FormData(e.target);
@@ -306,14 +279,14 @@ async function updateBuyer(e, id) {
   if (error) return alert(error.message);
   await loadSupabaseData();
 }
+
 async function deleteBuyer(id) {
   if (confirm("Delete buyer?")) {
-    const { error } = await supabase.from("buyers").delete().eq("id", id);
-    if (!error) await loadSupabaseData();
+    await supabase.from("buyers").delete().eq("id", id);
+    await loadSupabaseData();
   }
 }
 
-// Deal Actions
 function showDealForm() {
   const wrap = document.getElementById("deal-form-wrap");
   if (!wrap) return;
@@ -321,6 +294,7 @@ function showDealForm() {
   document.getElementById("deal-form").addEventListener("submit", saveDeal);
   document.getElementById("cancel-deal-form").addEventListener("click", () => wrap.innerHTML = "");
 }
+
 function showEditDealForm(id) {
   const d = state.deals.find(x => String(x.id) === String(id));
   const wrap = document.getElementById(`deal-edit-wrap-${id}`);
@@ -329,77 +303,57 @@ function showEditDealForm(id) {
   document.getElementById(`deal-edit-form-${id}`).addEventListener("submit", (e) => updateDeal(e, id));
   document.getElementById(`cancel-deal-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
 }
+
 async function saveDeal(e) {
   e.preventDefault();
-  // Simplified for now, should use validateDeal
   const fd = new FormData(e.target);
   const payload = ensureDocNumbers({
     deal_no: fd.get("deal_no"), product_name: fd.get("product_name"), 
     quantity: Number(fd.get("quantity")), rate: Number(fd.get("rate")),
     buyer_id: fd.get("buyer_id") || null, supplier_id: fd.get("supplier_id") || null
   });
-  const { error } = await supabase.from("deals").insert(payload);
-  if (error) return alert(error.message);
+  await supabase.from("deals").insert(payload);
   await loadSupabaseData();
 }
+
 async function updateDeal(e, id) {
   e.preventDefault();
   const fd = new FormData(e.target);
-  const { error } = await supabase.from("deals").update({
-    deal_no: fd.get("deal_no"), product_name: fd.get("product_name")
-  }).eq("id", id);
-  if (error) return alert(error.message);
+  await supabase.from("deals").update({ deal_no: fd.get("deal_no"), product_name: fd.get("product_name") }).eq("id", id);
   await loadSupabaseData();
 }
+
 async function deleteDeal(id) {
   if (confirm("Delete deal?")) {
-    const { error } = await supabase.from("deals").delete().eq("id", id);
-    if (!error) await loadSupabaseData();
+    await supabase.from("deals").delete().eq("id", id);
+    await loadSupabaseData();
   }
 }
 
-// Product Actions
 async function saveProduct(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
-  const { error } = await supabase.from("products").insert({ name: fd.get("name"), hsn_code: fd.get("hsn_code") });
-  if (error) return alert(error.message);
+  await supabase.from("products").insert({ name: fd.get("name"), hsn_code: fd.get("hsn_code") });
   await loadProducts();
   render();
 }
 
-/**
- * HELPERS
- */
-function bindBankInputs() {} // Implement if needed
-function bindShipperInputs() {} // Implement if needed
-function bindShippingInstructionForm() {} // Implement if needed
-function bindProductSelectors() {} // Implement if needed
-function addBankAccount() {}
-function addShipper() {}
-function saveCompanySettings(e) { e.preventDefault(); alert("Settings saved (local)"); }
-function exportDealsCsv() { alert("Exporting..."); }
 function showPaymentForm(id) { alert("Payment form for " + id); }
-async function deletePayment(did, pid) { if(confirm("Delete?")) await supabase.from("payments").delete().eq("id", pid); await loadSupabaseData(); }
+function exportDealsCsv() { alert("Exporting..."); }
+function bindShippingInstructionForm() {} 
 
-// Document Printing Logic
 function printDoc(type, dealId) {
   const deal = getDealById(dealId);
   const buyer = getBuyerById(deal?.buyer_id);
   const supplier = state.suppliers.find(s => String(s.id) === String(deal?.supplier_id));
-  
-  // Minimal Doc Object for printing
   const dealDoc = { ...deal, dealNo: deal.deal_no, productName: deal.product_name, totalAmount: deal.total_amount };
-  const company = state.company;
-
   let html = "";
-  if (type === "pi") html = buildPI(dealDoc, buyer, supplier, company);
-  if (type === "ci") html = buildCI(dealDoc, buyer, supplier, company);
-  if (type === "pl") html = buildPL(dealDoc, buyer, supplier, company);
-  if (type === "coo") html = buildCOO(dealDoc, buyer, supplier, company);
-
+  if (type === "pi") html = buildPI(dealDoc, buyer, supplier, state.company);
+  if (type === "ci") html = buildCI(dealDoc, buyer, supplier, state.company);
+  if (type === "pl") html = buildPL(dealDoc, buyer, supplier, state.company);
+  if (type === "coo") html = buildCOO(dealDoc, buyer, supplier, state.company);
   if (html) openPrintWindow(html);
 }
 
-// Init
+// Start
 loadSession();
