@@ -847,6 +847,7 @@ function shippingInstructionsView() {
   const buyers = state.buyers || [];
   const deals = state.deals || [];
   const suppliers = state.suppliers || [];
+  const products = state.products || [];
 
   return `
     <div class="card">
@@ -901,7 +902,14 @@ function shippingInstructionsView() {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
               <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Product</label>
-              <input name="product" id="si-product" placeholder="Product">
+              <select name="product" id="si-product">
+                <option value="">Select product</option>
+                ${products.map((p) => `
+                  <option value="${esc(p.name)}" data-hsn="${esc(p.hsn_code || "")}">
+                    ${esc(p.name)}
+                  </option>
+                `).join("")}
+              </select>
             </div>
 
             <div>
@@ -948,9 +956,20 @@ function bindShippingInstructionForm() {
     const deal = getDealById(dealEl.value);
     if (!deal) return;
 
-    if (productEl && !productEl.value) productEl.value = deal.product_name || "";
-    if (hsnEl && !hsnEl.value) hsnEl.value = deal.hsn_code || "";
-    if (buyerEl && !buyerEl.value && deal.buyer_id) buyerEl.value = String(deal.buyer_id);
+    if (productEl && !productEl.value) {
+      productEl.value = deal.product_name || "";
+      const selectedOption = productEl.options[productEl.selectedIndex];
+      const hsn = selectedOption?.dataset?.hsn || deal.hsn_code || "";
+      if (hsnEl && !hsnEl.value) hsnEl.value = hsn;
+    }
+
+    if (buyerEl && !buyerEl.value && deal.buyer_id) {
+      buyerEl.value = String(deal.buyer_id);
+    }
+
+    if (hsnEl && !hsnEl.value && deal.hsn_code) {
+      hsnEl.value = deal.hsn_code;
+    }
   });
 
   document.getElementById("download-shipping-instruction")?.addEventListener("click", () => {
@@ -1229,6 +1248,7 @@ function bindUI() {
   bindBankInputs();
   bindShipperInputs();
   bindShippingInstructionForm();
+  bindProductSelectors();
 }
 
 function buyerFormHtml(b = {}, edit = false, id = "") {
