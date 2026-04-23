@@ -1196,7 +1196,24 @@ async function deleteProduct(id) {
   await loadProducts();
   render();
 }
+function bindProductSelectors() {
+  const productSelectors = document.querySelectorAll('select[name="product_name"], select[name="product"]');
 
+  productSelectors.forEach((select) => {
+    select.addEventListener("change", () => {
+      const form = select.closest("form");
+      if (!form) return;
+
+      const hsnInput = form.querySelector('input[name="hsn_code"]');
+      const selectedOption = select.options[select.selectedIndex];
+      const hsn = selectedOption?.dataset?.hsn || "";
+
+      if (hsnInput) {
+        hsnInput.value = hsn;
+      }
+    });
+  });
+}
 function render() {
   if (state.page === "dashboard") content.innerHTML = dashboardView();
   if (state.page === "buyers") content.innerHTML = buyersView();
