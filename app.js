@@ -13,6 +13,8 @@ import { settingsView } from "./settings.js?v=8";
 import { shippingInstructionsView } from "./shipping.js?v=8";
 import { productsView, productEditFormHtml } from "./products.js?v=8";
 
+console.log("APP STARTING - VERSION 8");
+
 const content = document.getElementById("content");
 
 /**
@@ -293,12 +295,21 @@ function validateDeal(fd) {
 
 async function saveDeal(e) {
   e.preventDefault();
+  console.log("Saving deal...");
   try {
     const payload = ensureDocNumbers(validateDeal(new FormData(e.target)));
-    const { error } = await supabase.from("deals").insert(payload);
-    if (error) throw error;
+    console.log("Payload:", payload);
+    const { data, error } = await supabase.from("deals").insert(payload).select();
+    if (error) {
+      console.error("SUPABASE ERROR:", error);
+      throw error;
+    }
+    console.log("Save successful:", data);
     await loadSupabaseData();
-  } catch (err) { alert(err.message); }
+  } catch (err) { 
+    console.error("CATCH ERROR:", err);
+    alert("Error: " + err.message); 
+  }
 }
 
 async function updateDeal(e, id) {
@@ -321,12 +332,18 @@ async function deleteDeal(id) {
 
 async function saveBuyer(e) {
   e.preventDefault();
+  console.log("Saving buyer...");
   const fd = new FormData(e.target);
-  const { error } = await supabase.from("buyers").insert({
+  const { data, error } = await supabase.from("buyers").insert({
     name: fd.get("name"), address: fd.get("address"), gst: fd.get("gst"), iec: fd.get("iec"), pan: fd.get("pan"),
     customer_id: normalizeCustomerId(fd.get("customer_id")), phone: fd.get("phone")
-  });
-  if (error) return alert(error.message);
+  }).select();
+  
+  if (error) {
+    console.error("SUPABASE ERROR:", error);
+    return alert(error.message);
+  }
+  console.log("Save successful:", data);
   await loadSupabaseData();
 }
 
