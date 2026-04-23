@@ -1,17 +1,17 @@
-import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js?v=7";
-import { supabase } from "./supabase.js?v=7";
-import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal } from "./state.js?v=7";
-import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js?v=7";
+import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js?v=8";
+import { supabase } from "./supabase.js?v=8";
+import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal } from "./state.js?v=8";
+import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js?v=8";
 
-// Import Views (Now from the root folder)
-import { dashboardView } from "./dashboard.js?v=7";
-import { buyersView, buyerFormHtml } from "./buyers.js?v=7";
-import { suppliersView, supplierFormHtml } from "./suppliers.js?v=7";
-import { dealsView, dealFormHtml } from "./deals.js?v=7";
-import { dealDetailView } from "./dealDetail.js?v=7";
-import { settingsView } from "./settings.js?v=7";
-import { shippingInstructionsView } from "./shipping.js?v=7";
-import { productsView, productEditFormHtml } from "./products.js?v=7";
+// Import Views (Flat Structure)
+import { dashboardView } from "./dashboard.js?v=8";
+import { buyersView, buyerFormHtml } from "./buyers.js?v=8";
+import { suppliersView, supplierFormHtml } from "./suppliers.js?v=8";
+import { dealsView, dealFormHtml } from "./deals.js?v=8";
+import { dealDetailView } from "./dealDetail.js?v=8";
+import { settingsView } from "./settings.js?v=8";
+import { shippingInstructionsView } from "./shipping.js?v=8";
+import { productsView, productEditFormHtml } from "./products.js?v=8";
 
 const content = document.getElementById("content");
 
@@ -59,13 +59,12 @@ window.addEventListener("hashchange", handleRoute);
 async function loginUser(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
-  const email = String(fd.get("email") || "").trim();
-  const password = String(fd.get("password") || "").trim();
-
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: String(fd.get("email")).trim(),
+    password: String(fd.get("password")).trim()
+  });
   if (error) return alert(error.message);
-
-  state.authUser = data.user || null;
+  state.authUser = data.user;
   await loadSupabaseData();
 }
 
@@ -95,6 +94,10 @@ async function loadSupabaseData() {
       supabase.from("deal_documents").select("*").eq("is_deleted", false).order("created_at", { ascending: false }),
       supabase.from("audit_logs").select("*").order("created_at", { ascending: false })
     ]);
+
+    if (buyersRes.error) throw buyersRes.error;
+    if (suppliersRes.error) throw suppliersRes.error;
+    if (dealsRes.error) throw dealsRes.error;
 
     state.buyers = buyersRes.data || [];
     state.suppliers = suppliersRes.data || [];
@@ -130,7 +133,7 @@ async function loadSupabaseData() {
 
     state.ready = true;
   } catch (err) {
-    console.error(err);
+    console.error("Load failed:", err);
   }
   handleRoute();
 }
@@ -186,18 +189,21 @@ function render() {
 function bindUI() {
   document.getElementById("login-form")?.addEventListener("submit", loginUser);
   document.getElementById("logout-btn")?.addEventListener("click", logoutUser);
+  
+  // Navigation
   document.getElementById("show-buyer-form")?.addEventListener("click", showBuyerForm);
   document.getElementById("show-supplier-form")?.addEventListener("click", showSupplierForm);
   document.getElementById("show-deal-form")?.addEventListener("click", showDealForm);
   document.getElementById("back-to-deals")?.addEventListener("click", () => navigate("#/deals"));
   document.getElementById("open-company-settings")?.addEventListener("click", () => navigate("#/settings"));
-  document.getElementById("export-deals-csv")?.addEventListener("click", exportDealsCsv);
   document.getElementById("product-form")?.addEventListener("submit", saveProduct);
-
+  
+  // Search
   document.getElementById("deal-search")?.addEventListener("input", (e) => { state.dealSearch = e.target.value; render(); });
   document.getElementById("buyer-search")?.addEventListener("input", (e) => { state.buyerSearch = e.target.value; render(); });
   document.getElementById("supplier-search")?.addEventListener("input", (e) => { state.supplierSearch = e.target.value; render(); });
 
+  // List Actions
   document.querySelectorAll("[data-open-deal]").forEach(btn => btn.addEventListener("click", () => navigate("#/deals/" + btn.dataset.openDeal)));
   document.querySelectorAll("[data-edit-buyer]").forEach(btn => btn.addEventListener("click", () => showEditBuyerForm(btn.dataset.editBuyer)));
   document.querySelectorAll("[data-delete-buyer]").forEach(btn => btn.addEventListener("click", () => deleteBuyer(btn.dataset.deleteBuyer)));
@@ -206,55 +212,111 @@ function bindUI() {
   document.querySelectorAll("[data-edit-deal]").forEach(btn => btn.addEventListener("click", () => showEditDealForm(btn.dataset.editDeal)));
   document.querySelectorAll("[data-delete-deal]").forEach(btn => btn.addEventListener("click", () => deleteDeal(btn.dataset.deleteDeal)));
   
+  // Print
   document.querySelectorAll("[data-print-pi]").forEach(btn => btn.addEventListener("click", () => printDoc("pi", btn.dataset.printPi)));
   document.querySelectorAll("[data-print-ci]").forEach(btn => btn.addEventListener("click", () => printDoc("ci", btn.dataset.printCi)));
   document.querySelectorAll("[data-print-pl]").forEach(btn => btn.addEventListener("click", () => printDoc("pl", btn.dataset.printPl)));
   document.querySelectorAll("[data-print-coo]").forEach(btn => btn.addEventListener("click", () => printDoc("coo", btn.dataset.printCoo)));
 
+  // Payments
   document.querySelectorAll("[data-show-payment-form]").forEach(btn => btn.addEventListener("click", () => showPaymentForm(btn.dataset.showPaymentForm)));
   
-  bindShippingInstructionForm();
+  // Settings
+  document.getElementById("company-settings-form")?.addEventListener("submit", saveCompanySettings);
+  document.getElementById("add-bank-btn")?.addEventListener("click", addBankAccount);
+  document.getElementById("add-shipper-btn")?.addEventListener("click", addShipper);
+
+  // Auto-binding logic
+  bindDealAutoTotal();
 }
 
 /**
- * UI HELPERS
+ * ROBUST HANDLERS
  */
-function loginView() {
-  return `
-    <div class="card" style="max-width:420px;margin:40px auto">
-      <div class="title mb-12">Login</div>
-      <form id="login-form" class="item">
-        <div class="grid gap-10">
-          <div>
-            <label class="form-label">Email</label>
-            <input name="email" type="email" placeholder="Email" required>
-          </div>
-          <div>
-            <label class="form-label">Password</label>
-            <input name="password" type="password" placeholder="Password" required>
-          </div>
-          <button type="submit" class="btn-primary">Login</button>
-        </div>
-      </form>
-    </div>
-  `;
+
+function validateDeal(fd) {
+  const quantity = cleanNumber(fd.get("quantity"));
+  const rate = cleanNumber(fd.get("rate"));
+  const conv = cleanNumber(fd.get("conversion_rate"));
+  const baseCurr = fd.get("base_currency") || "USD";
+  const docCurr = fd.get("document_currency") || baseCurr;
+
+  let rateUsd = 0, rateAed = 0, totalUsd = 0, totalAed = 0;
+
+  if (baseCurr === "USD") {
+    rateUsd = rate;
+    rateAed = conv ? rate * conv : 0;
+  } else {
+    rateAed = rate;
+    rateUsd = conv ? rate / conv : 0;
+  }
+
+  totalUsd = quantity * rateUsd;
+  totalAed = quantity * rateAed;
+
+  return {
+    type: fd.get("type"),
+    deal_no: cleanUpper(fd.get("deal_no")),
+    product_name: fd.get("product_name"),
+    hsn_code: cleanUpper(fd.get("hsn_code")),
+    unit: cleanUpper(fd.get("unit")),
+    base_currency: baseCurr,
+    document_currency: docCurr,
+    conversion_rate: conv,
+    quantity,
+    rate,
+    rate_usd: rateUsd,
+    rate_aed: rateAed,
+    total_amount: docCurr === "USD" ? totalUsd : totalAed,
+    total_amount_usd: totalUsd,
+    total_amount_aed: totalAed,
+    status: fd.get("status") || "active",
+    approval_status: fd.get("approval_status") || "draft",
+    loading_port: cleanUpper(fd.get("loading_port")),
+    discharge_port: cleanUpper(fd.get("discharge_port")),
+    buyer_id: fd.get("buyer_id") || null,
+    supplier_id: fd.get("supplier_id") || null,
+    vessel: cleanUpper(fd.get("vessel")),
+    vessel_voyage: cleanUpper(fd.get("vessel_voyage")),
+    shipment_out_date: fd.get("shipment_out_date") || null,
+    eta: fd.get("eta") || null,
+    freight_type: cleanUpper(fd.get("freight_type")),
+    bl_no: cleanUpper(fd.get("bl_no")),
+    pi_no: cleanUpper(fd.get("pi_no")),
+    ci_no: cleanUpper(fd.get("ci_no")),
+    pl_no: cleanUpper(fd.get("pl_no")),
+    coo_no: cleanUpper(fd.get("coo_no")),
+    invoice_date: fd.get("invoice_date") || null,
+    container_numbers: String(fd.get("container_numbers") || "").split(/[,\n]+/).map(x => x.trim().toUpperCase()).filter(Boolean)
+  };
 }
 
-function showBuyerForm() {
-  const wrap = document.getElementById("buyer-form-wrap");
-  if (!wrap) return;
-  wrap.innerHTML = buyerFormHtml();
-  document.getElementById("buyer-form").addEventListener("submit", saveBuyer);
-  document.getElementById("cancel-buyer-form").addEventListener("click", () => wrap.innerHTML = "");
+async function saveDeal(e) {
+  e.preventDefault();
+  try {
+    const payload = ensureDocNumbers(validateDeal(new FormData(e.target)));
+    const { error } = await supabase.from("deals").insert(payload);
+    if (error) throw error;
+    await loadSupabaseData();
+  } catch (err) { alert(err.message); }
 }
 
-function showEditBuyerForm(id) {
-  const b = state.buyers.find(x => String(x.id) === String(id));
-  const wrap = document.getElementById(`buyer-edit-wrap-${id}`);
-  if (!b || !wrap) return;
-  wrap.innerHTML = buyerFormHtml(b, true, id);
-  document.getElementById(`buyer-edit-form-${id}`).addEventListener("submit", (e) => updateBuyer(e, id));
-  document.getElementById(`cancel-buyer-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
+async function updateDeal(e, id) {
+  e.preventDefault();
+  try {
+    const payload = validateDeal(new FormData(e.target));
+    const { error } = await supabase.from("deals").update(payload).eq("id", id);
+    if (error) throw error;
+    await loadSupabaseData();
+  } catch (err) { alert(err.message); }
+}
+
+async function deleteDeal(id) {
+  if (confirm("Delete this deal?")) {
+    const { error } = await supabase.from("deals").delete().eq("id", id);
+    if (error) alert(error.message);
+    else await loadSupabaseData();
+  }
 }
 
 async function saveBuyer(e) {
@@ -281,19 +343,141 @@ async function updateBuyer(e, id) {
 
 async function deleteBuyer(id) {
   if (confirm("Delete buyer?")) {
-    await supabase.from("buyers").delete().eq("id", id);
-    await loadSupabaseData();
+    const { error } = await supabase.from("buyers").delete().eq("id", id);
+    if (error) alert(error.message);
+    else await loadSupabaseData();
   }
 }
 
+// Supplier Actions
+function showSupplierForm() {
+  const wrap = document.getElementById("supplier-form-wrap");
+  if (!wrap) return;
+  wrap.innerHTML = supplierFormHtml();
+  document.getElementById("supplier-form").addEventListener("submit", saveSupplier);
+  document.getElementById("cancel-supplier-form").addEventListener("click", () => wrap.innerHTML = "");
+}
+function showEditSupplierForm(id) {
+  const s = state.suppliers.find(x => String(x.id) === String(id));
+  const wrap = document.getElementById(`supplier-edit-wrap-${id}`);
+  if (!s || !wrap) return;
+  wrap.innerHTML = supplierFormHtml(s, true, id);
+  document.getElementById(`supplier-edit-form-${id}`).addEventListener("submit", (e) => updateSupplier(e, id));
+  document.getElementById(`cancel-supplier-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
+}
+async function saveSupplier(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("suppliers").insert({
+    name: fd.get("name"), company_name: fd.get("company_name"), country: fd.get("country"),
+    email: fd.get("email"), address: fd.get("address"), bank_name: fd.get("bank_name"),
+    bank_account: fd.get("bank_account"), bank_iban: fd.get("bank_iban"), bank_swift: fd.get("bank_swift")
+  });
+  if (error) return alert(error.message);
+  await loadSupabaseData();
+}
+async function updateSupplier(e, id) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("suppliers").update({
+    name: fd.get("name"), company_name: fd.get("company_name"), country: fd.get("country"),
+    email: fd.get("email"), address: fd.get("address"), bank_name: fd.get("bank_name"),
+    bank_account: fd.get("bank_account"), bank_iban: fd.get("bank_iban"), bank_swift: fd.get("bank_swift")
+  }).eq("id", id);
+  if (error) return alert(error.message);
+  await loadSupabaseData();
+}
+async function deleteSupplier(id) {
+  if (confirm("Delete supplier?")) {
+    const { error } = await supabase.from("suppliers").delete().eq("id", id);
+    if (error) alert(error.message);
+    else await loadSupabaseData();
+  }
+}
+
+// Product Actions
+async function saveProduct(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("products").insert({
+    name: fd.get("name"), hsn_code: fd.get("hsn_code")
+  });
+  if (error) return alert(error.message);
+  await loadProducts();
+  render();
+}
+
+// Payment Actions
+function showPaymentForm(dealId) {
+  const wrap = document.getElementById(`payment-form-wrap-${dealId}`);
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <form id="payment-form-${dealId}" class="item">
+      <div class="form-header">Add Payment</div>
+      <div class="grid gap-10">
+        <select name="direction"><option value="in">Received (In)</option><option value="out">Sent (Out)</option></select>
+        <input name="amount" type="number" step="0.01" placeholder="Amount" required>
+        <input name="payment_date" type="date" value="${new Date().toISOString().split("T")[0]}" required>
+        <input name="ref" placeholder="Reference / Note">
+        <div class="flex gap-10">
+          <button type="submit" class="btn-primary">Save Payment</button>
+          <button type="button" onclick="this.closest('.item').remove()">Cancel</button>
+        </div>
+      </div>
+    </form>
+  `;
+  document.getElementById(`payment-form-${dealId}`).addEventListener("submit", (e) => savePayment(e, dealId));
+}
+
+async function savePayment(e, dealId) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("payments").insert({
+    deal_id: dealId,
+    direction: fd.get("direction"),
+    amount: Number(fd.get("amount")),
+    payment_date: fd.get("payment_date"),
+    ref: fd.get("ref"),
+    currency: "AED" // Defaulting for now
+  });
+  if (error) return alert(error.message);
+  await loadSupabaseData();
+}
+
+async function deletePayment(dealId, paymentId) {
+  if (confirm("Delete payment?")) {
+    const { error } = await supabase.from("payments").delete().eq("id", paymentId);
+    if (error) alert(error.message);
+    else await loadSupabaseData();
+  }
+}
+
+/**
+ * FORM HELPERS
+ */
+function showBuyerForm() {
+  const wrap = document.getElementById("buyer-form-wrap");
+  if (!wrap) return;
+  wrap.innerHTML = buyerFormHtml();
+  document.getElementById("buyer-form").addEventListener("submit", saveBuyer);
+  document.getElementById("cancel-buyer-form").addEventListener("click", () => wrap.innerHTML = "");
+}
+function showEditBuyerForm(id) {
+  const b = state.buyers.find(x => String(x.id) === String(id));
+  const wrap = document.getElementById(`buyer-edit-wrap-${id}`);
+  if (!b || !wrap) return;
+  wrap.innerHTML = buyerFormHtml(b, true, id);
+  document.getElementById(`buyer-edit-form-${id}`).addEventListener("submit", (e) => updateBuyer(e, id));
+  document.getElementById(`cancel-buyer-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
+}
 function showDealForm() {
   const wrap = document.getElementById("deal-form-wrap");
   if (!wrap) return;
   wrap.innerHTML = dealFormHtml({}, false);
   document.getElementById("deal-form").addEventListener("submit", saveDeal);
   document.getElementById("cancel-deal-form").addEventListener("click", () => wrap.innerHTML = "");
+  bindDealAutoTotal();
 }
-
 function showEditDealForm(id) {
   const d = state.deals.find(x => String(x.id) === String(id));
   const wrap = document.getElementById(`deal-edit-wrap-${id}`);
@@ -301,46 +485,31 @@ function showEditDealForm(id) {
   wrap.innerHTML = dealFormHtml(d, true, id);
   document.getElementById(`deal-edit-form-${id}`).addEventListener("submit", (e) => updateDeal(e, id));
   document.getElementById(`cancel-deal-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
+  bindDealAutoTotal(id);
 }
 
-async function saveDeal(e) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const payload = ensureDocNumbers({
-    deal_no: fd.get("deal_no"), product_name: fd.get("product_name"), 
-    quantity: Number(fd.get("quantity")), rate: Number(fd.get("rate")),
-    buyer_id: fd.get("buyer_id") || null, supplier_id: fd.get("supplier_id") || null
-  });
-  await supabase.from("deals").insert(payload);
-  await loadSupabaseData();
+function bindDealAutoTotal(id = null) {
+  const suffix = id ? `-${id}` : "";
+  const qtyIn = document.getElementById(`quantity${suffix}`);
+  const rateIn = document.getElementById(`rate${suffix}`);
+  const convIn = document.getElementById(`conversion-rate${suffix}`);
+  const totalIn = document.getElementById(`total${suffix}`);
+  const totalAedIn = document.getElementById(`total-aed${suffix}`);
+
+  const calc = () => {
+    const q = Number(qtyIn?.value || 0);
+    const r = Number(rateIn?.value || 0);
+    const c = Number(convIn?.value || 0);
+    const total = q * r;
+    if (totalIn) totalIn.value = total.toFixed(2);
+    if (totalAedIn && c) totalAedIn.value = (total * c).toFixed(2);
+  };
+
+  [qtyIn, rateIn, convIn].forEach(el => el?.addEventListener("input", calc));
 }
 
-async function updateDeal(e, id) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  await supabase.from("deals").update({ deal_no: fd.get("deal_no"), product_name: fd.get("product_name") }).eq("id", id);
-  await loadSupabaseData();
-}
-
-async function deleteDeal(id) {
-  if (confirm("Delete deal?")) {
-    await supabase.from("deals").delete().eq("id", id);
-    await loadSupabaseData();
-  }
-}
-
-async function saveProduct(e) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  await supabase.from("products").insert({ name: fd.get("name"), hsn_code: fd.get("hsn_code") });
-  await loadProducts();
-  render();
-}
-
-function showPaymentForm(id) { alert("Payment form for " + id); }
-function exportDealsCsv() { alert("Exporting..."); }
-function bindShippingInstructionForm() {} 
-
+// Misc
+function loginView() { return `<div class="card" style="max-width:400px;margin:100px auto"><div class="title mb-12">Login</div><form id="login-form"><input name="email" type="email" placeholder="Email" required class="mb-10"><input name="password" type="password" placeholder="Password" required class="mb-10"><button type="submit" class="btn-primary">Login</button></form></div>`; }
 function printDoc(type, dealId) {
   const deal = getDealById(dealId);
   const buyer = getBuyerById(deal?.buyer_id);
