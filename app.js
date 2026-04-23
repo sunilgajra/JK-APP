@@ -230,9 +230,22 @@ function bindUI() {
   document.getElementById("company-settings-form")?.addEventListener("submit", saveCompanySettings);
   document.getElementById("add-bank-btn")?.addEventListener("click", addBankAccount);
   document.getElementById("add-shipper-btn")?.addEventListener("click", addShipper);
+  document.querySelectorAll("[data-delete-bank]").forEach(btn => btn.addEventListener("click", () => deleteBankAccount(btn.dataset.deleteBank)));
+  document.querySelectorAll("[data-delete-shipper]").forEach(btn => btn.addEventListener("click", () => deleteShipper(btn.dataset.deleteShipper)));
+
+  // Exports
+  document.getElementById("export-deals-csv")?.addEventListener("click", exportDealsCsv);
+
+  // Documents
+  document.querySelectorAll("[data-placeholder-upload]").forEach(form => form.addEventListener("submit", saveDealDocument));
+  document.querySelectorAll("[data-delete-placeholder-doc]").forEach(btn => btn.addEventListener("click", () => deleteDealDocument(btn.dataset.deletePlaceholderDoc)));
+
+  // Shipping Instructions
+  bindShippingInstructionForm();
 
   // Auto-binding logic
   bindDealAutoTotal();
+  bindProductHsnLookup();
 }
 
 /**
@@ -292,6 +305,18 @@ function validateDeal(fd) {
     pl_no: cleanUpper(fd.get("pl_no")),
     coo_no: cleanUpper(fd.get("coo_no")),
     invoice_date: fd.get("invoice_date") || null,
+    gross_weight: cleanNumber(fd.get("gross_weight")),
+    net_weight: cleanNumber(fd.get("net_weight")),
+    package_details: cleanUpper(fd.get("package_details")),
+    loaded_on: cleanUpper(fd.get("loaded_on")),
+    cfs: cleanUpper(fd.get("cfs")),
+    country_of_origin: cleanUpper(fd.get("country_of_origin")),
+    terms_delivery: cleanUpper(fd.get("terms_delivery")),
+    payment_terms: cleanUpper(fd.get("payment_terms")),
+    bank_terms: cleanUpper(fd.get("bank_terms")),
+    document_bank_index: fd.get("document_bank_index") || null,
+    shipper_index: fd.get("shipper_index") || null,
+    shipment_status: fd.get("shipment_status") || "pending",
     container_numbers: String(fd.get("container_numbers") || "").split(/[,\n]+/).map(x => x.trim().toUpperCase()).filter(Boolean)
   };
 }
@@ -543,6 +568,151 @@ function bindDealAutoTotal(id = null) {
 
 // Misc
 function loginView() { return `<div class="card" style="max-width:400px;margin:100px auto"><div class="title mb-12">Login</div><form id="login-form"><input name="email" type="email" placeholder="Email" required class="mb-10"><input name="password" type="password" placeholder="Password" required class="mb-10"><button type="submit" class="btn-primary">Login</button></form></div>`; }
+// Settings Actions
+async function saveCompanySettings(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  
+  const bankAccounts = [];
+  document.querySelectorAll("[data-bank-index]").forEach(input => {
+    const idx = input.dataset.bank_index;
+    if (!bankAccounts[idx]) bankAccounts[idx] = {};
+    bankAccounts[idx][input.dataset.bank_field] = input.value;
+  });
+
+  const shippers = [];
+  document.querySelectorAll("[data-shipper-index]").forEach(input => {
+    const idx = input.dataset.shipper_index;
+    if (!shippers[idx]) shippers[idx] = {};
+    shippers[idx][input.dataset.shipper_field] = input.value;
+  });
+
+  const payload = {
+    name: fd.get("name"),
+    address: fd.get("address"),
+    bank_accounts: bankAccounts.filter(Boolean),
+    shippers: shippers.filter(Boolean)
+  };
+
+  const { error } = await supabase.from("company_settings").update(payload).eq("id", 1);
+  if (error) alert(error.message);
+  else {
+    alert("Settings saved!");
+    await loadSupabaseData();
+  }
+}
+
+function addBankAccount() {
+  state.company.bankAccounts.push({ bankName: "", account: "", iban: "", swift: "" });
+  render();
+}
+function deleteBankAccount(idx) {
+  state.company.bankAccounts.splice(idx, 1);
+  render();
+}
+function addShipper() {
+  state.company.shippers.push({ name: "", mobile: "", address: "", email: "" });
+  render();
+}
+function deleteShipper(idx) {
+  state.company.shippers.splice(idx, 1);
+  render();
+}
+
+// Shipping Instruction Actions
+function bindShippingInstructionForm() {
+  const form = document.getElementById("shipping-instruction-form");
+  if (!form) return;
+  form.addEventListener("submit", saveShippingInstruction);
+  document.getElementById("download-shipping-instruction")?.addEventListener("click", downloadShippingInstruction);
+  document.getElementById("whatsapp-shipping-instruction")?.addEventListener("click", whatsappShippingInstruction);
+  
+  document.getElementById("si-product")?.addEventListener("change", (e) => {
+    const hsn = e.target.selectedOptions[0]?.dataset.hsn || "";
+    document.getElementById("si-hsn").value = hsn;
+  });
+}
+
+async function saveShippingInstruction(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("shipping_instructions").insert({
+    shipper_index: fd.get("shipper_index"),
+    buyer_id: fd.get("buyer_id"),
+    deal_id: fd.get("deal_id"),
+    supplier_id: fd.get("supplier_id"),
+    product: fd.get("product"),
+    hsn_code: fd.get("hsn_code"),
+    free_days_text: fd.get("free_days_text"),
+    detention_text: fd.get("detention_text"),
+    other_instructions: fd.get("other_instructions")
+  });
+  if (error) alert(error.message);
+  else {
+    alert("Saved!");
+    await loadSupabaseData();
+  }
+}
+
+function whatsappShippingInstruction() {
+  const fd = new FormData(document.getElementById("shipping-instruction-form"));
+  const text = `*SHIPPING INSTRUCTIONS*\n\nProduct: ${fd.get("product")}\nHSN: ${fd.get("hsn_code")}\nFree Days: ${fd.get("free_days_text")}\n\n${fd.get("other_instructions")}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+}
+
+function downloadShippingInstruction() { alert("Download feature coming soon!"); }
+
+// Document Actions
+async function saveDealDocument(e) {
+  e.preventDefault();
+  const dealId = e.target.dataset.placeholder_upload;
+  const fd = new FormData(e.target);
+  const file = fd.get("file");
+  
+  const { error } = await supabase.from("deal_documents").insert({
+    deal_id: dealId,
+    doc_type: fd.get("docType"),
+    file_name: file?.name || "Placeholder",
+    is_deleted: false
+  });
+  
+  if (error) alert(error.message);
+  else await loadSupabaseData();
+}
+
+async function deleteDealDocument(val) {
+  const [dealId, idx] = val.split(":");
+  const docs = state.documentsByDeal[dealId] || [];
+  const doc = docs[idx];
+  if (doc && confirm("Delete document?")) {
+    await supabase.from("deal_documents").update({ is_deleted: true }).eq("id", doc.id);
+    await loadSupabaseData();
+  }
+}
+
+// Export Actions
+function exportDealsCsv() {
+  const rows = state.deals.map(d => [d.deal_no, d.product_name, d.total_amount, d.status].join(","));
+  const csv = "Deal No,Product,Total,Status\n" + rows.join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "deals.csv";
+  a.click();
+}
+
+function bindProductHsnLookup() {
+  document.querySelectorAll("[id^='product-name']").forEach(select => {
+    select.addEventListener("change", (e) => {
+      const hsn = e.target.selectedOptions[0]?.dataset.hsn || "";
+      const id = e.target.id.replace("product-name", "");
+      const hsnInput = document.getElementById("hsn-code" + id);
+      if (hsnInput) hsnInput.value = hsn;
+    });
+  });
+}
+
 function printDoc(type, dealId) {
   const deal = getDealById(dealId);
   const buyer = getBuyerById(deal?.buyer_id);
