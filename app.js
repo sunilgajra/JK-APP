@@ -1507,16 +1507,35 @@ function dealFormHtml(d = {}, edit = false, id = "") {
           </div>
         </div>
 
-        <div>
-          <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Product Name</label>
-          <input name="product_name" value="${esc(d.product_name || "")}" placeholder="Product name" required>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Product Name</label>
+            <select name="product_name" id="${edit ? `product-name-${id}` : "product-name"}" required>
+              <option value="">Select product</option>
+              ${(state.products || []).map((p) => `
+                <option
+                  value="${esc(p.name)}"
+                  data-hsn="${esc(p.hsn_code || "")}"
+                  ${d.product_name === p.name ? "selected" : ""}
+                >
+                  ${esc(p.name)}
+                </option>
+              `).join("")}
+            </select>
+          </div>
+
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">HSN Code</label>
+            <input
+              name="hsn_code"
+              id="${edit ? `hsn-code-${id}` : "hsn-code"}"
+              value="${esc(d.hsn_code || "")}"
+              placeholder="HSN Code"
+            >
+          </div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-          <div>
-            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">HSN Code</label>
-            <input name="hsn_code" value="${esc(d.hsn_code || "")}" placeholder="HSN Code">
-          </div>
           <div>
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Unit</label>
             <input name="unit" value="${esc(d.unit || "MTON")}" placeholder="Unit">
@@ -1528,39 +1547,50 @@ function dealFormHtml(d = {}, edit = false, id = "") {
               <option value="AED" ${d.base_currency === "AED" ? "selected" : ""}>AED</option>
             </select>
           </div>
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Document Shipper</label>
+            <select name="shipper_index">
+              <option value="">Default Company</option>
+              ${(state.company.shippers || []).map((s, i) => `
+                <option value="${i}" ${String(d.shipper_index ?? "") === String(i) ? "selected" : ""}>
+                  ${esc(s.name || "Shipper")} - ${esc(s.mobile || "")}
+                </option>
+              `).join("")}
+            </select>
+          </div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
-  <div>
-    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Conversion Rate (USD → AED)</label>
-    <input name="conversion_rate" id="${edit ? `conversion-rate-${id}` : "conversion-rate"}" type="number" step="0.0001" value="${esc(d.conversion_rate || "")}" placeholder="e.g. 3.6725">
-  </div>
-  <div>
-    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Document Currency</label>
-    <select name="document_currency">
-      <option value="AED" ${currentDocCurrency === "AED" ? "selected" : ""}>AED</option>
-      <option value="USD" ${currentDocCurrency === "USD" ? "selected" : ""}>USD</option>
-    </select>
-  </div>
-  <div>
-    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Status</label>
-    <select name="status">
-      <option value="active" ${d.status === "active" ? "selected" : ""}>active</option>
-      <option value="shipped" ${d.status === "shipped" ? "selected" : ""}>shipped</option>
-      <option value="invoiced" ${d.status === "invoiced" ? "selected" : ""}>invoiced</option>
-      <option value="completed" ${d.status === "completed" ? "selected" : ""}>completed</option>
-    </select>
-  </div>
-  <div>
-    <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Approval Status</label>
-    <select name="approval_status">
-      <option value="draft" ${(d.approval_status || "draft") === "draft" ? "selected" : ""}>draft</option>
-      <option value="under_review" ${d.approval_status === "under_review" ? "selected" : ""}>under_review</option>
-      <option value="approved" ${d.approval_status === "approved" ? "selected" : ""}>approved</option>
-      <option value="locked" ${d.approval_status === "locked" ? "selected" : ""}>locked</option>
-    </select>
-  </div>
-</div>
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Conversion Rate (USD → AED)</label>
+            <input name="conversion_rate" id="${edit ? `conversion-rate-${id}` : "conversion-rate"}" type="number" step="0.0001" value="${esc(d.conversion_rate || "")}" placeholder="e.g. 3.6725">
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Document Currency</label>
+            <select name="document_currency">
+              <option value="AED" ${currentDocCurrency === "AED" ? "selected" : ""}>AED</option>
+              <option value="USD" ${currentDocCurrency === "USD" ? "selected" : ""}>USD</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Status</label>
+            <select name="status">
+              <option value="active" ${d.status === "active" ? "selected" : ""}>active</option>
+              <option value="shipped" ${d.status === "shipped" ? "selected" : ""}>shipped</option>
+              <option value="invoiced" ${d.status === "invoiced" ? "selected" : ""}>invoiced</option>
+              <option value="completed" ${d.status === "completed" ? "selected" : ""}>completed</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Approval Status</label>
+            <select name="approval_status">
+              <option value="draft" ${(d.approval_status || "draft") === "draft" ? "selected" : ""}>draft</option>
+              <option value="under_review" ${d.approval_status === "under_review" ? "selected" : ""}>under_review</option>
+              <option value="approved" ${d.approval_status === "approved" ? "selected" : ""}>approved</option>
+              <option value="locked" ${d.approval_status === "locked" ? "selected" : ""}>locked</option>
+            </select>
+          </div>
+        </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
           <div>
@@ -1657,18 +1687,18 @@ function dealFormHtml(d = {}, edit = false, id = "") {
           <div style="margin-top:10px">
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Container Numbers (one per line or comma separated)</label>
             <textarea
-  name="container_numbers"
-  style="min-height:110px"
-  placeholder="Enter one container number per line&#10;Example:&#10;RLTU2087940&#10;RLTU2038966&#10;RLTU2106736"
->${esc(
-  Array.isArray(d.container_numbers)
-    ? d.container_numbers.join("\n")
-    : String(d.container_numbers || "")
-        .split(/[,\n]+/)
-        .map((x) => x.trim())
-        .filter(Boolean)
-        .join("\n")
-)}</textarea>
+              name="container_numbers"
+              style="min-height:110px"
+              placeholder="Enter one container number per line&#10;Example:&#10;RLTU2087940&#10;RLTU2038966&#10;RLTU2106736"
+            >${esc(
+              Array.isArray(d.container_numbers)
+                ? d.container_numbers.join("\n")
+                : String(d.container_numbers || "")
+                    .split(/[,\n]+/)
+                    .map((x) => x.trim())
+                    .filter(Boolean)
+                    .join("\n")
+            )}</textarea>
           </div>
         </div>
 
@@ -1709,7 +1739,7 @@ function dealFormHtml(d = {}, edit = false, id = "") {
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Payment Terms</label>
             <input name="payment_terms" value="${esc(d.payment_terms || "")}">
           </div>
-                    <div style="margin-top:10px">
+          <div style="margin-top:10px">
             <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Bank Terms</label>
             <input name="bank_terms" value="${esc(d.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}">
           </div>
@@ -1725,19 +1755,19 @@ function dealFormHtml(d = {}, edit = false, id = "") {
               `).join("")}
             </select>
           </div>
-        </div>
 
-        <div style="margin-top:10px">
-  <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Document Shipper</label>
-  <select name="shipper_index">
-    <option value="">Default Company</option>
-    ${(state.company.shippers || []).map((s, i) => `
-      <option value="${i}" ${String(d.shipper_index ?? "") === String(i) ? "selected" : ""}>
-        ${esc(s.name || "Shipper")} - ${esc(s.mobile || "")}
-      </option>
-    `).join("")}
-  </select>
-</div>
+          <div style="margin-top:10px">
+            <label style="display:block;margin-bottom:6px;font-size:12px;font-weight:700;color:#94a3b8">Document Shipper</label>
+            <select name="shipper_index">
+              <option value="">Default Company</option>
+              ${(state.company.shippers || []).map((s, i) => `
+                <option value="${i}" ${String(d.shipper_index ?? "") === String(i) ? "selected" : ""}>
+                  ${esc(s.name || "Shipper")} - ${esc(s.mobile || "")}
+                </option>
+              `).join("")}
+            </select>
+          </div>
+        </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
