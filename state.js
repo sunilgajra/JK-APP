@@ -1,3 +1,4 @@
+console.log("STATE.JS INITIALIZING");
 export const state = {
   authUser: null,
   page: "dashboard",

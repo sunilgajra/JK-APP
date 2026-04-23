@@ -1,17 +1,17 @@
-import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js?v=8";
-import { supabase } from "./supabase.js?v=8";
-import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal } from "./state.js?v=8";
-import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js?v=8";
+import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO } from "./documents.js";
+import { supabase } from "./supabase.js";
+import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal } from "./state.js";
+import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js";
 
 // Import Views (Flat Structure)
-import { dashboardView } from "./dashboard.js?v=8";
-import { buyersView, buyerFormHtml } from "./buyers.js?v=8";
-import { suppliersView, supplierFormHtml } from "./suppliers.js?v=8";
-import { dealsView, dealFormHtml } from "./deals.js?v=8";
-import { dealDetailView } from "./dealDetail.js?v=8";
-import { settingsView } from "./settings.js?v=8";
-import { shippingInstructionsView } from "./shipping.js?v=8";
-import { productsView, productEditFormHtml } from "./products.js?v=8";
+import { dashboardView } from "./dashboard.js";
+import { buyersView, buyerFormHtml } from "./buyers.js";
+import { suppliersView, supplierFormHtml } from "./suppliers.js";
+import { dealsView, dealFormHtml } from "./deals.js";
+import { dealDetailView } from "./dealDetail.js";
+import { settingsView } from "./settings.js";
+import { shippingInstructionsView } from "./shipping.js";
+import { productsView, productEditFormHtml } from "./products.js";
 
 console.log("APP STARTING - VERSION 8");
 
@@ -102,6 +102,7 @@ async function loadSupabaseData() {
     if (dealsRes.error) throw dealsRes.error;
 
     state.buyers = buyersRes.data || [];
+    console.log("FETCHED BUYERS COUNT:", state.buyers.length);
     state.suppliers = suppliersRes.data || [];
     state.deals = dealsRes.data || [];
 
@@ -170,6 +171,7 @@ async function loadShippingInstructions() {
  * RENDERING
  */
 function render() {
+  console.log("Rendering page:", state.page);
   if (!state.authUser) {
     content.innerHTML = loginView();
     bindUI();
@@ -189,6 +191,7 @@ function render() {
 }
 
 function bindUI() {
+  console.log("Binding UI for page:", state.page);
   document.getElementById("login-form")?.addEventListener("submit", loginUser);
   document.getElementById("logout-btn")?.addEventListener("click", logoutUser);
   
@@ -308,7 +311,8 @@ async function saveDeal(e) {
     await loadSupabaseData();
   } catch (err) { 
     console.error("CATCH ERROR:", err);
-    alert("Error: " + err.message); 
+    if (err.code === "23505") alert("Error: This Deal Number already exists. Please use a unique Deal No.");
+    else alert("Error: " + err.message); 
   }
 }
 
@@ -332,8 +336,9 @@ async function deleteDeal(id) {
 
 async function saveBuyer(e) {
   e.preventDefault();
-  console.log("Saving buyer...");
+  console.log("saveBuyer triggered");
   const fd = new FormData(e.target);
+  console.log("Buyer Data:", Object.fromEntries(fd.entries()));
   const { data, error } = await supabase.from("buyers").insert({
     name: fd.get("name"), address: fd.get("address"), gst: fd.get("gst"), iec: fd.get("iec"), pan: fd.get("pan"),
     customer_id: normalizeCustomerId(fd.get("customer_id")), phone: fd.get("phone")
@@ -341,20 +346,29 @@ async function saveBuyer(e) {
   
   if (error) {
     console.error("SUPABASE ERROR:", error);
-    return alert(error.message);
+    if (error.code === "23505") alert("Error: This Customer ID is already in use. Please use a different ID.");
+    else alert(error.message);
+    return;
   }
+
   console.log("Save successful:", data);
   await loadSupabaseData();
 }
 
 async function updateBuyer(e, id) {
   e.preventDefault();
+  console.log("updateBuyer triggered for ID:", id);
   const fd = new FormData(e.target);
-  const { error } = await supabase.from("buyers").update({
+  const { data, error } = await supabase.from("buyers").update({
     name: fd.get("name"), address: fd.get("address"), gst: fd.get("gst"), iec: fd.get("iec"), pan: fd.get("pan"),
     customer_id: normalizeCustomerId(fd.get("customer_id")), phone: fd.get("phone")
-  }).eq("id", id);
-  if (error) return alert(error.message);
+  }).eq("id", id).select();
+  
+  if (error) {
+    console.error("SUPABASE ERROR:", error);
+    return alert(error.message);
+  }
+  console.log("Update successful:", data);
   await loadSupabaseData();
 }
 
@@ -473,16 +487,18 @@ async function deletePayment(dealId, paymentId) {
  * FORM HELPERS
  */
 function showBuyerForm() {
+  console.log("showBuyerForm called");
   const wrap = document.getElementById("buyer-form-wrap");
-  if (!wrap) return;
+  if (!wrap) return console.warn("buyer-form-wrap not found");
   wrap.innerHTML = buyerFormHtml();
   document.getElementById("buyer-form").addEventListener("submit", saveBuyer);
   document.getElementById("cancel-buyer-form").addEventListener("click", () => wrap.innerHTML = "");
 }
 function showEditBuyerForm(id) {
+  console.log("showEditBuyerForm called for ID:", id);
   const b = state.buyers.find(x => String(x.id) === String(id));
   const wrap = document.getElementById(`buyer-edit-wrap-${id}`);
-  if (!b || !wrap) return;
+  if (!b || !wrap) return console.warn("Edit wrap or buyer not found", id);
   wrap.innerHTML = buyerFormHtml(b, true, id);
   document.getElementById(`buyer-edit-form-${id}`).addEventListener("submit", (e) => updateBuyer(e, id));
   document.getElementById(`cancel-buyer-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");

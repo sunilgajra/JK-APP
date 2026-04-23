@@ -2,6 +2,7 @@ import { state } from "./state.js";
 import { esc, nextCustomerId } from "./utils.js";
 
 export function buyersView() {
+  console.log("VIEWING BUYERS - STATE COUNT:", state.buyers.length);
   const q = state.buyerSearch.trim().toLowerCase();
   const filteredBuyers = state.buyers.filter((b) => {
     if (!q) return true;

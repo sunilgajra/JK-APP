@@ -31,11 +31,17 @@ export function normalizeCustomerId(v) {
 }
 
 export function nextCustomerId() {
+  if (!state.buyers || state.buyers.length === 0) return "1001";
+  
   const nums = state.buyers
-    .map((b) => Number(String(b.customer_id || "").replace(/\D/g, "")))
-    .filter((n) => Number.isFinite(n) && n > 0);
+    .map((b) => {
+      const id = String(b.customer_id || "").replace(/\D/g, "");
+      return id ? parseInt(id, 10) : 0;
+    })
+    .filter((n) => !isNaN(n) && n > 0);
 
-  return String((nums.length ? Math.max(...nums) : 1000) + 1);
+  const max = nums.length ? Math.max(...nums) : 1000;
+  return String(max + 1);
 }
 
 export function formatAuditValue(v) {
