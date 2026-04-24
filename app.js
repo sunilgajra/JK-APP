@@ -507,20 +507,51 @@ async function deleteProduct(id) {
 function showPaymentForm(dealId) {
   const wrap = document.getElementById(`payment-form-wrap-${dealId}`);
   if (!wrap) return;
+  const deal = state.deals.find(d => String(d.id) === String(dealId));
+  const dealCurrency = deal?.document_currency || deal?.currency || "AED";
+
   wrap.innerHTML = `
     <form id="payment-form-${dealId}" class="item">
-      <div class="form-header">Add Payment</div>
+      <div class="form-header">Add Payment (Deal Currency: ${dealCurrency})</div>
       <div class="grid gap-10">
         <select name="direction"><option value="in">Received (In)</option><option value="out">Sent (Out)</option></select>
-        <input name="amount" type="number" step="0.01" placeholder="Amount" required>
+        
+        <div class="grid grid-2 gap-10">
+          <input name="amount" id="p-amount-${dealId}" type="number" step="0.01" placeholder="Amount" required>
+          <select name="currency" id="payment-currency-${dealId}">
+            <option value="${dealCurrency}">${dealCurrency} (Deal Main)</option>
+            <option value="AED" ${dealCurrency === "AED" ? "disabled" : ""}>AED</option>
+            <option value="USD" ${dealCurrency === "USD" ? "disabled" : ""}>USD</option>
+            <option value="INR">INR</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <input name="currency_other" id="payment-currency-other-${dealId}" placeholder="Specify other currency" style="display:none">
+        
+        <div id="conv-wrap-${dealId}" style="display:none; background:rgba(255,255,255,0.05); padding:10px; border-radius:4px">
+          <div class="item-sub mb-8">Currency Conversion to ${dealCurrency}</div>
+          <div class="grid grid-2 gap-10">
+            <div>
+              <label style="font-size:11px; opacity:0.7">Rate (1 ${dealCurrency} = ?)</label>
+              <input name="conversion_rate" id="p-rate-${dealId}" type="number" step="0.000001" value="1">
+            </div>
+            <div>
+              <label style="font-size:11px; opacity:0.7">Converted Amount</label>
+              <input id="p-converted-${dealId}" type="text" readonly style="background:rgba(0,0,0,0.2)">
+            </div>
+          </div>
+        </div>
+
         <select name="method" id="payment-method-${dealId}">
           <option value="Bank">Bank</option>
           <option value="Token">Token</option>
           <option value="Other">Other</option>
         </select>
         <input name="method_other" id="payment-method-other-${dealId}" placeholder="Specify other payment type" style="display:none">
+        
         <input name="payment_date" type="date" value="${new Date().toISOString().split("T")[0]}" required>
         <input name="ref" placeholder="Reference / Note">
+        
         <div class="flex gap-10">
           <button type="submit" class="btn-primary">Save Payment</button>
           <button type="button" onclick="this.closest('.item').remove()">Cancel</button>
@@ -529,12 +560,39 @@ function showPaymentForm(dealId) {
     </form>
   `;
 
+  const amountInput = document.getElementById(`p-amount-${dealId}`);
+  const currSelect = document.getElementById(`payment-currency-${dealId}`);
+  const currOther = document.getElementById(`payment-currency-other-${dealId}`);
+  const convWrap = document.getElementById(`conv-wrap-${dealId}`);
+  const rateInput = document.getElementById(`p-rate-${dealId}`);
+  const convertedInput = document.getElementById(`p-converted-${dealId}`);
+
+  const updateConv = () => {
+    const isOther = currSelect.value !== dealCurrency;
+    convWrap.style.display = isOther ? "block" : "none";
+    
+    const amount = Number(amountInput.value || 0);
+    const rate = Number(rateInput.value || 1);
+    // If user enters INR and deal is AED, and they say 1 AED = 22 INR, then Converted = amount / 22
+    if (rate > 0) {
+      convertedInput.value = (amount / rate).toFixed(2);
+    }
+  };
+
+  currSelect.addEventListener("change", () => {
+    currOther.style.display = currSelect.value === "Other" ? "block" : "none";
+    currOther.required = currSelect.value === "Other";
+    updateConv();
+  });
+  
+  amountInput.addEventListener("input", updateConv);
+  rateInput.addEventListener("input", updateConv);
+
   const methodSelect = document.getElementById(`payment-method-${dealId}`);
-  const otherInput = document.getElementById(`payment-method-other-${dealId}`);
+  const methodOther = document.getElementById(`payment-method-other-${dealId}`);
   methodSelect.addEventListener("change", () => {
-    otherInput.style.display = methodSelect.value === "Other" ? "block" : "none";
-    if (methodSelect.value === "Other") otherInput.required = true;
-    else otherInput.required = false;
+    methodOther.style.display = methodSelect.value === "Other" ? "block" : "none";
+    methodOther.required = methodSelect.value === "Other";
   });
 
   document.getElementById(`payment-form-${dealId}`).addEventListener("submit", (e) => savePayment(e, dealId));
@@ -543,16 +601,28 @@ function showPaymentForm(dealId) {
 async function savePayment(e, dealId) {
   e.preventDefault();
   const fd = new FormData(e.target);
+  const deal = state.deals.find(d => String(d.id) === String(dealId));
+  const dealCurrency = deal?.document_currency || deal?.currency || "AED";
   
   let method = fd.get("method");
   if (method === "Other") method = fd.get("method_other");
 
+  let currency = fd.get("currency");
+  if (currency === "Other") currency = fd.get("currency_other");
+
+  const amount = Number(fd.get("amount"));
+  const rate = Number(fd.get("conversion_rate") || 1);
+  const convertedAmount = currency === dealCurrency ? amount : amount / rate;
+
   const { error } = await supabase.from("payments").insert({
     deal_id: dealId,
-    amount: Number(fd.get("amount")),
+    amount: amount,
     direction: fd.get("direction"),
     payment_date: fd.get("payment_date"),
     method: method,
+    currency: currency,
+    conversion_rate: rate,
+    converted_amount: convertedAmount,
     ref: fd.get("ref"),
     status: "completed"
   });

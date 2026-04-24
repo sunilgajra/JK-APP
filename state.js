@@ -49,8 +49,10 @@ export function paymentSummary(dealId, totalAmount, dealType = "sell") {
   let sent = 0;
 
   list.forEach((p) => {
-    if (p.direction === "out") sent += Number(p.amount || 0);
-    else received += Number(p.amount || 0);
+    // Use converted_amount if available, else fallback to amount
+    const val = Number(p.converted_amount !== undefined ? p.converted_amount : p.amount || 0);
+    if (p.direction === "out") sent += val;
+    else received += val;
   });
 
   const total = Number(totalAmount || 0);
