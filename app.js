@@ -862,7 +862,13 @@ async function saveDealDocument(e) {
     if (error) throw error;
     await loadSupabaseData();
   } catch (err) {
-    alert("Upload failed: " + err.message);
+    if (err.message && err.message.includes("Bucket not found")) {
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const names = buckets && buckets.length ? buckets.map(b => b.name).join(", ") : "No buckets found";
+      alert("Upload failed: Bucket not found.\n\nThe code is looking for 'deal_documents', but your Supabase only has these buckets:\n" + names + "\n\nPlease rename your bucket to 'deal_documents' or create it exactly like that.");
+    } else {
+      alert("Upload failed: " + err.message);
+    }
     e.target.querySelector("button").textContent = "Upload Document";
     e.target.querySelector("button").disabled = false;
   }
