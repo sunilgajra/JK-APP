@@ -513,6 +513,12 @@ function showPaymentForm(dealId) {
       <div class="grid gap-10">
         <select name="direction"><option value="in">Received (In)</option><option value="out">Sent (Out)</option></select>
         <input name="amount" type="number" step="0.01" placeholder="Amount" required>
+        <select name="method" id="payment-method-${dealId}">
+          <option value="Bank">Bank</option>
+          <option value="Token">Token</option>
+          <option value="Other">Other</option>
+        </select>
+        <input name="method_other" id="payment-method-other-${dealId}" placeholder="Specify other payment type" style="display:none">
         <input name="payment_date" type="date" value="${new Date().toISOString().split("T")[0]}" required>
         <input name="ref" placeholder="Reference / Note">
         <div class="flex gap-10">
@@ -522,7 +528,40 @@ function showPaymentForm(dealId) {
       </div>
     </form>
   `;
+
+  const methodSelect = document.getElementById(`payment-method-${dealId}`);
+  const otherInput = document.getElementById(`payment-method-other-${dealId}`);
+  methodSelect.addEventListener("change", () => {
+    otherInput.style.display = methodSelect.value === "Other" ? "block" : "none";
+    if (methodSelect.value === "Other") otherInput.required = true;
+    else otherInput.required = false;
+  });
+
   document.getElementById(`payment-form-${dealId}`).addEventListener("submit", (e) => savePayment(e, dealId));
+}
+
+async function savePayment(e, dealId) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  
+  let method = fd.get("method");
+  if (method === "Other") method = fd.get("method_other");
+
+  const { error } = await supabase.from("payments").insert({
+    deal_id: dealId,
+    amount: Number(fd.get("amount")),
+    direction: fd.get("direction"),
+    payment_date: fd.get("payment_date"),
+    method: method,
+    ref: fd.get("ref"),
+    status: "completed"
+  });
+
+  if (error) alert(error.message);
+  else {
+    await loadSupabaseData();
+    render();
+  }
 }
 
 function showDocumentForm(dealId) {
@@ -553,20 +592,7 @@ function showDocumentForm(dealId) {
   wrap.querySelector("form").addEventListener("submit", saveDealDocument);
 }
 
-async function savePayment(e, dealId) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const { error } = await supabase.from("payments").insert({
-    deal_id: dealId,
-    direction: fd.get("direction"),
-    amount: Number(fd.get("amount")),
-    payment_date: fd.get("payment_date"),
-    ref: fd.get("ref"),
-    currency: "AED" // Defaulting for now
-  });
-  if (error) return alert(error.message);
-  await loadSupabaseData();
-}
+
 
 async function deletePayment(dealId, paymentId) {
   if (confirm("Delete payment?")) {
