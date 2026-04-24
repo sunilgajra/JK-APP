@@ -113,6 +113,7 @@ export function dealDetailView() {
                 <button data-edit-document="${d.id}:${doc.id}" type="button">Edit</button>
                 <button data-delete-placeholder-doc="${d.id}:${doc.id}" type="button">Delete</button>
               </div>
+              <div id="document-edit-wrap-${doc.id}" class="mt-8"></div>
             </div>
           `).join("")
               : `<div class="item-sub">No documents added yet.</div>`

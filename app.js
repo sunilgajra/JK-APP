@@ -895,18 +895,75 @@ async function deleteDealDocument(val) {
 
 async function showEditDocumentForm(val) {
   const [dealId, docId] = val.split(":");
-  const doc = (state.documentsByDeal[dealId] || []).find(d => String(d.id) === String(docId));
-  if (!doc) return;
+  const wrap = document.getElementById(`document-edit-wrap-${docId}`);
+  if (!wrap) return;
   
-  const newType = prompt("Enter new document type (BL, OBL, Telex, Supplier Invoice, etc.):", doc.doc_type);
-  if (newType && newType !== doc.doc_type) {
-    const { error } = await supabase.from("deal_documents").update({ doc_type: newType }).eq("id", docId);
-    if (error) alert(error.message);
-    else {
+  const docs = state.documentsByDeal[dealId] || [];
+  const doc = docs.find(d => String(d.id) === String(docId));
+  if (!doc) return;
+
+  wrap.innerHTML = `
+    <form id="doc-edit-form-${docId}" class="grid gap-10 mt-8 p-10" style="background:rgba(255,255,255,0.05); border-radius:4px">
+      <div class="form-header" style="font-size:13px">Replace Document</div>
+      <select name="docType">
+        <option value="BL" ${doc.doc_type === "BL" ? "selected" : ""}>BL</option>
+        <option value="OBL" ${doc.doc_type === "OBL" ? "selected" : ""}>OBL</option>
+        <option value="Telex" ${doc.doc_type === "Telex" ? "selected" : ""}>Telex</option>
+        <option value="Supplier Invoice" ${doc.doc_type === "Supplier Invoice" ? "selected" : ""}>Supplier Invoice</option>
+        <option value="Commercial Invoice" ${doc.doc_type === "Commercial Invoice" ? "selected" : ""}>Commercial Invoice</option>
+        <option value="Packing List" ${doc.doc_type === "Packing List" ? "selected" : ""}>Packing List</option>
+        <option value="Certificate" ${doc.doc_type === "Certificate" ? "selected" : ""}>Certificate</option>
+        <option value="Other" ${doc.doc_type === "Other" ? "selected" : ""}>Other</option>
+      </select>
+      <input type="file" name="file">
+      <div class="item-sub" style="font-size:11px; margin-top:-5px">Leave file empty to only change the type.</div>
+      <div class="flex gap-10">
+        <button type="submit" class="btn-primary btn-small">Update</button>
+        <button type="button" class="btn-small" onclick="this.closest('form').remove()">Cancel</button>
+      </div>
+    </form>
+  `;
+
+  wrap.querySelector("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const file = fd.get("file");
+    const docType = fd.get("docType");
+    const btn = e.target.querySelector("button[type='submit']");
+    
+    btn.textContent = "Updating...";
+    btn.disabled = true;
+
+    try {
+      let updateData = { doc_type: docType };
+
+      if (file && file.size > 0) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        const filePath = `${dealId}/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage.from("deal-documents").upload(filePath, file);
+        if (uploadError) throw uploadError;
+        
+        const { data: publicUrlData } = supabase.storage.from("deal-documents").getPublicUrl(filePath);
+        
+        updateData.file_name = file.name;
+        updateData.file_url = publicUrlData.publicUrl;
+        updateData.file_path = filePath;
+        updateData.mime_type = file.type || "application/octet-stream";
+      }
+
+      const { error } = await supabase.from("deal_documents").update(updateData).eq("id", docId);
+      if (error) throw error;
+      
       await loadSupabaseData();
       render();
+    } catch (err) {
+      alert("Update failed: " + err.message);
+      btn.textContent = "Update";
+      btn.disabled = false;
     }
-  }
+  });
 }
 
 // Export Actions
