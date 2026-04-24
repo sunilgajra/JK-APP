@@ -136,8 +136,10 @@ export function dealDetailView() {
               <div class="item-sub">${esc(p.direction || "in")} · ${esc(p.method || "—")} · ${esc(p.status || "pending")}</div>
               <div class="item-sub">${esc(p.ref || "—")} · ${esc(p.payment_date || "—")}</div>
               <div class="mt-8 flex gap-8">
+                <button data-edit-payment="${d.id}:${p.id}">Edit</button>
                 <button data-delete-payment="${d.id}:${p.id}">Delete Payment</button>
               </div>
+              <div id="payment-edit-wrap-${p.id}" class="mt-8"></div>
             </div>
           `).join("")
               : `<div class="item-sub">No payments yet.</div>`
