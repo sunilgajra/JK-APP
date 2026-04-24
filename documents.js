@@ -24,7 +24,7 @@ function assetUrl(file) {
 const LOGO_URL = assetUrl("logo.PNG");
 const STAMP_URL = assetUrl("stamp.png");
 
-function openPrintWindow(html) {
+export function openPrintWindow(html) {
   const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 
   if (isMobile) {
@@ -612,7 +612,7 @@ function footer(company = {}, date = "", showSignatory = false) {
   `;
 }
 
-function buildPI(deal, buyer, supplier, company = {}) {
+export function buildPI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.created_at || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
   const currency = docCurrency(deal);
@@ -727,7 +727,7 @@ function buildPI(deal, buyer, supplier, company = {}) {
   </html>`;
 }
 
-function buildCI(deal, buyer, supplier, company = {}) {
+export function buildCI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
   const currency = docCurrency(deal);
@@ -820,7 +820,7 @@ function buildCI(deal, buyer, supplier, company = {}) {
   </body></html>`;
 }
 
-function buildPL(deal, buyer, supplier, company = {}) {
+export function buildPL(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
 
   return `
@@ -911,7 +911,7 @@ function buildPL(deal, buyer, supplier, company = {}) {
   </html>`;
 }
 
-function buildCOO(deal, buyer, supplier, company = {}) {
+export function buildCOO(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
 
   return `
@@ -1257,5 +1257,4 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
   </body>
   </html>`;
 }
-
-export { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildSupplierStatement, buildBuyerStatement };
+
