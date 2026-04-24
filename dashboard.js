@@ -1,4 +1,4 @@
-import { state, paymentSummary } from "./state.js";
+import { state, paymentSummary, paymentsForDeal } from "./state.js";
 import { esc, fmtMoney } from "./utils.js";
 
 export function dashboardView() {
@@ -24,6 +24,7 @@ export function dashboardView() {
 
   const totalProfitAed = totalSaleAed - totalPurchaseAed;
   const profitMargin = totalSaleAed > 0 ? (totalProfitAed / totalSaleAed) * 100 : 0;
+  const recentDeals = [...state.deals].slice(0, 5);
 
   return `
     <div class="grid grid-3 mb-12">
