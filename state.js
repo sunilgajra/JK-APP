@@ -43,22 +43,24 @@ export function documentsForDeal(dealId) {
   return state.documentsByDeal[String(dealId)] || [];
 }
 
-export function paymentSummary(dealId, totalAmount, dealType = "sell") {
+export function paymentSummary(dealId, saleTotal, purchaseTotal) {
   const list = paymentsForDeal(dealId);
   let received = 0;
   let sent = 0;
 
   list.forEach((p) => {
-    // Use converted_amount if available, else fallback to amount
     const val = Number(p.converted_amount !== undefined ? p.converted_amount : p.amount || 0);
     if (p.direction === "out") sent += val;
     else received += val;
   });
 
-  const total = Number(totalAmount || 0);
-  const balance = dealType === "purchase" ? total - sent : total - received;
+  const sale = Number(saleTotal || 0);
+  const purchase = Number(purchaseTotal || 0);
+  
+  const receivable = sale - received;
+  const payable = purchase - sent;
 
-  return { received, sent, balance };
+  return { received, sent, receivable, payable, sale, purchase };
 }
 
 export function getSelectedDeal() {

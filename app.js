@@ -265,23 +265,31 @@ function bindUI() {
 
 function validateDeal(fd) {
   const quantity = cleanNumber(fd.get("quantity"));
-  const rate = cleanNumber(fd.get("rate"));
+  const rate = cleanNumber(fd.get("rate")); // Sale Rate
+  const pRate = cleanNumber(fd.get("purchase_rate")); // Purchase Rate
   const conv = cleanNumber(fd.get("conversion_rate"));
   const baseCurr = fd.get("base_currency") || "USD";
   const docCurr = fd.get("document_currency") || baseCurr;
 
   let rateUsd = 0, rateAed = 0, totalUsd = 0, totalAed = 0;
+  let pRateUsd = 0, pRateAed = 0, pTotalUsd = 0, pTotalAed = 0;
 
   if (baseCurr === "USD") {
     rateUsd = rate;
     rateAed = conv ? rate * conv : 0;
+    pRateUsd = pRate;
+    pRateAed = conv ? pRate * conv : 0;
   } else {
     rateAed = rate;
     rateUsd = conv ? rate / conv : 0;
+    pRateAed = pRate;
+    pRateUsd = conv ? pRate / conv : 0;
   }
 
   totalUsd = quantity * rateUsd;
   totalAed = quantity * rateAed;
+  pTotalUsd = quantity * pRateUsd;
+  pTotalAed = quantity * pRateAed;
 
   return {
     type: fd.get("type"),
@@ -293,12 +301,15 @@ function validateDeal(fd) {
     document_currency: docCurr,
     conversion_rate: conv,
     quantity,
-    rate,
+    rate, // Sale Rate
+    purchase_rate: pRate, // Purchase Rate
     rate_usd: rateUsd,
     rate_aed: rateAed,
     total_amount: docCurr === "USD" ? totalUsd : totalAed,
     total_amount_usd: totalUsd,
     total_amount_aed: totalAed,
+    purchase_total_usd: pTotalUsd,
+    purchase_total_aed: pTotalAed,
     status: fd.get("status") || "active",
     approval_status: fd.get("approval_status") || "draft",
     loading_port: cleanUpper(fd.get("loading_port")),
@@ -849,32 +860,50 @@ function bindDealAutoTotal(id = null) {
   const suffix = id ? `-${id}` : "";
   const qtyIn = document.getElementById(`quantity${suffix}`);
   const rateIn = document.getElementById(`rate${suffix}`);
+  const pRateIn = document.getElementById(`purchase-rate${suffix}`);
   const convIn = document.getElementById(`conversion-rate${suffix}`);
   const baseCurrIn = document.getElementById(`base-currency${suffix}`);
+  
   const totalUsdIn = document.getElementById(`total${suffix}`);
   const totalAedIn = document.getElementById(`total-aed${suffix}`);
+  const pTotalUsdIn = document.getElementById(`purchase-total${suffix}`);
+  const pTotalAedIn = document.getElementById(`purchase-total-aed${suffix}`);
 
   const calc = () => {
     const q = Number(qtyIn?.value || 0);
     const r = Number(rateIn?.value || 0);
+    const pr = Number(pRateIn?.value || 0);
     const c = Number(convIn?.value || 0);
     const bc = baseCurrIn?.value || "USD";
 
-    let tUsd = 0, tAed = 0;
+    // Sale Totals
+    let sUsd = 0, sAed = 0;
     if (bc === "USD") {
-      tUsd = q * r;
-      tAed = c ? tUsd * c : 0;
+      sUsd = q * r;
+      sAed = c ? sUsd * c : 0;
     } else {
-      tAed = q * r;
-      tUsd = c ? tAed / c : 0;
+      sAed = q * r;
+      sUsd = c ? sAed / c : 0;
     }
 
-    if (totalUsdIn) totalUsdIn.value = tUsd.toFixed(2);
-    if (totalAedIn) totalAedIn.value = tAed.toFixed(2);
+    // Purchase Totals
+    let pUsd = 0, pAed = 0;
+    if (bc === "USD") {
+      pUsd = q * pr;
+      pAed = c ? pUsd * c : 0;
+    } else {
+      pAed = q * pr;
+      pUsd = c ? pAed / c : 0;
+    }
+
+    if (totalUsdIn) totalUsdIn.value = sUsd.toFixed(2);
+    if (totalAedIn) totalAedIn.value = sAed.toFixed(2);
+    if (pTotalUsdIn) pTotalUsdIn.value = pUsd.toFixed(2);
+    if (pTotalAedIn) pTotalAedIn.value = pAed.toFixed(2);
   };
 
-  [qtyIn, rateIn, convIn, baseCurrIn].forEach(el => el?.addEventListener("input", calc));
-  [qtyIn, rateIn, convIn, baseCurrIn].forEach(el => el?.addEventListener("change", calc));
+  [qtyIn, rateIn, pRateIn, convIn, baseCurrIn].forEach(el => el?.addEventListener("input", calc));
+  [qtyIn, rateIn, pRateIn, convIn, baseCurrIn].forEach(el => el?.addEventListener("change", calc));
 }
 
 // Misc

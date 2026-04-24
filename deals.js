@@ -41,17 +41,26 @@ export function dealsView() {
         ${
           filteredDeals.length
             ? filteredDeals.map((d) => {
-                const s = paymentSummary(d.id, d.total_amount, d.type);
-                const payments = paymentsForDeal(d.id);
-                const documents = documentsForDeal(d.id);
+                const s = paymentSummary(d.id, d.total_amount, d.document_currency === "USD" ? d.purchase_total_usd : d.purchase_total_aed);
+                const curr = d.document_currency || d.currency || "AED";
                 return `
             <div class="item">
               <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
-              <div class="item-sub">HSN: ${esc(d.hsn_code || "—")}</div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
-              <div class="item-sub">${esc(d.currency || "AED")} ${fmtMoney(d.total_amount)} · ${esc(d.status || "active")}</div>
-              <div class="item-sub">${esc(d.type || "sell")} · Buyer: ${esc(buyerName(d.buyer_id))} · Supplier: ${esc(supplierName(d.supplier_id))}</div>
-              <div class="item-sub">Received: ${esc(d.currency || "AED")} ${fmtMoney(s.received)} · Sent: ${esc(d.currency || "AED")} ${fmtMoney(s.sent)} · Balance: ${esc(d.currency || "AED")} ${fmtMoney(s.balance)}</div>
+              <div class="item-sub">Buyer: ${esc(buyerName(d.buyer_id))} · Supplier: ${esc(supplierName(d.supplier_id))}</div>
+              
+              <div class="grid grid-2 mt-8 p-10" style="background:rgba(255,255,255,0.03); border-radius:4px">
+                <div>
+                  <div class="item-sub" style="font-weight:bold; color:var(--success)">Receivable (Buyer)</div>
+                  <div class="item-title" style="font-size:14px">${curr} ${fmtMoney(s.receivable)}</div>
+                  <div class="item-sub">Total: ${fmtMoney(s.sale)} | Rec: ${fmtMoney(s.received)}</div>
+                </div>
+                <div>
+                  <div class="item-sub" style="font-weight:bold; color:var(--danger)">Payable (Supplier)</div>
+                  <div class="item-title" style="font-size:14px">${curr} ${fmtMoney(s.payable)}</div>
+                  <div class="item-sub">Total: ${fmtMoney(s.purchase)} | Sent: ${fmtMoney(s.sent)}</div>
+                </div>
+              </div>
 
               <div class="mt-8 flex gap-8 flex-wrap">
                 <button data-open-deal="${d.id}">Open</button>
@@ -228,22 +237,33 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
           </div>
         </div>
 
+        <div class="grid grid-2 gap-10">
+          <div>
+            <label class="form-label">Sale Rate (to Buyer)</label>
+            <input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}">
+          </div>
+          <div>
+            <label class="form-label">Purchase Rate (from Supplier)</label>
+            <input name="purchase_rate" id="${edit ? `purchase-rate-${id}` : "purchase-rate"}" type="number" step="0.01" value="${esc(d.purchase_rate || "")}">
+          </div>
+        </div>
+
         <div class="grid grid-4 gap-10">
           <div>
             <label class="form-label">Quantity</label>
             <input name="quantity" id="${edit ? `quantity-${id}` : "quantity"}" type="number" step="0.001" value="${esc(d.quantity || "")}">
           </div>
-          <div>
-            <label class="form-label">Rate</label>
-            <input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}">
+          <div style="background:rgba(255,255,255,0.03); padding:8px; border-radius:4px">
+            <label class="form-label">Sale Total (USD)</label>
+            <input name="total_amount_usd" id="${edit ? `total-${id}` : "total"}" type="number" step="0.01" value="${esc(d.total_amount_usd || "")}" readonly style="background:transparent">
+            <label class="form-label" style="margin-top:5px">Sale Total (AED)</label>
+            <input name="total_amount_aed" id="${edit ? `total-aed-${id}` : "total-aed"}" type="number" step="0.01" value="${esc(d.total_amount_aed || "")}" readonly style="background:transparent">
           </div>
-          <div>
-            <label class="form-label">Total (USD)</label>
-            <input name="total_amount_usd" id="${edit ? `total-${id}` : "total"}" type="number" step="0.01" value="${esc(d.total_amount_usd || "")}" readonly>
-          </div>
-          <div>
-            <label class="form-label">Total (AED)</label>
-            <input name="total_amount_aed" id="${edit ? `total-aed-${id}` : "total-aed"}" type="number" step="0.01" value="${esc(d.total_amount_aed || "")}" readonly>
+          <div style="background:rgba(255,255,255,0.03); padding:8px; border-radius:4px">
+            <label class="form-label">Purchase Total (USD)</label>
+            <input name="purchase_total_usd" id="${edit ? `purchase-total-${id}` : "purchase-total"}" type="number" step="0.01" value="${esc(d.purchase_total_usd || "")}" readonly style="background:transparent">
+            <label class="form-label" style="margin-top:5px">Purchase Total (AED)</label>
+            <input name="purchase_total_aed" id="${edit ? `purchase-total-aed-${id}` : "purchase-total-aed"}" type="number" step="0.01" value="${esc(d.purchase_total_aed || "")}" readonly style="background:transparent">
           </div>
         </div>
 

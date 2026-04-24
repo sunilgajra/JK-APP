@@ -9,11 +9,12 @@ export function dealDetailView() {
   const supplier = state.suppliers.find((s) => String(s.id) === String(d.supplier_id));
   const payments = paymentsForDeal(d.id);
   const documents = documentsForDeal(d.id);
-  const s = paymentSummary(d.id, d.total_amount, d.type);
   const showCurrency = d.document_currency || d.currency || d.base_currency || "AED";
   const showTotal = showCurrency === "USD"
     ? Number(d.total_amount_usd || d.total_amount || 0)
     : Number(d.total_amount_aed || d.total_amount || 0);
+  const pTotal = showCurrency === "USD" ? (d.purchase_total_usd || 0) : (d.purchase_total_aed || 0);
+  const s = paymentSummary(d.id, showTotal, pTotal);
 
   return `
     <div class="card">
@@ -56,11 +57,19 @@ export function dealDetailView() {
         </div>
       </div>
 
-      <div class="item mt-12">
-        <div class="item-title">Payment Summary</div>
-        <div class="item-sub">Received: ${esc(showCurrency)} ${fmtMoney(s.received)}</div>
-        <div class="item-sub">Sent: ${esc(showCurrency)} ${fmtMoney(s.sent)}</div>
-        <div class="item-sub">Balance: ${esc(showCurrency)} ${fmtMoney(s.balance)}</div>
+      <div class="item mt-12 grid grid-2 gap-10" style="background:rgba(255,255,255,0.03); padding:15px; border-radius:8px">
+        <div>
+          <div class="item-title" style="color:var(--success)">Receivable (Buyer)</div>
+          <div class="title" style="font-size:20px; margin-bottom:5px">${esc(showCurrency)} ${fmtMoney(s.receivable)}</div>
+          <div class="item-sub">Sale Total: ${fmtMoney(s.sale)}</div>
+          <div class="item-sub">Received: ${fmtMoney(s.received)}</div>
+        </div>
+        <div>
+          <div class="item-title" style="color:var(--danger)">Payable (Supplier)</div>
+          <div class="title" style="font-size:20px; margin-bottom:5px">${esc(showCurrency)} ${fmtMoney(s.payable)}</div>
+          <div class="item-sub">Purchase Total: ${fmtMoney(s.purchase)}</div>
+          <div class="item-sub">Sent to Supplier: ${fmtMoney(s.sent)}</div>
+        </div>
       </div>
 
       <div class="item mt-12">
