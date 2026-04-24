@@ -1345,8 +1345,16 @@ async function runAiScan(dealId, docId) {
     });
 
     const result = await aiRes.json();
+    if (!aiRes.ok) {
+      console.error("Gemini API Error Response:", result);
+      throw new Error(result.error?.message || "Unknown API Error");
+    }
+
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error("AI could not read the document.");
+    if (!text) {
+      console.error("Gemini Response Object:", result);
+      throw new Error("AI could not read the document. The response was empty.");
+    }
 
     // Clean JSON from markdown if present
     const jsonStr = text.replace(/```json|```/g, "").trim();
