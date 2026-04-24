@@ -855,6 +855,7 @@ async function saveDealDocument(e) {
       doc_type: docType,
       file_name: file.name,
       file_url: publicUrlData.publicUrl,
+      file_path: filePath,
       mime_type: file.type || "application/octet-stream",
       is_deleted: false
     });
