@@ -862,6 +862,7 @@ async function saveDealDocument(e) {
     
     if (error) throw error;
     await loadSupabaseData();
+    render();
   } catch (err) {
     if (err.message && err.message.includes("Bucket not found")) {
       const { data: buckets } = await supabase.storage.listBuckets();
