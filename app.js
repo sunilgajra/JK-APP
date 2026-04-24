@@ -1228,26 +1228,38 @@ async function showEditDocumentForm(val) {
 function exportDealsCsv() {
   const headers = [
     "Deal No", "Type", "Status", "Approval", "Buyer", "Supplier", 
-    "Product", "HSN", "Quantity", "Unit", "Rate", 
+    "Product", "HSN", "Quantity", "Unit", 
+    "Sale Rate", "Sale Total USD", "Sale Total AED",
+    "Purchase Rate", "Purchase Total USD", "Purchase Total AED",
     "Base Currency", "Doc Currency", "Conv Rate", 
-    "Total USD", "Total AED", "Loading Port", "Discharge Port", 
-    "Vessel", "ETA", "Shipment Out", "Payment Terms"
+    "Received (Buyer)", "Sent (Supplier)", "Receivable (Buyer Bal)", "Payable (Supplier Bal)",
+    "Loading Port", "Discharge Port", "Vessel", "ETA", "Shipment Out", "Payment Terms"
   ];
 
   const rows = state.deals.map(d => {
     const buyer = getBuyerById(d.buyer_id)?.name || "—";
     const supplier = state.suppliers.find(s => String(s.id) === String(d.supplier_id))?.name || "—";
     
+    // Get payment summary for this deal
+    // We use the AED totals as a base if doc currency is AED, else USD
+    const isUsd = d.document_currency === "USD";
+    const s = paymentSummary(
+      d.id, 
+      isUsd ? d.total_amount_usd : d.total_amount_aed,
+      isUsd ? d.purchase_total_usd : d.purchase_total_aed
+    );
+    
     const data = [
       d.deal_no, d.type, d.status, d.approval_status, buyer, supplier,
-      d.product_name, d.hsn_code, d.quantity, d.unit, d.rate,
+      d.product_name, d.hsn_code, d.quantity, d.unit,
+      d.rate, d.total_amount_usd, d.total_amount_aed,
+      d.purchase_rate, d.purchase_total_usd, d.purchase_total_aed,
       d.base_currency, d.document_currency, d.conversion_rate,
-      d.total_amount_usd, d.total_amount_aed, d.loading_port, d.discharge_port,
-      d.vessel_voyage || d.vessel, d.eta, d.shipment_out_date, d.payment_terms
+      s.received, s.sent, s.receivable, s.payable,
+      d.loading_port, d.discharge_port, d.vessel_voyage || d.vessel, d.eta, d.shipment_out_date, d.payment_terms
     ];
 
-    // Wrap in quotes and handle existing quotes
-    return data.map(val => `"${String(val || "").replace(/"/g, '""')}"`).join(",");
+    return data.map(val => `"${String(val ?? "").replace(/"/g, '""')}"`).join(",");
   });
 
   const csv = headers.join(",") + "\n" + rows.join("\n");
