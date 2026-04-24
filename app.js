@@ -1227,12 +1227,11 @@ async function showEditDocumentForm(val) {
 // Export Actions
 function exportDealsCsv() {
   const headers = [
-    "Deal No", "Type", "Status", "Approval", "Buyer", "Supplier", 
+    "Deal No", "Type", "Status", "Approval", 
+    "Supplier", "Purchase Rate", "Purchase Total USD", "Purchase Total AED", "Sent (Supplier)", "Payable (Supplier Bal)",
+    "Buyer", "Sale Rate", "Sale Total USD", "Sale Total AED", "Received (Buyer)", "Receivable (Buyer Bal)",
     "Product", "HSN", "Quantity", "Unit", 
-    "Sale Rate", "Sale Total USD", "Sale Total AED",
-    "Purchase Rate", "Purchase Total USD", "Purchase Total AED",
     "Base Currency", "Doc Currency", "Conv Rate", 
-    "Received (Buyer)", "Sent (Supplier)", "Receivable (Buyer Bal)", "Payable (Supplier Bal)",
     "Loading Port", "Discharge Port", "Vessel", "ETA", "Shipment Out", "Payment Terms"
   ];
 
@@ -1240,8 +1239,6 @@ function exportDealsCsv() {
     const buyer = getBuyerById(d.buyer_id)?.name || "—";
     const supplier = state.suppliers.find(s => String(s.id) === String(d.supplier_id))?.name || "—";
     
-    // Get payment summary for this deal
-    // We use the AED totals as a base if doc currency is AED, else USD
     const isUsd = d.document_currency === "USD";
     const s = paymentSummary(
       d.id, 
@@ -1250,12 +1247,11 @@ function exportDealsCsv() {
     );
     
     const data = [
-      d.deal_no, d.type, d.status, d.approval_status, buyer, supplier,
+      d.deal_no, d.type, d.status, d.approval_status,
+      supplier, d.purchase_rate, d.purchase_total_usd, d.purchase_total_aed, s.sent, s.payable,
+      buyer, d.rate, d.total_amount_usd, d.total_amount_aed, s.received, s.receivable,
       d.product_name, d.hsn_code, d.quantity, d.unit,
-      d.rate, d.total_amount_usd, d.total_amount_aed,
-      d.purchase_rate, d.purchase_total_usd, d.purchase_total_aed,
       d.base_currency, d.document_currency, d.conversion_rate,
-      s.received, s.sent, s.receivable, s.payable,
       d.loading_port, d.discharge_port, d.vessel_voyage || d.vessel, d.eta, d.shipment_out_date, d.payment_terms
     ];
 
