@@ -21,7 +21,8 @@ export const state = {
     bankAccounts: [],
     shippers: [],
     mobile: "+971524396170",
-    email: "info@jkpetrochem.com"
+    email: "info@jkpetrochem.com",
+    gemini_api_key: ""
   },
   error: "",
   ready: false

@@ -142,6 +142,7 @@ export function dealDetailView() {
                 }
                 <button data-edit-document="${d.id}:${doc.id}" type="button">Edit</button>
                 <button data-delete-placeholder-doc="${d.id}:${doc.id}" type="button">Delete</button>
+                ${doc.doc_type === 'BL' ? `<button data-ai-scan="${d.id}:${doc.id}" class="btn-primary" style="background:#6366f1">Scan with AI</button>` : ''}
               </div>
               <div id="document-edit-wrap-${doc.id}" class="mt-8"></div>
             </div>

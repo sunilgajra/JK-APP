@@ -86,6 +86,13 @@ export function settingsView() {
             <button type="button" id="add-shipper-btn" class="mt-10">+ Add Shipper</button>
           </div>
 
+          <div>
+            <div class="form-header">AI Settings</div>
+            <label class="form-label">Google Gemini API Key (for Smart Scan)</label>
+            <input name="gemini_api_key" type="password" value="${esc(c.gemini_api_key || "")}" placeholder="Paste your API key here">
+            <div class="item-sub mt-4">Required for scanning documents automatically.</div>
+          </div>
+
           <button type="submit" class="btn-primary">Save Settings</button>
         </div>
       </form>

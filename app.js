@@ -153,6 +153,7 @@ async function loadCompanySettings() {
       address: data.address || state.company.address,
       mobile: data.mobile || state.company.mobile,
       email: data.email || state.company.email,
+      gemini_api_key: data.gemini_api_key || "",
       bankAccounts: Array.isArray(data.bank_accounts) ? data.bank_accounts : [],
       shippers: Array.isArray(data.shippers) ? data.shippers : []
     };
@@ -205,6 +206,11 @@ function bindUI() {
   document.getElementById("open-company-settings")?.addEventListener("click", () => navigate("#/settings"));
   document.getElementById("product-form")?.addEventListener("submit", saveProduct);
   
+  document.querySelectorAll("[data-ai-scan]").forEach(btn => btn.addEventListener("click", () => {
+    const [dealId, docId] = btn.dataset.aiScan.split(":");
+    runAiScan(dealId, docId);
+  }));
+
   // Search
   document.getElementById("deal-search")?.addEventListener("input", (e) => { state.dealSearch = e.target.value; render(); });
   document.getElementById("buyer-search")?.addEventListener("input", (e) => { state.buyerSearch = e.target.value; render(); });
@@ -917,23 +923,24 @@ async function saveCompanySettings(e) {
   
   const bankAccounts = [];
   document.querySelectorAll("[data-bank-index]").forEach(input => {
-    const idx = input.dataset.bank_index;
+    const idx = input.dataset.bankIndex;
     if (!bankAccounts[idx]) bankAccounts[idx] = {};
-    bankAccounts[idx][input.dataset.bank_field] = input.value;
+    bankAccounts[idx][input.dataset.bankField] = input.value;
   });
 
   const shippers = [];
   document.querySelectorAll("[data-shipper-index]").forEach(input => {
-    const idx = input.dataset.shipper_index;
+    const idx = input.dataset.shipperIndex;
     if (!shippers[idx]) shippers[idx] = {};
-    shippers[idx][input.dataset.shipper_field] = input.value;
+    shippers[idx][input.dataset.shipperField] = input.value;
   });
 
   const payload = {
     name: fd.get("name"),
     address: fd.get("address"),
     bank_accounts: bankAccounts.filter(Boolean),
-    shippers: shippers.filter(Boolean)
+    shippers: shippers.filter(Boolean),
+    gemini_api_key: fd.get("gemini_api_key")
   };
 
   const { error } = await supabase.from("company_settings").update(payload).eq("id", 1);
@@ -1296,6 +1303,81 @@ function printDoc(type, dealId) {
   if (type === "supplier-statement") html = buildSupplierStatement(deal, buyer, supplier, payments, state.company);
   if (type === "buyer-statement") html = buildBuyerStatement(deal, buyer, supplier, payments, state.company);
   if (html) openPrintWindow(html);
+}
+
+async function runAiScan(dealId, docId) {
+  const key = state.company.gemini_api_key;
+  if (!key) return alert("Please add your Gemini API Key in Settings first.");
+
+  const doc = state.documentsByDeal[dealId]?.find(d => String(d.id) === String(docId));
+  if (!doc || !doc.file_url) return alert("Document file not found.");
+
+  const btn = document.querySelector(`[data-ai-scan="${dealId}:${docId}"]`);
+  const originalText = btn.textContent;
+  btn.textContent = "Scanning...";
+  btn.disabled = true;
+
+  try {
+    // 1. Get file as base64
+    const response = await fetch(doc.file_url);
+    const blob = await response.blob();
+    const reader = new FileReader();
+    const base64 = await new Promise((resolve) => {
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.readAsDataURL(blob);
+    });
+
+    // 2. Call Gemini API
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    const prompt = "Analyze this Bill of Lading. Extract the following fields in strict JSON format: bl_no, vessel, loading_port, discharge_port, product_name, quantity (number only), container_list (string), shipment_out_date (YYYY-MM-DD), eta (YYYY-MM-DD). If a field is missing, use null. Only return the JSON object.";
+    
+    const aiRes = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inline_data: { mime_type: doc.mime_type || "image/jpeg", data: base64 } }
+          ]
+        }]
+      })
+    });
+
+    const result = await aiRes.json();
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error("AI could not read the document.");
+
+    // Clean JSON from markdown if present
+    const jsonStr = text.replace(/```json|```/g, "").trim();
+    const data = JSON.parse(jsonStr);
+
+    // 3. Confirm and Update
+    if (confirm(`AI found the following details:\n\nBL No: ${data.bl_no}\nVessel: ${data.vessel}\nLoading: ${data.loading_port}\nDischarge: ${data.discharge_port}\nProduct: ${data.product_name}\n\nApply these changes to the deal?`)) {
+      const updateData = {};
+      if (data.bl_no) updateData.bl_no = data.bl_no;
+      if (data.vessel) updateData.vessel = data.vessel;
+      if (data.loading_port) updateData.loading_port = data.loading_port;
+      if (data.discharge_port) updateData.discharge_port = data.discharge_port;
+      if (data.product_name) updateData.product_name = data.product_name;
+      if (data.quantity) updateData.quantity = data.quantity;
+      if (data.shipment_out_date) updateData.shipment_out_date = data.shipment_out_date;
+      if (data.eta) updateData.eta = data.eta;
+
+      const { error } = await supabase.from("deals").update(updateData).eq("id", dealId);
+      if (error) throw error;
+      
+      alert("Deal updated successfully!");
+      await loadSupabaseData();
+      render();
+    }
+  } catch (err) {
+    console.error("AI Scan Error:", err);
+    alert("Scan failed: " + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 }
 
 // Start
