@@ -1054,7 +1054,7 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
         <th style="width:15%">Due Amount USD</th>
       </tr>
       <tr>
-        <td>${esc(deal.product_name)}</td>
+        <td class="center">${esc(deal.product_name)}</td>
         <td class="center">${fmt(deal.quantity)}</td>
         <td class="center">${fmt(deal.purchase_rate)}</td>
         <td class="right">${fmt(purchaseTotalUsd)}</td>
@@ -1100,11 +1100,11 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
 
     <div class="excel-header" style="margin-top:20px">FINAL SUMMARY</div>
     <div class="summary-box">
-      <table class="plainTable">
+      <table class="plainTable" style="width:100%">
         <tr>
           <td style="width:200px; font-weight:bold">Due Amount</td>
-          <td style="width:120px" class="right">AED ${fmt(purchaseTotalAed)}</td>
-          <td style="width:120px" class="right">USD ${fmt(purchaseTotalUsd)}</td>
+          <td style="width:150px" class="right">AED ${fmt(purchaseTotalAed)}</td>
+          <td style="width:150px" class="right">USD ${fmt(purchaseTotalUsd)}</td>
           <td></td>
         </tr>
         <tr>
@@ -1113,7 +1113,8 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
           <td class="right">USD ${fmt(paidUsd)}</td>
           <td></td>
         </tr>
-        <tr style="height:15px"><td></td></tr>
+        <tr style="height:15px"><td></td><td></td><td></td><td></td></tr>
+        <tr style="height:15px"><td></td><td></td><td></td><td></td></tr>
         <tr style="font-weight:800">
           <td>Total:</td>
           <td class="right"><span class="bal-to-pay">${fmt(balAed)}</span></td>
@@ -1188,7 +1189,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
         <th style="width:15%">Due Amount USD</th>
       </tr>
       <tr>
-        <td>${esc(deal.product_name)}</td>
+        <td class="center">${esc(deal.product_name)}</td>
         <td class="center">${fmt(deal.quantity)}</td>
         <td class="center">${fmt(deal.rate)}</td>
         <td class="right">${fmt(saleTotalUsd)}</td>
@@ -1234,11 +1235,11 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
 
     <div class="excel-header" style="margin-top:20px">FINAL SUMMARY</div>
     <div class="summary-box">
-      <table class="plainTable">
+      <table class="plainTable" style="width:100%">
         <tr>
           <td style="width:200px; font-weight:bold">Invoice Amount</td>
-          <td style="width:120px" class="right">AED ${fmt(saleTotalAed)}</td>
-          <td style="width:120px" class="right">USD ${fmt(saleTotalUsd)}</td>
+          <td style="width:150px" class="right">AED ${fmt(saleTotalAed)}</td>
+          <td style="width:150px" class="right">USD ${fmt(saleTotalUsd)}</td>
           <td></td>
         </tr>
         <tr>
@@ -1247,7 +1248,8 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
           <td class="right">USD ${fmt(recUsd)}</td>
           <td></td>
         </tr>
-        <tr style="height:15px"><td></td></tr>
+        <tr style="height:15px"><td></td><td></td><td></td><td></td></tr>
+        <tr style="height:15px"><td></td><td></td><td></td><td></td></tr>
         <tr style="font-weight:800">
           <td>Total:</td>
           <td class="right"><span class="bal-to-rec">${fmt(balAed)}</span></td>
