@@ -1,61 +1,52 @@
-import { state, paymentsForDeal } from "./state.js";
+import { state, paymentSummary } from "./state.js";
 import { esc, fmtMoney } from "./utils.js";
 
 export function dashboardView() {
-  const totalDeals = state.deals.length;
-  const totalBuyers = state.buyers.length;
-  const totalSuppliers = state.suppliers.length;
+  let totalSaleAed = 0;
+  let totalPurchaseAed = 0;
+  let totalReceivableAed = 0;
+  let totalPayableAed = 0;
+  let totalReceivedAed = 0;
+  let totalSentAed = 0;
 
-  const totalValueAed = state.deals.reduce(
-    (sum, d) => sum + Number(d.total_amount_aed || d.total_amount || 0),
-    0
-  );
+  state.deals.forEach(d => {
+    const conv = Number(d.conversion_rate || 3.67);
+    const s = paymentSummary(d.id, d.total_amount_usd, d.purchase_total_usd);
+    
+    // Convert USD balances to AED for the dashboard overview
+    totalSaleAed += (s.sale * conv);
+    totalPurchaseAed += (s.purchase * conv);
+    totalReceivableAed += (s.receivable * conv);
+    totalPayableAed += (s.payable * conv);
+    totalReceivedAed += (s.received * conv);
+    totalSentAed += (s.sent * conv);
+  });
 
-  const totalReceivedAed = state.deals.reduce((sum, d) => {
-    const payments = paymentsForDeal(d.id);
-    const dealCurrency = d.document_currency || d.currency || d.base_currency || "AED";
-    const conv = Number(d.conversion_rate || 0);
-
-    const receivedAed = payments.reduce((acc, p) => {
-      if (p.direction !== "in") return acc;
-
-      const amount = Number(p.amount || 0);
-      const paymentCurrency = p.currency || dealCurrency;
-
-      if (paymentCurrency === "AED") return acc + amount;
-      if (paymentCurrency === "USD") return acc + (conv > 0 ? amount * conv : 0);
-      return acc;
-    }, 0);
-
-    return sum + receivedAed;
-  }, 0);
-
-  const activeDeals = state.deals.filter(
-    (d) => (d.status || "").toLowerCase() !== "completed"
-  ).length;
-
-  const recentDeals = [...state.deals].slice(0, 5);
+  const totalProfitAed = totalSaleAed - totalPurchaseAed;
+  const profitMargin = totalSaleAed > 0 ? (totalProfitAed / totalSaleAed) * 100 : 0;
 
   return `
+    <div class="grid grid-3 mb-12">
+      <div class="card" style="border-left: 4px solid var(--success)">
+        <div class="stat-label">Total Receivables</div>
+        <div class="stat-value" style="color:var(--success)">AED ${fmtMoney(totalReceivableAed)}</div>
+        <div class="item-sub">Outstanding from Buyers</div>
+      </div>
+
+      <div class="card" style="border-left: 4px solid var(--danger)">
+        <div class="stat-label">Total Payables</div>
+        <div class="stat-value" style="color:var(--danger)">AED ${fmtMoney(totalPayableAed)}</div>
+        <div class="item-sub">Outstanding to Suppliers</div>
+      </div>
+
+      <div class="card" style="border-left: 4px solid var(--primary)">
+        <div class="stat-label">Expected Profit</div>
+        <div class="stat-value" style="color:var(--primary)">AED ${fmtMoney(totalProfitAed)}</div>
+        <div class="item-sub">Avg Margin: ${profitMargin.toFixed(1)}%</div>
+      </div>
+    </div>
+
     <div class="grid grid-2">
-      <div class="card">
-        <div class="stat-label">Total Deals</div>
-        <div class="stat-value">${totalDeals}</div>
-        <div class="item-sub">Active: ${activeDeals}</div>
-      </div>
-
-      <div class="card">
-        <div class="stat-label">Total Value</div>
-        <div class="stat-value" style="font-size:20px">AED ${fmtMoney(totalValueAed)}</div>
-        <div class="item-sub">Across all deals</div>
-      </div>
-
-      <div class="card">
-        <div class="stat-label">Received Payments</div>
-        <div class="stat-value" style="font-size:20px;color:#22c55e">AED ${fmtMoney(totalReceivedAed)}</div>
-        <div class="item-sub">Payments received</div>
-      </div>
-
       <div class="card">
         <div class="stat-label">Network</div>
         <div class="stat-value" style="font-size:20px">${totalBuyers + totalSuppliers}</div>

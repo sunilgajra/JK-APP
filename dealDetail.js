@@ -72,6 +72,19 @@ export function dealDetailView() {
         </div>
       </div>
 
+      <div class="item mt-12" style="background:linear-gradient(90deg, rgba(var(--primary-rgb), 0.1), transparent); padding:15px; border-radius:8px; border-left: 4px solid var(--primary)">
+        <div class="grid grid-2 gap-10">
+          <div>
+            <div class="item-title" style="color:var(--primary)">Expected Gross Profit</div>
+            <div class="title" style="font-size:20px">${esc(showCurrency)} ${fmtMoney(s.sale - s.purchase)}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="item-title">Profit Margin</div>
+            <div class="title" style="font-size:20px; color:var(--primary)">${(s.sale > 0 ? ((s.sale - s.purchase) / s.sale) * 100 : 0).toFixed(2)}%</div>
+          </div>
+        </div>
+      </div>
+
       <div class="item mt-12">
         <div class="item-title">Documents</div>
         <div class="mt-8 flex gap-8 flex-wrap">

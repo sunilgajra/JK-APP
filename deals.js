@@ -45,8 +45,14 @@ export function dealsView() {
                 const payments = paymentsForDeal(d.id);
                 const documents = documentsForDeal(d.id);
                 const curr = d.document_currency || d.currency || "AED";
+                const profit = s.sale - s.purchase;
+                const margin = s.sale > 0 ? (profit / s.sale) * 100 : 0;
                 return `
-            <div class="item">
+            <div class="item relative">
+              <div style="position:absolute; top:15px; right:15px; text-align:right">
+                <div class="item-sub" style="font-weight:bold; color:var(--primary)">Margin: ${margin.toFixed(1)}%</div>
+                <div class="item-sub">Profit: ${curr} ${fmtMoney(profit)}</div>
+              </div>
               <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
               <div class="item-sub">Buyer: ${esc(buyerName(d.buyer_id))} · Supplier: ${esc(supplierName(d.supplier_id))}</div>
