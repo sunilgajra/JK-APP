@@ -1,6 +1,6 @@
 import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildShippingInstruction } from "./documents.js";
 import { supabase } from "./supabase.js";
-import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal } from "./state.js";
+import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal, paymentSummary } from "./state.js";
 import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js";
 
 // Import Views (Flat Structure)
