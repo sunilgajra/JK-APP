@@ -115,11 +115,13 @@ async function loadSupabaseData() {
     state.paymentsByDeal = groupedPayments;
 
     const groupedDocs = {};
+    console.log("FETCHED DOCS COUNT:", (documentsRes.data || []).length);
     (documentsRes.data || []).forEach(doc => {
       const k = String(doc.deal_id);
       if (!groupedDocs[k]) groupedDocs[k] = [];
       groupedDocs[k].push(doc);
     });
+    console.log("GROUPED DOCS:", groupedDocs);
     state.documentsByDeal = groupedDocs;
 
     const groupedAudit = {};
