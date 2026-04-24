@@ -49,8 +49,8 @@ export function dashboardView() {
     <div class="grid grid-2">
       <div class="card">
         <div class="stat-label">Network</div>
-        <div class="stat-value" style="font-size:20px">${totalBuyers + totalSuppliers}</div>
-        <div class="item-sub">${totalBuyers} buyers · ${totalSuppliers} suppliers</div>
+        <div class="stat-value" style="font-size:20px">${state.buyers.length + state.suppliers.length}</div>
+        <div class="item-sub">${state.buyers.length} buyers · ${state.suppliers.length} suppliers</div>
       </div>
     </div>
 
