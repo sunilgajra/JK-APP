@@ -968,14 +968,38 @@ async function showEditDocumentForm(val) {
 
 // Export Actions
 function exportDealsCsv() {
-  const rows = state.deals.map(d => [d.deal_no, d.product_name, d.total_amount, d.status].join(","));
-  const csv = "Deal No,Product,Total,Status\n" + rows.join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
+  const headers = [
+    "Deal No", "Type", "Status", "Approval", "Buyer", "Supplier", 
+    "Product", "HSN", "Quantity", "Unit", "Rate", 
+    "Base Currency", "Doc Currency", "Conv Rate", 
+    "Total USD", "Total AED", "Loading Port", "Discharge Port", 
+    "Vessel", "ETA", "Shipment Out", "Payment Terms"
+  ];
+
+  const rows = state.deals.map(d => {
+    const buyer = getBuyerById(d.buyer_id)?.name || "—";
+    const supplier = state.suppliers.find(s => String(s.id) === String(d.supplier_id))?.name || "—";
+    
+    const data = [
+      d.deal_no, d.type, d.status, d.approval_status, buyer, supplier,
+      d.product_name, d.hsn_code, d.quantity, d.unit, d.rate,
+      d.base_currency, d.document_currency, d.conversion_rate,
+      d.total_amount_usd, d.total_amount_aed, d.loading_port, d.discharge_port,
+      d.vessel_voyage || d.vessel, d.eta, d.shipment_out_date, d.payment_terms
+    ];
+
+    // Wrap in quotes and handle existing quotes
+    return data.map(val => `"${String(val || "").replace(/"/g, '""')}"`).join(",");
+  });
+
+  const csv = headers.join(",") + "\n" + rows.join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "deals.csv";
+  a.download = `deals_export_${new Date().toISOString().split("T")[0]}.csv`;
   a.click();
+  URL.revokeObjectURL(url);
 }
 
 function bindProductHsnLookup(id = null) {
