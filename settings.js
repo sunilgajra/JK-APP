@@ -91,6 +91,7 @@ export function settingsView() {
             <label class="form-label">Google Gemini API Key (for Smart Scan)</label>
             <input name="gemini_api_key" type="password" value="${esc(c.gemini_api_key || "")}" placeholder="Paste your API key here">
             <div class="item-sub mt-4">Required for scanning documents automatically.</div>
+            <button type="button" id="check-ai-btn" class="mt-8" style="background:#4f46e5; color:white">Check AI Connection</button>
           </div>
 
           <button type="submit" class="btn-primary">Save Settings</button>

@@ -211,6 +211,8 @@ function bindUI() {
     runAiScan(dealId, docId);
   }));
 
+  document.getElementById("check-ai-btn")?.addEventListener("click", checkAiConnection);
+
   // Search
   document.getElementById("deal-search")?.addEventListener("input", (e) => { state.dealSearch = e.target.value; render(); });
   document.getElementById("buyer-search")?.addEventListener("input", (e) => { state.buyerSearch = e.target.value; render(); });
@@ -1385,6 +1387,28 @@ async function runAiScan(dealId, docId) {
   } finally {
     btn.textContent = originalText;
     btn.disabled = false;
+  }
+}
+
+async function checkAiConnection() {
+  const key = state.company.gemini_api_key;
+  if (!key) return alert("Please enter an API Key first.");
+
+  const btn = document.getElementById("check-ai-btn");
+  btn.textContent = "Checking...";
+  
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    const data = await res.json();
+    
+    if (!res.ok) throw new Error(data.error?.message || "Connection failed");
+    
+    const modelNames = data.models?.map(m => m.name.replace("models/", "")) || [];
+    alert(`Success! Your key can access these models:\n\n${modelNames.join("\n")}\n\nPlease tell Antigravity which ones you see!`);
+  } catch (err) {
+    alert("Connection failed: " + err.message);
+  } finally {
+    btn.textContent = "Check AI Connection";
   }
 }
 
