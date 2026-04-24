@@ -110,7 +110,8 @@ export function dealDetailView() {
                        <a href="${doc.file_url}" download="${esc(doc.file_name || "file")}">Download</a>`
                     : `<span style="opacity:.6">No file URL</span>`
                 }
-                <button data-delete-placeholder-doc="${d.id}:${idx}" type="button">Delete</button>
+                <button data-edit-document="${d.id}:${doc.id}" type="button">Edit</button>
+                <button data-delete-placeholder-doc="${d.id}:${doc.id}" type="button">Delete</button>
               </div>
             </div>
           `).join("")

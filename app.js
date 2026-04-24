@@ -241,8 +241,9 @@ function bindUI() {
   // Exports
   document.getElementById("export-deals-csv")?.addEventListener("click", exportDealsCsv);
 
-  // Documents
+   // Documents
   document.querySelectorAll("[data-placeholder-upload]").forEach(form => form.addEventListener("submit", saveDealDocument));
+  document.querySelectorAll("[data-edit-document]").forEach(btn => btn.addEventListener("click", () => showEditDocumentForm(btn.dataset.editDocument)));
   document.querySelectorAll("[data-delete-placeholder-doc]").forEach(btn => btn.addEventListener("click", () => deleteDealDocument(btn.dataset.deletePlaceholderDoc)));
 
   // Shipping Instructions
@@ -879,12 +880,32 @@ async function saveDealDocument(e) {
 }
 
 async function deleteDealDocument(val) {
-  const [dealId, idx] = val.split(":");
-  const docs = state.documentsByDeal[dealId] || [];
-  const doc = docs[idx];
-  if (doc && confirm("Delete document?")) {
-    await supabase.from("deal_documents").update({ is_deleted: true }).eq("id", doc.id);
-    await loadSupabaseData();
+  const parts = val.split(":");
+  const docId = parts.length > 1 ? parts[1] : parts[0];
+  
+  if (confirm("Delete document?")) {
+    const { error } = await supabase.from("deal_documents").update({ is_deleted: true }).eq("id", docId);
+    if (error) alert(error.message);
+    else {
+      await loadSupabaseData();
+      render();
+    }
+  }
+}
+
+async function showEditDocumentForm(val) {
+  const [dealId, docId] = val.split(":");
+  const doc = (state.documentsByDeal[dealId] || []).find(d => String(d.id) === String(docId));
+  if (!doc) return;
+  
+  const newType = prompt("Enter new document type (BL, OBL, Telex, Supplier Invoice, etc.):", doc.doc_type);
+  if (newType && newType !== doc.doc_type) {
+    const { error } = await supabase.from("deal_documents").update({ doc_type: newType }).eq("id", docId);
+    if (error) alert(error.message);
+    else {
+      await loadSupabaseData();
+      render();
+    }
   }
 }
 

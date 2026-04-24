@@ -99,6 +99,7 @@ export function dealsView() {
                     <div class="item-sub">${esc(doc.file_name || "—")}</div>
                     <div class="mt-8 flex gap-8">
                       <a href="${doc.file_url}" target="_blank" class="btn-small">View</a>
+                      <button data-edit-document="${d.id}:${doc.id}" class="btn-small">Edit</button>
                       <button data-delete-placeholder-doc="${d.id}:${doc.id}" class="btn-danger btn-small">Delete</button>
                     </div>
                   </div>
