@@ -225,8 +225,9 @@ function bindUI() {
   document.querySelectorAll("[data-print-pl]").forEach(btn => btn.addEventListener("click", () => printDoc("pl", btn.dataset.printPl)));
   document.querySelectorAll("[data-print-coo]").forEach(btn => btn.addEventListener("click", () => printDoc("coo", btn.dataset.printCoo)));
 
-  // Payments
+  // Payments and Docs
   document.querySelectorAll("[data-show-payment-form]").forEach(btn => btn.addEventListener("click", () => showPaymentForm(btn.dataset.showPaymentForm)));
+  document.querySelectorAll("[data-show-document-form]").forEach(btn => btn.addEventListener("click", () => showDocumentForm(btn.dataset.showDocumentForm)));
   
   // Settings
   document.getElementById("company-settings-form")?.addEventListener("submit", saveCompanySettings);
@@ -519,6 +520,34 @@ function showPaymentForm(dealId) {
     </form>
   `;
   document.getElementById(`payment-form-${dealId}`).addEventListener("submit", (e) => savePayment(e, dealId));
+}
+
+function showDocumentForm(dealId) {
+  const wrap = document.getElementById(`document-form-wrap-${dealId}`);
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <form data-placeholder-upload="${dealId}" class="item">
+      <div class="form-header">Upload Document</div>
+      <div class="grid gap-10">
+        <select name="docType">
+          <option value="BL">BL</option>
+          <option value="OBL">OBL</option>
+          <option value="Telex">Telex</option>
+          <option value="Supplier Invoice">Supplier Invoice</option>
+          <option value="Commercial Invoice">Commercial Invoice</option>
+          <option value="Packing List">Packing List</option>
+          <option value="Certificate">Certificate</option>
+          <option value="Other">Other</option>
+        </select>
+        <input type="file" name="file" required>
+        <div class="flex gap-10">
+          <button type="submit" class="btn-primary">Upload Document</button>
+          <button type="button" onclick="this.closest('.item').remove()">Cancel</button>
+        </div>
+      </div>
+    </form>
+  `;
+  wrap.querySelector("form").addEventListener("submit", saveDealDocument);
 }
 
 async function savePayment(e, dealId) {

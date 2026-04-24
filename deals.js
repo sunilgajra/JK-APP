@@ -55,6 +55,7 @@ export function dealsView() {
               <div class="mt-8 flex gap-8 flex-wrap">
                 <button data-open-deal="${d.id}">Open</button>
                 <button data-show-payment-form="${d.id}">Add Payment</button>
+                <button data-show-document-form="${d.id}">Upload Document</button>
                 <button data-edit-deal="${d.id}">Edit</button>
                 <button data-delete-deal="${d.id}">Delete</button>
               </div>
@@ -68,6 +69,7 @@ export function dealsView() {
 
               <div id="deal-edit-wrap-${d.id}" class="mt-10"></div>
               <div id="payment-form-wrap-${d.id}" class="mt-10"></div>
+              <div id="document-form-wrap-${d.id}" class="mt-10"></div>
 
               <div class="list mt-10">
                 ${
