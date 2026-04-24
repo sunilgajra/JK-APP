@@ -86,7 +86,15 @@ export function dealDetailView() {
       </div>
 
       <div class="item mt-12">
-        <div class="item-title">Documents</div>
+        <div class="item-title">Account Statements</div>
+        <div class="mt-8 flex gap-8 flex-wrap">
+          <button data-print-supplier-statement="${d.id}" class="btn-primary">Supplier Settlement</button>
+          <button data-print-buyer-statement="${d.id}" class="btn-primary">Buyer Settlement</button>
+        </div>
+      </div>
+
+      <div class="item mt-12">
+        <div class="item-title">Export Documents</div>
         <div class="mt-8 flex gap-8 flex-wrap">
           <button data-print-pi="${d.id}">Print PI</button>
           <button data-print-ci="${d.id}">Print CI</button>

@@ -1,4 +1,4 @@
-import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildShippingInstruction } from "./documents.js";
+import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildShippingInstruction, buildSupplierStatement, buildBuyerStatement } from "./documents.js";
 import { supabase } from "./supabase.js";
 import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal, paymentSummary } from "./state.js";
 import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js";
@@ -1285,11 +1285,14 @@ function printDoc(type, dealId) {
   const buyer = getBuyerById(deal?.buyer_id);
   const supplier = state.suppliers.find(s => String(s.id) === String(deal?.supplier_id));
   const dealDoc = { ...deal, dealNo: deal.deal_no, productName: deal.product_name, totalAmount: deal.total_amount };
+  const payments = paymentsForDeal(dealId);
   let html = "";
   if (type === "pi") html = buildPI(dealDoc, buyer, supplier, state.company);
   if (type === "ci") html = buildCI(dealDoc, buyer, supplier, state.company);
   if (type === "pl") html = buildPL(dealDoc, buyer, supplier, state.company);
   if (type === "coo") html = buildCOO(dealDoc, buyer, supplier, state.company);
+  if (type === "supplier-statement") html = buildSupplierStatement(deal, buyer, supplier, payments, state.company);
+  if (type === "buyer-statement") html = buildBuyerStatement(deal, buyer, supplier, payments, state.company);
   if (html) openPrintWindow(html);
 }
 

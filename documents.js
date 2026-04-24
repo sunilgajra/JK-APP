@@ -996,4 +996,266 @@ function buildCOO(deal, buyer, supplier, company = {}) {
   </html>`;
 }
 
-export { openPrintWindow, buildPI, buildCI, buildPL, buildCOO };
+export function buildSupplierStatement(deal, buyer, supplier, payments, company = {}) {
+  const date = new Date().toISOString();
+  const currency = docCurrency(deal);
+  const outPayments = payments.filter(p => p.direction === "out");
+  const purchaseTotalUsd = Number(deal.purchase_total_usd || 0);
+  const purchaseTotalAed = Number(deal.purchase_total_aed || 0);
+  const conv = Number(deal.conversion_rate || 3.67);
+
+  let paidAed = 0;
+  let paidUsd = 0;
+  outPayments.forEach(p => {
+    const amt = Number(p.amount || 0);
+    if (p.currency === "AED") {
+      paidAed += amt;
+      paidUsd += (amt / conv);
+    } else {
+      paidUsd += amt;
+      paidAed += (amt * conv);
+    }
+  });
+
+  const balAed = purchaseTotalAed - paidAed;
+  const balUsd = purchaseTotalUsd - paidUsd;
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Supplier Statement - ${esc(deal.deal_no)}</title>
+    ${commonStyle()}
+    ${previewScript()}
+    <style>
+      .statement-table th { background: #3b9da2; color: white; }
+      .summary-box { background: #f0f7f7; border: 2px solid #3b9da2; padding: 15px; margin-top: 20px; }
+      .bal-to-pay { background: #ffff00; font-weight: 800; padding: 5px; border: 1px solid #000; }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+    <div class="top">
+      ${logoBlock()}
+      <div style="grid-column: span 2; text-align: right;">
+        <div class="docTitle">SUPPLIER SETTLEMENT</div>
+        <div class="item-sub">Deal No: ${esc(deal.deal_no)}</div>
+        <div class="item-sub">Supplier: ${esc(supplier?.name)}</div>
+      </div>
+    </div>
+
+    <div class="boxHead">PURCHASE (PRIME)</div>
+    <table class="statement-table thin">
+      <tr>
+        <th>MATERIAL</th>
+        <th>QTY</th>
+        <th>RATE</th>
+        <th>Amount USD</th>
+        <th>AED @${conv}</th>
+        <th>BL</th>
+      </tr>
+      <tr>
+        <td>${esc(deal.product_name)}</td>
+        <td class="center">${fmt(deal.quantity)}</td>
+        <td class="center">${fmt(deal.purchase_rate)}</td>
+        <td class="right">${fmt(purchaseTotalUsd)}</td>
+        <td class="right">${fmt(purchaseTotalAed)}</td>
+        <td class="center">${esc(deal.bl_no || "PENDING")}</td>
+      </tr>
+      <tr style="background:#eee; font-weight:bold">
+        <td colspan="3" class="right">TOTAL</td>
+        <td class="right">${fmt(purchaseTotalUsd)}</td>
+        <td class="right">${fmt(purchaseTotalAed)}</td>
+        <td></td>
+      </tr>
+    </table>
+
+    <div class="boxHead" style="margin-top:20px">PAYMENTS SENT</div>
+    <table class="statement-table thin">
+      <tr>
+        <th>DATE</th>
+        <th>AED</th>
+        <th>USD</th>
+        <th>METHOD / REF</th>
+      </tr>
+      ${outPayments.length ? outPayments.map(p => {
+        const pUsd = p.currency === "USD" ? p.amount : p.amount / conv;
+        const pAed = p.currency === "AED" ? p.amount : p.amount * conv;
+        return `
+        <tr>
+          <td class="center">${fmtDate(p.payment_date)}</td>
+          <td class="right">${fmt(pAed)}</td>
+          <td class="right">${fmt(pUsd)}</td>
+          <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
+        </tr>`;
+      }).join("") : `<tr><td colspan="4" class="center">No payments recorded</td></tr>`}
+      <tr style="background:#eee; font-weight:bold">
+        <td class="right">TOTAL PAID</td>
+        <td class="right">${fmt(paidAed)}</td>
+        <td class="right">${fmt(paidUsd)}</td>
+        <td></td>
+      </tr>
+    </table>
+
+    <div class="summary-box">
+      <div class="boxHead" style="margin: -15px -15px 15px -15px">FINAL SUMMARY</div>
+      <table class="plainTable">
+        <tr>
+          <td style="width:200px">Due Amount</td>
+          <td style="width:120px" class="right">AED ${fmt(purchaseTotalAed)}</td>
+          <td style="width:120px" class="right">USD ${fmt(purchaseTotalUsd)}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Less Payment Done</td>
+          <td class="right">AED ${fmt(paidAed)}</td>
+          <td class="right">USD ${fmt(paidUsd)}</td>
+          <td></td>
+        </tr>
+        <tr style="height:20px"><td></td></tr>
+        <tr style="font-weight:800">
+          <td>Total Balance:</td>
+          <td class="right"><span class="bal-to-pay">${fmt(balAed)}</span></td>
+          <td class="right"><span class="bal-to-pay">${fmt(balUsd)}</span></td>
+          <td style="padding-left:10px">BAL TO PAY</td>
+        </tr>
+      </table>
+    </div>
+
+    ${footer(company, date)}
+  </body>
+  </html>`;
+}
+
+export function buildBuyerStatement(deal, buyer, supplier, payments, company = {}) {
+  const date = new Date().toISOString();
+  const currency = docCurrency(deal);
+  const inPayments = payments.filter(p => p.direction === "in");
+  const saleTotalUsd = Number(deal.total_amount_usd || 0);
+  const saleTotalAed = Number(deal.total_amount_aed || 0);
+  const conv = Number(deal.conversion_rate || 3.67);
+
+  let recAed = 0;
+  let recUsd = 0;
+  inPayments.forEach(p => {
+    const amt = Number(p.amount || 0);
+    if (p.currency === "AED") {
+      recAed += amt;
+      recUsd += (amt / conv);
+    } else {
+      recUsd += amt;
+      recAed += (amt * conv);
+    }
+  });
+
+  const balAed = saleTotalAed - recAed;
+  const balUsd = saleTotalUsd - recUsd;
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Buyer Statement - ${esc(deal.deal_no)}</title>
+    ${commonStyle()}
+    ${previewScript()}
+    <style>
+      .statement-table th { background: #3b9da2; color: white; }
+      .summary-box { background: #f7faf0; border: 2px solid #3b9da2; padding: 15px; margin-top: 20px; }
+      .bal-to-rec { background: #ffff00; font-weight: 800; padding: 5px; border: 1px solid #000; }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+    <div class="top">
+      ${logoBlock()}
+      <div style="grid-column: span 2; text-align: right;">
+        <div class="docTitle">BUYER SETTLEMENT</div>
+        <div class="item-sub">Deal No: ${esc(deal.deal_no)}</div>
+        <div class="item-sub">Buyer: ${esc(buyer?.name)}</div>
+      </div>
+    </div>
+
+    <div class="boxHead">SALE DETAILS</div>
+    <table class="statement-table thin">
+      <tr>
+        <th>MATERIAL</th>
+        <th>QTY</th>
+        <th>RATE</th>
+        <th>Amount USD</th>
+        <th>AED @${conv}</th>
+        <th>BL</th>
+      </tr>
+      <tr>
+        <td>${esc(deal.product_name)}</td>
+        <td class="center">${fmt(deal.quantity)}</td>
+        <td class="center">${fmt(deal.rate)}</td>
+        <td class="right">${fmt(saleTotalUsd)}</td>
+        <td class="right">${fmt(saleTotalAed)}</td>
+        <td class="center">${esc(deal.bl_no || "—")}</td>
+      </tr>
+      <tr style="background:#eee; font-weight:bold">
+        <td colspan="3" class="right">TOTAL</td>
+        <td class="right">${fmt(saleTotalUsd)}</td>
+        <td class="right">${fmt(saleTotalAed)}</td>
+        <td></td>
+      </tr>
+    </table>
+
+    <div class="boxHead" style="margin-top:20px">PAYMENTS RECEIVED</div>
+    <table class="statement-table thin">
+      <tr>
+        <th>DATE</th>
+        <th>AED</th>
+        <th>USD</th>
+        <th>METHOD / REF</th>
+      </tr>
+      ${inPayments.length ? inPayments.map(p => {
+        const pUsd = p.currency === "USD" ? p.amount : p.amount / conv;
+        const pAed = p.currency === "AED" ? p.amount : p.amount * conv;
+        return `
+        <tr>
+          <td class="center">${fmtDate(p.payment_date)}</td>
+          <td class="right">${fmt(pAed)}</td>
+          <td class="right">${fmt(pUsd)}</td>
+          <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
+        </tr>`;
+      }).join("") : `<tr><td colspan="4" class="center">No payments recorded</td></tr>`}
+      <tr style="background:#eee; font-weight:bold">
+        <td class="right">TOTAL RECEIVED</td>
+        <td class="right">${fmt(recAed)}</td>
+        <td class="right">${fmt(recUsd)}</td>
+        <td></td>
+      </tr>
+    </table>
+
+    <div class="summary-box">
+      <div class="boxHead" style="margin: -15px -15px 15px -15px">FINAL SUMMARY</div>
+      <table class="plainTable">
+        <tr>
+          <td style="width:200px">Invoice Amount</td>
+          <td style="width:120px" class="right">AED ${fmt(saleTotalAed)}</td>
+          <td style="width:120px" class="right">USD ${fmt(saleTotalUsd)}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Less Payment Received</td>
+          <td class="right">AED ${fmt(recAed)}</td>
+          <td class="right">USD ${fmt(recUsd)}</td>
+          <td></td>
+        </tr>
+        <tr style="height:20px"><td></td></tr>
+        <tr style="font-weight:800">
+          <td>Remaining Balance:</td>
+          <td class="right"><span class="bal-to-rec">${fmt(balAed)}</span></td>
+          <td class="right"><span class="bal-to-rec">${fmt(balUsd)}</span></td>
+          <td style="padding-left:10px">BAL RECEIVABLE</td>
+        </tr>
+      </table>
+    </div>
+
+    ${footer(company, date)}
+  </body>
+  </html>`;
+}
+
+export { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildSupplierStatement, buildBuyerStatement };
