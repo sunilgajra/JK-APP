@@ -998,7 +998,6 @@ export function buildCOO(deal, buyer, supplier, company = {}) {
 
 export function buildSupplierStatement(deal, buyer, supplier, payments, company = {}) {
   const date = new Date().toISOString();
-  const currency = docCurrency(deal);
   const outPayments = payments.filter(p => p.direction === "out");
   const purchaseTotalUsd = Number(deal.purchase_total_usd || 0);
   const purchaseTotalAed = Number(deal.purchase_total_aed || 0);
@@ -1028,31 +1027,31 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
     ${commonStyle()}
     ${previewScript()}
     <style>
-      .statement-table th { background: #3b9da2; color: white; }
-      .summary-box { background: #f0f7f7; border: 2px solid #3b9da2; padding: 15px; margin-top: 20px; }
-      .bal-to-pay { background: #ffff00; font-weight: 800; padding: 5px; border: 1px solid #000; }
+      .doc { width: 210mm; padding: 10mm; }
+      .statement-table th { background: #dce6f1; color: #333; border: 1px solid #999; font-size: 10px; }
+      .statement-table td { border: 1px solid #ccc; padding: 4px; }
+      .summary-box { border: 1px solid #3b9da2; padding: 10px; margin-top: 20px; background:#f9f9f9; }
+      .bal-to-pay { background: #ffff00; font-weight: 800; padding: 4px; border: 1px solid #000; }
+      .excel-header { background: #dce6f1; font-weight: bold; text-align: center; padding: 5px; border: 1px solid #999; text-transform: uppercase; }
     </style>
   </head>
   <body>
     ${previewActions()}
-    <div class="top">
-      ${logoBlock()}
-      <div style="grid-column: span 2; text-align: right;">
-        <div class="docTitle">SUPPLIER SETTLEMENT</div>
-        <div class="item-sub">Deal No: ${esc(deal.deal_no)}</div>
-        <div class="item-sub">Supplier: ${esc(supplier?.name)}</div>
-      </div>
+    
+    <div style="margin-bottom: 20px; font-size: 14px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px;">
+      SUPPLIER SETTLEMENT REPORT - ${esc(deal.deal_no)}
     </div>
 
-    <div class="boxHead">PURCHASE (PRIME)</div>
+    <div class="excel-header">PURCHASE (PRIME)</div>
     <table class="statement-table thin">
       <tr>
-        <th>MATERIAL</th>
-        <th>QTY</th>
-        <th>RATE</th>
-        <th>Amount USD</th>
-        <th>AED @${conv}</th>
-        <th>BL</th>
+        <th style="width:25%">MATERIAL</th>
+        <th style="width:10%">QTY</th>
+        <th style="width:10%">RATE</th>
+        <th style="width:15%">Amount USD</th>
+        <th style="width:15%">AED @${conv}</th>
+        <th style="width:10%">DUE</th>
+        <th style="width:15%">Due Amount USD</th>
       </tr>
       <tr>
         <td>${esc(deal.product_name)}</td>
@@ -1060,23 +1059,25 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
         <td class="center">${fmt(deal.purchase_rate)}</td>
         <td class="right">${fmt(purchaseTotalUsd)}</td>
         <td class="right">${fmt(purchaseTotalAed)}</td>
-        <td class="center">${esc(deal.bl_no || "PENDING")}</td>
+        <td class="center">100%</td>
+        <td class="right">${fmt(purchaseTotalUsd)}</td>
       </tr>
-      <tr style="background:#eee; font-weight:bold">
+      <tr style="background:#f2f2f2; font-weight:bold">
         <td colspan="3" class="right">TOTAL</td>
         <td class="right">${fmt(purchaseTotalUsd)}</td>
         <td class="right">${fmt(purchaseTotalAed)}</td>
         <td></td>
+        <td class="right">${fmt(purchaseTotalUsd)}</td>
       </tr>
     </table>
 
-    <div class="boxHead" style="margin-top:20px">PAYMENTS SENT</div>
+    <div class="excel-header" style="margin-top:20px">PAYMENT</div>
     <table class="statement-table thin">
       <tr>
-        <th>DATE</th>
-        <th>AED</th>
-        <th>USD</th>
-        <th>METHOD / REF</th>
+        <th style="width:20%">DATE</th>
+        <th style="width:25%">AED</th>
+        <th style="width:25%">USD</th>
+        <th style="width:30%">METHOD / REF</th>
       </tr>
       ${outPayments.length ? outPayments.map(p => {
         const pUsd = p.currency === "USD" ? p.amount : p.amount / conv;
@@ -1089,7 +1090,7 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
           <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
         </tr>`;
       }).join("") : `<tr><td colspan="4" class="center">No payments recorded</td></tr>`}
-      <tr style="background:#eee; font-weight:bold">
+      <tr style="background:#f2f2f2; font-weight:bold">
         <td class="right">TOTAL PAID</td>
         <td class="right">${fmt(paidAed)}</td>
         <td class="right">${fmt(paidUsd)}</td>
@@ -1097,39 +1098,40 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
       </tr>
     </table>
 
+    <div class="excel-header" style="margin-top:20px">FINAL SUMMARY</div>
     <div class="summary-box">
-      <div class="boxHead" style="margin: -15px -15px 15px -15px">FINAL SUMMARY</div>
       <table class="plainTable">
         <tr>
-          <td style="width:200px">Due Amount</td>
+          <td style="width:200px; font-weight:bold">Due Amount</td>
           <td style="width:120px" class="right">AED ${fmt(purchaseTotalAed)}</td>
           <td style="width:120px" class="right">USD ${fmt(purchaseTotalUsd)}</td>
           <td></td>
         </tr>
         <tr>
-          <td>Less Payment Done</td>
+          <td style="font-weight:bold">Less Payment Done</td>
           <td class="right">AED ${fmt(paidAed)}</td>
           <td class="right">USD ${fmt(paidUsd)}</td>
           <td></td>
         </tr>
-        <tr style="height:20px"><td></td></tr>
+        <tr style="height:15px"><td></td></tr>
         <tr style="font-weight:800">
-          <td>Total Balance:</td>
+          <td>Total:</td>
           <td class="right"><span class="bal-to-pay">${fmt(balAed)}</span></td>
           <td class="right"><span class="bal-to-pay">${fmt(balUsd)}</span></td>
-          <td style="padding-left:10px">BAL TO PAY</td>
+          <td style="padding-left:10px; font-size:10px">BAL TO PAY</td>
         </tr>
       </table>
     </div>
 
-    ${footer(company, date)}
+    <div style="margin-top: 30px; font-size: 10px; color: #666; text-align: right;">
+      Generated on ${fmtDate(new Date())} · BL: ${esc(deal.bl_no || "PENDING")}
+    </div>
   </body>
   </html>`;
 }
 
 export function buildBuyerStatement(deal, buyer, supplier, payments, company = {}) {
   const date = new Date().toISOString();
-  const currency = docCurrency(deal);
   const inPayments = payments.filter(p => p.direction === "in");
   const saleTotalUsd = Number(deal.total_amount_usd || 0);
   const saleTotalAed = Number(deal.total_amount_aed || 0);
@@ -1159,31 +1161,31 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
     ${commonStyle()}
     ${previewScript()}
     <style>
-      .statement-table th { background: #3b9da2; color: white; }
-      .summary-box { background: #f7faf0; border: 2px solid #3b9da2; padding: 15px; margin-top: 20px; }
-      .bal-to-rec { background: #ffff00; font-weight: 800; padding: 5px; border: 1px solid #000; }
+      .doc { width: 210mm; padding: 10mm; }
+      .statement-table th { background: #dce6f1; color: #333; border: 1px solid #999; font-size: 10px; }
+      .statement-table td { border: 1px solid #ccc; padding: 4px; }
+      .summary-box { border: 1px solid #3b9da2; padding: 10px; margin-top: 20px; background:#f9f9f9; }
+      .bal-to-rec { background: #ffff00; font-weight: 800; padding: 4px; border: 1px solid #000; }
+      .excel-header { background: #dce6f1; font-weight: bold; text-align: center; padding: 5px; border: 1px solid #999; text-transform: uppercase; }
     </style>
   </head>
   <body>
     ${previewActions()}
-    <div class="top">
-      ${logoBlock()}
-      <div style="grid-column: span 2; text-align: right;">
-        <div class="docTitle">BUYER SETTLEMENT</div>
-        <div class="item-sub">Deal No: ${esc(deal.deal_no)}</div>
-        <div class="item-sub">Buyer: ${esc(buyer?.name)}</div>
-      </div>
+    
+    <div style="margin-bottom: 20px; font-size: 14px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px;">
+      BUYER SETTLEMENT REPORT - ${esc(deal.deal_no)}
     </div>
 
-    <div class="boxHead">SALE DETAILS</div>
+    <div class="excel-header">SALE DETAILS</div>
     <table class="statement-table thin">
       <tr>
-        <th>MATERIAL</th>
-        <th>QTY</th>
-        <th>RATE</th>
-        <th>Amount USD</th>
-        <th>AED @${conv}</th>
-        <th>BL</th>
+        <th style="width:25%">MATERIAL</th>
+        <th style="width:10%">QTY</th>
+        <th style="width:10%">RATE</th>
+        <th style="width:15%">Amount USD</th>
+        <th style="width:15%">AED @${conv}</th>
+        <th style="width:10%">DUE</th>
+        <th style="width:15%">Due Amount USD</th>
       </tr>
       <tr>
         <td>${esc(deal.product_name)}</td>
@@ -1191,23 +1193,25 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
         <td class="center">${fmt(deal.rate)}</td>
         <td class="right">${fmt(saleTotalUsd)}</td>
         <td class="right">${fmt(saleTotalAed)}</td>
-        <td class="center">${esc(deal.bl_no || "—")}</td>
+        <td class="center">100%</td>
+        <td class="right">${fmt(saleTotalUsd)}</td>
       </tr>
-      <tr style="background:#eee; font-weight:bold">
+      <tr style="background:#f2f2f2; font-weight:bold">
         <td colspan="3" class="right">TOTAL</td>
         <td class="right">${fmt(saleTotalUsd)}</td>
         <td class="right">${fmt(saleTotalAed)}</td>
         <td></td>
+        <td class="right">${fmt(saleTotalUsd)}</td>
       </tr>
     </table>
 
-    <div class="boxHead" style="margin-top:20px">PAYMENTS RECEIVED</div>
+    <div class="excel-header" style="margin-top:20px">PAYMENTS RECEIVED</div>
     <table class="statement-table thin">
       <tr>
-        <th>DATE</th>
-        <th>AED</th>
-        <th>USD</th>
-        <th>METHOD / REF</th>
+        <th style="width:20%">DATE</th>
+        <th style="width:25%">AED</th>
+        <th style="width:25%">USD</th>
+        <th style="width:30%">METHOD / REF</th>
       </tr>
       ${inPayments.length ? inPayments.map(p => {
         const pUsd = p.currency === "USD" ? p.amount : p.amount / conv;
@@ -1220,7 +1224,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
           <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
         </tr>`;
       }).join("") : `<tr><td colspan="4" class="center">No payments recorded</td></tr>`}
-      <tr style="background:#eee; font-weight:bold">
+      <tr style="background:#f2f2f2; font-weight:bold">
         <td class="right">TOTAL RECEIVED</td>
         <td class="right">${fmt(recAed)}</td>
         <td class="right">${fmt(recUsd)}</td>
@@ -1228,32 +1232,34 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
       </tr>
     </table>
 
+    <div class="excel-header" style="margin-top:20px">FINAL SUMMARY</div>
     <div class="summary-box">
-      <div class="boxHead" style="margin: -15px -15px 15px -15px">FINAL SUMMARY</div>
       <table class="plainTable">
         <tr>
-          <td style="width:200px">Invoice Amount</td>
+          <td style="width:200px; font-weight:bold">Invoice Amount</td>
           <td style="width:120px" class="right">AED ${fmt(saleTotalAed)}</td>
           <td style="width:120px" class="right">USD ${fmt(saleTotalUsd)}</td>
           <td></td>
         </tr>
         <tr>
-          <td>Less Payment Received</td>
+          <td style="font-weight:bold">Less Payment Received</td>
           <td class="right">AED ${fmt(recAed)}</td>
           <td class="right">USD ${fmt(recUsd)}</td>
           <td></td>
         </tr>
-        <tr style="height:20px"><td></td></tr>
+        <tr style="height:15px"><td></td></tr>
         <tr style="font-weight:800">
-          <td>Remaining Balance:</td>
+          <td>Total:</td>
           <td class="right"><span class="bal-to-rec">${fmt(balAed)}</span></td>
           <td class="right"><span class="bal-to-rec">${fmt(balUsd)}</span></td>
-          <td style="padding-left:10px">BAL RECEIVABLE</td>
+          <td style="padding-left:10px; font-size:10px">BAL RECEIVABLE</td>
         </tr>
       </table>
     </div>
 
-    ${footer(company, date)}
+    <div style="margin-top: 30px; font-size: 10px; color: #666; text-align: right;">
+      Generated on ${fmtDate(new Date())} · Buyer: ${esc(buyer?.name)}
+    </div>
   </body>
   </html>`;
 }
