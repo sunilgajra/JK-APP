@@ -1,4 +1,4 @@
-import { state, buyerName, supplierName, paymentSummary, paymentsForDeal } from "./state.js";
+import { state, buyerName, supplierName, paymentSummary, paymentsForDeal, documentsForDeal } from "./state.js";
 import { esc, nextDealNo, fmtMoney } from "./utils.js";
 
 export function dealsView() {
@@ -43,6 +43,7 @@ export function dealsView() {
             ? filteredDeals.map((d) => {
                 const s = paymentSummary(d.id, d.total_amount, d.type);
                 const payments = paymentsForDeal(d.id);
+                const documents = documentsForDeal(d.id);
                 return `
             <div class="item">
               <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
@@ -85,6 +86,24 @@ export function dealsView() {
                   </div>
                 `).join("")
                     : `<div class="item-sub">No payments yet.</div>`
+                }
+              </div>
+
+              <div class="list mt-10">
+                <div style="font-weight:600; font-size:12px; margin-bottom:5px; opacity:0.8">DOCUMENTS</div>
+                ${
+                  documents.length
+                    ? documents.map((doc) => `
+                  <div class="item" style="padding:10px">
+                    <div class="item-title">${esc(doc.doc_type || "Document")}</div>
+                    <div class="item-sub">${esc(doc.file_name || "—")}</div>
+                    <div class="mt-8 flex gap-8">
+                      <a href="${doc.file_url}" target="_blank" class="btn-small">View</a>
+                      <button data-delete-placeholder-doc="${d.id}:${doc.id}" class="btn-danger btn-small">Delete</button>
+                    </div>
+                  </div>
+                `).join("")
+                    : `<div class="item-sub">No documents yet.</div>`
                 }
               </div>
             </div>
