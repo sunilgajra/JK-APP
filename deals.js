@@ -96,7 +96,6 @@ export function dealsView() {
 }
 
 export function dealFormHtml(d = {}, edit = false, id = "") {
-  const labelId = edit ? `total-label-${id}` : "total-label";
   const currentDocCurrency = d.document_currency || d.currency || "USD";
 
   return `
@@ -214,8 +213,8 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
             <input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}">
           </div>
           <div>
-            <label id="${labelId}" class="form-label">Total (${esc(currentDocCurrency)})</label>
-            <input name="total_amount" id="${edit ? `total-${id}` : "total"}" type="number" step="0.01" value="${esc(d.total_amount || "")}" readonly>
+            <label class="form-label">Total (USD)</label>
+            <input name="total_amount_usd" id="${edit ? `total-${id}` : "total"}" type="number" step="0.01" value="${esc(d.total_amount_usd || "")}" readonly>
           </div>
           <div>
             <label class="form-label">Total (AED)</label>

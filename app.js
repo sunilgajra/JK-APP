@@ -589,19 +589,31 @@ function bindDealAutoTotal(id = null) {
   const qtyIn = document.getElementById(`quantity${suffix}`);
   const rateIn = document.getElementById(`rate${suffix}`);
   const convIn = document.getElementById(`conversion-rate${suffix}`);
-  const totalIn = document.getElementById(`total${suffix}`);
+  const baseCurrIn = document.getElementById(`base-currency${suffix}`);
+  const totalUsdIn = document.getElementById(`total${suffix}`);
   const totalAedIn = document.getElementById(`total-aed${suffix}`);
 
   const calc = () => {
     const q = Number(qtyIn?.value || 0);
     const r = Number(rateIn?.value || 0);
     const c = Number(convIn?.value || 0);
-    const total = q * r;
-    if (totalIn) totalIn.value = total.toFixed(2);
-    if (totalAedIn && c) totalAedIn.value = (total * c).toFixed(2);
+    const bc = baseCurrIn?.value || "USD";
+
+    let tUsd = 0, tAed = 0;
+    if (bc === "USD") {
+      tUsd = q * r;
+      tAed = c ? tUsd * c : 0;
+    } else {
+      tAed = q * r;
+      tUsd = c ? tAed / c : 0;
+    }
+
+    if (totalUsdIn) totalUsdIn.value = tUsd.toFixed(2);
+    if (totalAedIn) totalAedIn.value = tAed.toFixed(2);
   };
 
-  [qtyIn, rateIn, convIn].forEach(el => el?.addEventListener("input", calc));
+  [qtyIn, rateIn, convIn, baseCurrIn].forEach(el => el?.addEventListener("input", calc));
+  [qtyIn, rateIn, convIn, baseCurrIn].forEach(el => el?.addEventListener("change", calc));
 }
 
 // Misc
