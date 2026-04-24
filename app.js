@@ -1328,7 +1328,7 @@ async function runAiScan(dealId, docId) {
     });
 
     // 2. Call Gemini API
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`;
     const prompt = "Analyze this Bill of Lading. Extract the following fields in strict JSON format: bl_no, vessel, loading_port, discharge_port, product_name, quantity (number only), container_list (string), shipment_out_date (YYYY-MM-DD), eta (YYYY-MM-DD). If a field is missing, use null. Only return the JSON object.";
     
     const aiRes = await fetch(apiUrl, {
