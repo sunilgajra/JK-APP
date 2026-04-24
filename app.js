@@ -828,7 +828,7 @@ Generated via JK Trade Manager`;
 // Document Actions
 async function saveDealDocument(e) {
   e.preventDefault();
-  const dealId = e.target.dataset.placeholder_upload;
+  const dealId = e.target.getAttribute("data-placeholder-upload");
   const fd = new FormData(e.target);
   const file = fd.get("file");
   const docType = fd.get("docType");
