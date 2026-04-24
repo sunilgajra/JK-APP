@@ -47,7 +47,7 @@ export function productsView() {
 
 export function productEditFormHtml(p = {}) {
   return `
-    <form data-product-edit-form="${p.id}" class="item">
+    <form id="product-edit-form-${p.id}" class="item">
       <div class="grid gap-10" style="grid-template-columns:1fr 1fr auto auto;align-items:end">
         <div>
           <label class="form-label">Product Name</label>
@@ -60,7 +60,7 @@ export function productEditFormHtml(p = {}) {
         </div>
 
         <button type="submit" class="btn-primary">Update</button>
-        <button type="button" data-cancel-product-edit="${p.id}">Cancel</button>
+        <button type="button" id="cancel-product-edit-${p.id}">Cancel</button>
       </div>
     </form>
   `;

@@ -1,5 +1,5 @@
 import { state, paymentsForDeal } from "./state.js";
-import { esc } from "./utils.js";
+import { esc, fmtMoney } from "./utils.js";
 
 export function dashboardView() {
   const totalDeals = state.deals.length;
@@ -46,13 +46,13 @@ export function dashboardView() {
 
       <div class="card">
         <div class="stat-label">Total Value</div>
-        <div class="stat-value" style="font-size:20px">AED ${totalValueAed.toLocaleString("en-IN")}</div>
+        <div class="stat-value" style="font-size:20px">AED ${fmtMoney(totalValueAed)}</div>
         <div class="item-sub">Across all deals</div>
       </div>
 
       <div class="card">
         <div class="stat-label">Received Payments</div>
-        <div class="stat-value" style="font-size:20px;color:#22c55e">AED ${totalReceivedAed.toLocaleString("en-IN")}</div>
+        <div class="stat-value" style="font-size:20px;color:#22c55e">AED ${fmtMoney(totalReceivedAed)}</div>
         <div class="item-sub">Payments received</div>
       </div>
 
@@ -95,8 +95,8 @@ export function dashboardView() {
                     <div class="item-sub">${esc(d.type || "sell")} · ${esc(d.status || "active")}</div>
                   </div>
                   <div style="text-align:right;min-width:150px">
-                    <div style="font-size:15px;font-weight:800;color:#d4a646">${esc(dealCurrency)} ${displayTotal.toLocaleString("en-IN")}</div>
-                    <div class="item-sub">Received: ${esc(dealCurrency)} ${received.toLocaleString("en-IN")}</div>
+                    <div style="font-size:15px;font-weight:800;color:#d4a646">${esc(dealCurrency)} ${fmtMoney(displayTotal)}</div>
+                    <div class="item-sub">Received: ${esc(dealCurrency)} ${fmtMoney(received)}</div>
                   </div>
                 </div>
               </div>

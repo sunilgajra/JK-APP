@@ -1,5 +1,5 @@
 import { state, buyerName, supplierName, paymentSummary, paymentsForDeal } from "./state.js";
-import { esc, nextDealNo } from "./utils.js";
+import { esc, nextDealNo, fmtMoney } from "./utils.js";
 
 export function dealsView() {
   const q = state.dealSearch.trim().toLowerCase();
@@ -48,9 +48,9 @@ export function dealsView() {
               <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
               <div class="item-sub">HSN: ${esc(d.hsn_code || "—")}</div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
-              <div class="item-sub">${esc(d.currency || "AED")} ${Number(d.total_amount || 0).toLocaleString("en-IN")} · ${esc(d.status || "active")}</div>
+              <div class="item-sub">${esc(d.currency || "AED")} ${fmtMoney(d.total_amount)} · ${esc(d.status || "active")}</div>
               <div class="item-sub">${esc(d.type || "sell")} · Buyer: ${esc(buyerName(d.buyer_id))} · Supplier: ${esc(supplierName(d.supplier_id))}</div>
-              <div class="item-sub">Received: ${esc(d.currency || "AED")} ${s.received.toLocaleString("en-IN")} · Sent: ${esc(d.currency || "AED")} ${s.sent.toLocaleString("en-IN")} · Balance: ${esc(d.currency || "AED")} ${s.balance.toLocaleString("en-IN")}</div>
+              <div class="item-sub">Received: ${esc(d.currency || "AED")} ${fmtMoney(s.received)} · Sent: ${esc(d.currency || "AED")} ${fmtMoney(s.sent)} · Balance: ${esc(d.currency || "AED")} ${fmtMoney(s.balance)}</div>
 
               <div class="mt-8 flex gap-8 flex-wrap">
                 <button data-open-deal="${d.id}">Open</button>
@@ -74,7 +74,7 @@ export function dealsView() {
                   payments.length
                     ? payments.map((p) => `
                   <div class="item" style="padding:10px">
-                    <div class="item-title">${esc(p.currency || d.currency || "AED")} ${Number(p.amount || 0).toLocaleString("en-IN")}</div>
+                    <div class="item-title">${esc(p.currency || d.currency || "AED")} ${fmtMoney(p.amount)}</div>
                     <div class="item-sub">${esc(p.direction || "in")} · ${esc(p.method || "—")} · ${esc(p.status || "pending")}</div>
                     <div class="item-sub">${esc(p.ref || "—")} · ${esc(p.payment_date || "—")}</div>
                     <div class="mt-8 flex gap-8">

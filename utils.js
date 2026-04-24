@@ -13,6 +13,10 @@ export function cleanText(v) {
   return String(v || "").trim();
 }
 
+export function fmtMoney(n) {
+  return Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function cleanUpper(v) {
   return String(v || "")
     .trim()

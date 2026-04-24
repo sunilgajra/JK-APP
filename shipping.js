@@ -100,6 +100,24 @@ export function shippingInstructionsView() {
           </div>
         </div>
       </form>
+
+      <div class="list mt-12">
+        ${
+          (state.shippingInstructions || []).length
+            ? state.shippingInstructions.map((si) => `
+              <div class="item">
+                <div class="item-title">Deal: ${esc(state.deals.find(d => String(d.id) === String(si.deal_id))?.deal_no || "—")} · Product: ${esc(si.product || "—")}</div>
+                <div class="item-sub">HSN: ${esc(si.hsn_code || "—")}</div>
+                <div class="item-sub">Free Days: ${esc(si.free_days_text || "—")}</div>
+                <div class="item-sub">Detention: ${esc(si.detention_text || "—")}</div>
+                <div class="mt-8 flex gap-8">
+                  <button data-delete-si="${si.id}">Delete</button>
+                </div>
+              </div>
+            `).join("")
+            : `<div class="empty">No shipping instructions saved yet.</div>`
+        }
+      </div>
     </div>
   `;
 }

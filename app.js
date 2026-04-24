@@ -13,7 +13,7 @@ import { settingsView } from "./settings.js";
 import { shippingInstructionsView } from "./shipping.js";
 import { productsView, productEditFormHtml } from "./products.js";
 
-console.log("APP STARTING - VERSION 11");
+console.log("APP STARTING - VERSION 12");
 
 const content = document.getElementById("content");
 
@@ -216,6 +216,8 @@ function bindUI() {
   document.querySelectorAll("[data-delete-supplier]").forEach(btn => btn.addEventListener("click", () => deleteSupplier(btn.dataset.deleteSupplier)));
   document.querySelectorAll("[data-edit-deal]").forEach(btn => btn.addEventListener("click", () => showEditDealForm(btn.dataset.editDeal)));
   document.querySelectorAll("[data-delete-deal]").forEach(btn => btn.addEventListener("click", () => deleteDeal(btn.dataset.deleteDeal)));
+  document.querySelectorAll("[data-edit-product]").forEach(btn => btn.addEventListener("click", () => showEditProductForm(btn.dataset.editProduct)));
+  document.querySelectorAll("[data-delete-product]").forEach(btn => btn.addEventListener("click", () => deleteProduct(btn.dataset.deleteProduct)));
   
   // Print
   document.querySelectorAll("[data-print-pi]").forEach(btn => btn.addEventListener("click", () => printDoc("pi", btn.dataset.printPi)));
@@ -239,6 +241,9 @@ function bindUI() {
   // Documents
   document.querySelectorAll("[data-placeholder-upload]").forEach(form => form.addEventListener("submit", saveDealDocument));
   document.querySelectorAll("[data-delete-placeholder-doc]").forEach(btn => btn.addEventListener("click", () => deleteDealDocument(btn.dataset.deletePlaceholderDoc)));
+
+  // Shipping Instructions
+  document.querySelectorAll("[data-delete-si]").forEach(btn => btn.addEventListener("click", () => deleteShippingInstruction(btn.dataset.deleteSi)));
 
   // Shipping Instructions
   bindShippingInstructionForm();
@@ -365,7 +370,7 @@ async function saveBuyer(e) {
   const fd = new FormData(e.target);
   console.log("Buyer Data:", Object.fromEntries(fd.entries()));
   const { data, error } = await supabase.from("buyers").insert({
-    name: fd.get("name"), address: fd.get("address"), gst: fd.get("gst"), iec: fd.get("iec"), pan: fd.get("pan"),
+    name: fd.get("name"), email: fd.get("email"), address: fd.get("address"), gst: fd.get("gst"), iec: fd.get("iec"), pan: fd.get("pan"),
     customer_id: normalizeCustomerId(fd.get("customer_id")), phone: fd.get("phone")
   }).select();
   
@@ -385,7 +390,7 @@ async function updateBuyer(e, id) {
   console.log("updateBuyer triggered for ID:", id);
   const fd = new FormData(e.target);
   const { data, error } = await supabase.from("buyers").update({
-    name: fd.get("name"), address: fd.get("address"), gst: fd.get("gst"), iec: fd.get("iec"), pan: fd.get("pan"),
+    name: fd.get("name"), email: fd.get("email"), address: fd.get("address"), gst: fd.get("gst"), iec: fd.get("iec"), pan: fd.get("pan"),
     customer_id: normalizeCustomerId(fd.get("customer_id")), phone: fd.get("phone")
   }).eq("id", id).select();
   
@@ -461,6 +466,37 @@ async function saveProduct(e) {
   if (error) return alert(error.message);
   await loadProducts();
   render();
+}
+
+function showEditProductForm(id) {
+  const p = state.products.find(x => String(x.id) === String(id));
+  const wrap = document.getElementById(`product-edit-wrap-${id}`);
+  if (!p || !wrap) return;
+  wrap.innerHTML = productEditFormHtml(p);
+  document.getElementById(`product-edit-form-${id}`).addEventListener("submit", (e) => updateProduct(e, id));
+  document.getElementById(`cancel-product-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
+}
+
+async function updateProduct(e, id) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("products").update({
+    name: fd.get("name"), hsn_code: fd.get("hsn_code")
+  }).eq("id", id);
+  if (error) return alert(error.message);
+  await loadProducts();
+  render();
+}
+
+async function deleteProduct(id) {
+  if (confirm("Delete product?")) {
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) alert(error.message);
+    else {
+      await loadProducts();
+      render();
+    }
+  }
 }
 
 // Payment Actions
@@ -661,6 +697,14 @@ async function saveShippingInstruction(e) {
   }
 }
 
+async function deleteShippingInstruction(id) {
+  if (confirm("Delete shipping instruction?")) {
+    const { error } = await supabase.from("shipping_instructions").delete().eq("id", id);
+    if (error) alert(error.message);
+    else await loadSupabaseData();
+  }
+}
+
 function whatsappShippingInstruction() {
   const fd = new FormData(document.getElementById("shipping-instruction-form"));
   const shipperIdx = fd.get("shipper_index");
@@ -746,16 +790,41 @@ async function saveDealDocument(e) {
   const dealId = e.target.dataset.placeholder_upload;
   const fd = new FormData(e.target);
   const file = fd.get("file");
+  const docType = fd.get("docType");
   
-  const { error } = await supabase.from("deal_documents").insert({
-    deal_id: dealId,
-    doc_type: fd.get("docType"),
-    file_name: file?.name || "Placeholder",
-    is_deleted: false
-  });
+  if (!file || file.size === 0) {
+    return alert("Please select a file to upload.");
+  }
   
-  if (error) alert(error.message);
-  else await loadSupabaseData();
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+  const filePath = `${dealId}/${fileName}`;
+  
+  e.target.querySelector("button").textContent = "Uploading...";
+  e.target.querySelector("button").disabled = true;
+
+  try {
+    const { data: uploadData, error: uploadError } = await supabase.storage.from("deal_documents").upload(filePath, file);
+    if (uploadError) throw uploadError;
+    
+    const { data: publicUrlData } = supabase.storage.from("deal_documents").getPublicUrl(filePath);
+    
+    const { error } = await supabase.from("deal_documents").insert({
+      deal_id: dealId,
+      doc_type: docType,
+      file_name: file.name,
+      file_url: publicUrlData.publicUrl,
+      mime_type: file.type || "application/octet-stream",
+      is_deleted: false
+    });
+    
+    if (error) throw error;
+    await loadSupabaseData();
+  } catch (err) {
+    alert("Upload failed: " + err.message);
+    e.target.querySelector("button").textContent = "Upload Document";
+    e.target.querySelector("button").disabled = false;
+  }
 }
 
 async function deleteDealDocument(val) {

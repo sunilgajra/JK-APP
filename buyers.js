@@ -6,7 +6,7 @@ export function buyersView() {
   const q = state.buyerSearch.trim().toLowerCase();
   const filteredBuyers = state.buyers.filter((b) => {
     if (!q) return true;
-    const text = [b.name, b.address, b.gst, b.iec, b.customer_id, b.phone].join(" ").toLowerCase();
+    const text = [b.name, b.email, b.address, b.gst, b.iec, b.customer_id, b.phone].join(" ").toLowerCase();
     return text.includes(q);
   });
 
@@ -31,7 +31,7 @@ export function buyersView() {
             <div class="item-title">${esc(b.name || "—")}</div>
             <div class="item-sub">${esc(b.address || "—")}</div>
             <div class="item-sub">GST: ${esc(b.gst || "—")} · IEC: ${esc(b.iec || "—")}</div>
-            <div class="item-sub">Customer ID: ${esc(b.customer_id || "—")}</div>
+            <div class="item-sub">Customer ID: ${esc(b.customer_id || "—")} · Email: ${esc(b.email || "—")}</div>
             <div class="item-sub">Phone: ${esc(b.phone || "—")}</div>
             <div class="mt-8 flex gap-8">
               <button data-edit-buyer="${b.id}">Edit</button>
@@ -53,9 +53,15 @@ export function buyerFormHtml(b = {}, edit = false, id = "") {
       <div class="form-header">${edit ? "Edit Buyer" : "New Buyer"}</div>
       <div class="grid gap-10">
 
-        <div>
-          <label class="form-label">Buyer Name</label>
-          <input name="name" value="${esc(b.name || "")}" placeholder="Buyer name" required>
+        <div class="grid grid-2 gap-10">
+          <div>
+            <label class="form-label">Buyer Name</label>
+            <input name="name" value="${esc(b.name || "")}" placeholder="Buyer name" required>
+          </div>
+          <div>
+            <label class="form-label">Email</label>
+            <input name="email" type="email" value="${esc(b.email || "")}" placeholder="Email">
+          </div>
         </div>
 
         <div>

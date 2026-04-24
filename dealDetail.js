@@ -1,5 +1,5 @@
 import { state, getSelectedDeal, paymentsForDeal, documentsForDeal, paymentSummary, dealAuditLogs } from "./state.js";
-import { esc, formatAuditValue, formatAuditTime } from "./utils.js";
+import { esc, formatAuditValue, formatAuditTime, fmtMoney } from "./utils.js";
 
 export function dealDetailView() {
   const d = getSelectedDeal();
@@ -28,12 +28,12 @@ export function dealDetailView() {
         <div class="item"><div class="item-title">Status</div><div class="item-sub">${esc(d.status || "active")}</div></div>
         <div class="item"><div class="item-title">Approval Status</div><div class="item-sub">${esc(d.approval_status || "draft")}</div></div>
         <div class="item"><div class="item-title">Route</div><div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div></div>
-        <div class="item"><div class="item-title">Value</div><div class="item-sub">${esc(showCurrency)} ${showTotal.toLocaleString("en-IN")}</div></div>
+        <div class="item"><div class="item-title">Value</div><div class="item-sub">${esc(showCurrency)} ${fmtMoney(showTotal)}</div></div>
         <div class="item"><div class="item-title">Base Currency</div><div class="item-sub">${esc(d.base_currency || "USD")}</div></div>
         <div class="item"><div class="item-title">Document Currency</div><div class="item-sub">${esc(d.document_currency || d.currency || "AED")}</div></div>
         <div class="item"><div class="item-title">Conversion Rate</div><div class="item-sub">${esc(d.conversion_rate || "—")}</div></div>
-        <div class="item"><div class="item-title">Total USD</div><div class="item-sub">USD ${Number(d.total_amount_usd || 0).toLocaleString("en-IN")}</div></div>
-        <div class="item"><div class="item-title">Total AED</div><div class="item-sub">AED ${Number(d.total_amount_aed || 0).toLocaleString("en-IN")}</div></div>
+        <div class="item"><div class="item-title">Total USD</div><div class="item-sub">USD ${fmtMoney(d.total_amount_usd)}</div></div>
+        <div class="item"><div class="item-title">Total AED</div><div class="item-sub">AED ${fmtMoney(d.total_amount_aed)}</div></div>
         <div class="item"><div class="item-title">Shipment Out Date</div><div class="item-sub">${esc(d.shipment_out_date || "—")}</div></div>
         <div class="item"><div class="item-title">ETA</div><div class="item-sub">${esc(d.eta || "—")}</div></div>
         <div class="item"><div class="item-title">BL No</div><div class="item-sub">${esc(d.bl_no || "—")}</div></div>
@@ -58,9 +58,9 @@ export function dealDetailView() {
 
       <div class="item mt-12">
         <div class="item-title">Payment Summary</div>
-        <div class="item-sub">Received: ${esc(showCurrency)} ${s.received.toLocaleString("en-IN")}</div>
-        <div class="item-sub">Sent: ${esc(showCurrency)} ${s.sent.toLocaleString("en-IN")}</div>
-        <div class="item-sub">Balance: ${esc(showCurrency)} ${s.balance.toLocaleString("en-IN")}</div>
+        <div class="item-sub">Received: ${esc(showCurrency)} ${fmtMoney(s.received)}</div>
+        <div class="item-sub">Sent: ${esc(showCurrency)} ${fmtMoney(s.sent)}</div>
+        <div class="item-sub">Balance: ${esc(showCurrency)} ${fmtMoney(s.balance)}</div>
       </div>
 
       <div class="item mt-12">
@@ -130,7 +130,7 @@ export function dealDetailView() {
             payments.length
               ? payments.map((p) => `
             <div class="item" style="padding:10px">
-              <div class="item-title">${esc(p.currency || d.currency || "AED")} ${Number(p.amount || 0).toLocaleString("en-IN")}</div>
+              <div class="item-title">${esc(p.currency || d.currency || "AED")} ${fmtMoney(p.amount)}</div>
               <div class="item-sub">${esc(p.direction || "in")} · ${esc(p.method || "—")} · ${esc(p.status || "pending")}</div>
               <div class="item-sub">${esc(p.ref || "—")} · ${esc(p.payment_date || "—")}</div>
               <div class="mt-8 flex gap-8">
