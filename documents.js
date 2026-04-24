@@ -1042,7 +1042,7 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
       SUPPLIER SETTLEMENT REPORT - ${esc(deal.deal_no)}
     </div>
 
-    <div class="excel-header">PURCHASE (PRIME)</div>
+    <div class="excel-header">PURCHASE (${esc(supplier?.name || "PRIME")})</div>
     <table class="statement-table thin">
       <tr>
         <th style="width:25%">MATERIAL</th>
@@ -1125,7 +1125,7 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
     </div>
 
     <div style="margin-top: 30px; font-size: 10px; color: #666; text-align: right;">
-      Generated on ${fmtDate(new Date())} · BL: ${esc(deal.bl_no || "PENDING")}
+      Generated on ${fmtDate(new Date())} · BL No: ${esc(deal.bl_no || "PENDING")}
     </div>
   </body>
   </html>`;
@@ -1177,7 +1177,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
       BUYER SETTLEMENT REPORT - ${esc(deal.deal_no)}
     </div>
 
-    <div class="excel-header">SALE DETAILS</div>
+    <div class="excel-header">SALE (${esc(buyer?.name || "DETAILS")})</div>
     <table class="statement-table thin">
       <tr>
         <th style="width:25%">MATERIAL</th>
@@ -1260,7 +1260,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
     </div>
 
     <div style="margin-top: 30px; font-size: 10px; color: #666; text-align: right;">
-      Generated on ${fmtDate(new Date())} · Buyer: ${esc(buyer?.name)}
+      Generated on ${fmtDate(new Date())} · BL No: ${esc(deal.bl_no || "—")}
     </div>
   </body>
   </html>`;
