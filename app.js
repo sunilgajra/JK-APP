@@ -845,10 +845,10 @@ async function saveDealDocument(e) {
   e.target.querySelector("button").disabled = true;
 
   try {
-    const { data: uploadData, error: uploadError } = await supabase.storage.from("deal_documents").upload(filePath, file);
+    const { data: uploadData, error: uploadError } = await supabase.storage.from("deal-documents").upload(filePath, file);
     if (uploadError) throw uploadError;
     
-    const { data: publicUrlData } = supabase.storage.from("deal_documents").getPublicUrl(filePath);
+    const { data: publicUrlData } = supabase.storage.from("deal-documents").getPublicUrl(filePath);
     
     const { error } = await supabase.from("deal_documents").insert({
       deal_id: dealId,
