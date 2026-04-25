@@ -285,7 +285,6 @@ button {
 
 button:hover {
   filter: brightness(1.1);
-  transform: translateY(-1px);
 }
 
 button:active {
@@ -302,7 +301,7 @@ button:active {
   .hdr { padding: 1rem; }
   .hdr h1 { font-size: 1.1rem; }
   .nav { top: 64px; padding: 0.75rem 1rem; }
-  #content { padding-top: 1.5rem; }
+  #content { padding-top: 1rem; }
   .card { padding: 1rem; }
   .stat-value { font-size: 1.5rem; }
   .grid-3, .grid-4 { grid-template-columns: 1fr; }
