@@ -27,7 +27,7 @@ export function dealsView() {
         <div class="title mb-0">Deals</div>
         <div class="flex gap-8 flex-wrap">
           <button id="export-deals-csv">Export CSV</button>
-          <button id="show-deal-form" class="btn-primary">Add Deal</button>
+          <button id="show-deal-form" class="btn-primary" style="margin-left: 7.7%">Add Deal</button>
         </div>
       </div>
 
@@ -47,11 +47,12 @@ export function dealsView() {
                 const curr = d.document_currency || d.currency || "AED";
                 const profit = s.sale - s.purchase;
                 const margin = s.sale > 0 ? (profit / s.sale) * 100 : 0;
+                const profitAed = d.document_currency === "USD" ? profit * (d.conversion_rate || 3.6725) : profit;
                 return `
             <div class="item relative">
               <div style="position:absolute; top:15px; right:15px; text-align:right">
                 <div class="item-sub" style="font-weight:bold; color:var(--primary)">Margin: ${margin.toFixed(1)}%</div>
-                <div class="item-sub">Profit: ${curr} ${fmtMoney(profit)}</div>
+                <div class="item-sub">Profit (AED): ${fmtMoney(profitAed)}</div>
               </div>
               <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>

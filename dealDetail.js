@@ -20,7 +20,7 @@ export function dealDetailView() {
     <div class="card">
       <div class="flex flex-between flex-center gap-12 mb-12">
         <div class="title mb-0">${esc(d.deal_no || "Deal Detail")}</div>
-        <button id="back-to-deals">Back</button>
+        <a href="#/deals" class="btn-outline" id="back-to-deals">Back</a>
       </div>
 
       <div class="grid grid-2">
@@ -75,8 +75,8 @@ export function dealDetailView() {
       <div class="item mt-12" style="background:linear-gradient(90deg, rgba(var(--primary-rgb), 0.1), transparent); padding:15px; border-radius:8px; border-left: 4px solid var(--primary)">
         <div class="grid grid-2 gap-10">
           <div>
-            <div class="item-title" style="color:var(--primary)">Expected Gross Profit</div>
-            <div class="title" style="font-size:20px">${esc(showCurrency)} ${fmtMoney(s.sale - s.purchase)}</div>
+            <div class="item-title" style="color:var(--primary)">Profit (AED)</div>
+            <div class="title" style="font-size:20px">AED ${fmtMoney(d.document_currency === "USD" ? (s.sale - s.purchase) * (d.conversion_rate || 3.6725) : (s.sale - s.purchase))}</div>
           </div>
           <div style="text-align:right">
             <div class="item-title">Profit Margin</div>

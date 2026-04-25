@@ -301,7 +301,8 @@ button:active {
 @media (max-width: 640px) {
   .hdr { padding: 1rem; }
   .hdr h1 { font-size: 1.1rem; }
-  .nav { top: 68px; padding: 0.75rem 1rem; }
+  .nav { top: 64px; padding: 0.75rem 1rem; }
+  #content { padding-top: 1.5rem; }
   .card { padding: 1rem; }
   .stat-value { font-size: 1.5rem; }
   .grid-3, .grid-4 { grid-template-columns: 1fr; }
@@ -318,7 +319,11 @@ form button { min-height: 44px; }
   border: 1px solid var(--border) !important;
   padding: 8px 20px;
   font-size: 0.875rem;
-  z-index: 100;
+  text-decoration: none;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #back-to-deals:hover {
