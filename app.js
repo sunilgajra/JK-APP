@@ -174,8 +174,18 @@ async function loadShippingInstructions() {
 /**
  * RENDERING
  */
+let lastFocusedId = null;
+let lastSelectionStart = 0;
+
 function render() {
   console.log("Rendering page:", state.page);
+  
+  // Remember focus
+  if (document.activeElement && document.activeElement.id) {
+    lastFocusedId = document.activeElement.id;
+    lastSelectionStart = document.activeElement.selectionStart;
+  }
+
   if (!state.authUser) {
     content.innerHTML = loginView();
     bindUI();
@@ -192,6 +202,17 @@ function render() {
   else if (state.page === "settings") content.innerHTML = settingsView();
 
   bindUI();
+
+  // Restore focus
+  if (lastFocusedId) {
+    const el = document.getElementById(lastFocusedId);
+    if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) {
+      el.focus();
+      try {
+        el.setSelectionRange(lastSelectionStart, lastSelectionStart);
+      } catch (e) {}
+    }
+  }
 }
 
 function bindUI() {
@@ -214,10 +235,33 @@ function bindUI() {
 
   document.getElementById("check-ai-btn")?.addEventListener("click", checkAiConnection);
 
-  // Search
-  document.getElementById("deal-search")?.addEventListener("input", (e) => { state.dealSearch = e.target.value; render(); });
-  document.getElementById("buyer-search")?.addEventListener("input", (e) => { state.buyerSearch = e.target.value; render(); });
-  document.getElementById("supplier-search")?.addEventListener("input", (e) => { state.supplierSearch = e.target.value; render(); });
+  // Search - with preservation of cursor
+  const dealSearch = document.getElementById("deal-search");
+  if (dealSearch) {
+    dealSearch.value = state.dealSearch || "";
+    dealSearch.addEventListener("input", (e) => {
+      state.dealSearch = e.target.value;
+      render();
+    });
+  }
+
+  const buyerSearch = document.getElementById("buyer-search");
+  if (buyerSearch) {
+    buyerSearch.value = state.buyerSearch || "";
+    buyerSearch.addEventListener("input", (e) => {
+      state.buyerSearch = e.target.value;
+      render();
+    });
+  }
+
+  const supplierSearch = document.getElementById("supplier-search");
+  if (supplierSearch) {
+    supplierSearch.value = state.supplierSearch || "";
+    supplierSearch.addEventListener("input", (e) => {
+      state.supplierSearch = e.target.value;
+      render();
+    });
+  }
 
   // List Actions
   document.querySelectorAll("[data-open-deal]").forEach(btn => btn.addEventListener("click", () => navigate("#/deals/" + btn.dataset.openDeal)));
