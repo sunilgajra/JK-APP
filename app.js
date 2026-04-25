@@ -1327,17 +1327,39 @@ function bindProductHsnLookup(id = null) {
 
 function printDoc(type, dealId) {
   const deal = getDealById(dealId);
+  if (!deal) return;
+
   const buyer = getBuyerById(deal?.buyer_id);
   const supplier = state.suppliers.find(s => String(s.id) === String(deal?.supplier_id));
   const dealDoc = { ...deal, dealNo: deal.deal_no, productName: deal.product_name, totalAmount: deal.total_amount };
   const payments = paymentsForDeal(dealId);
+
+  // Map selected bank
+  const bankIdx = parseInt(deal.document_bank_index || 0);
+  const bank = (state.company.bankAccounts || [])[bankIdx] || {};
+
+  // Map selected shipper
+  const shipperIdx = deal.shipper_index !== null && deal.shipper_index !== "" ? parseInt(deal.shipper_index) : -1;
+  const shipper = shipperIdx >= 0 ? (state.company.shippers || [])[shipperIdx] : null;
+
+  const companyForDoc = {
+    ...state.company,
+    name: shipper ? shipper.name : state.company.name,
+    address: shipper ? shipper.address : state.company.address,
+    bankAccount: bank.account || "",
+    bankIBAN: bank.iban || "",
+    bankSWIFT: bank.swift || "",
+    bankName: bank.bankName || ""
+  };
+
   let html = "";
-  if (type === "pi") html = buildPI(dealDoc, buyer, supplier, state.company);
-  if (type === "ci") html = buildCI(dealDoc, buyer, supplier, state.company);
-  if (type === "pl") html = buildPL(dealDoc, buyer, supplier, state.company);
-  if (type === "coo") html = buildCOO(dealDoc, buyer, supplier, state.company);
-  if (type === "supplier-statement") html = buildSupplierStatement(deal, buyer, supplier, payments, state.company);
-  if (type === "buyer-statement") html = buildBuyerStatement(deal, buyer, supplier, payments, state.company);
+  if (type === "pi") html = buildPI(dealDoc, buyer, supplier, companyForDoc);
+  if (type === "ci") html = buildCI(dealDoc, buyer, supplier, companyForDoc);
+  if (type === "pl") html = buildPL(dealDoc, buyer, supplier, companyForDoc);
+  if (type === "coo") html = buildCOO(dealDoc, buyer, supplier, companyForDoc);
+  if (type === "supplier-statement") html = buildSupplierStatement(deal, buyer, supplier, payments, companyForDoc);
+  if (type === "buyer-statement") html = buildBuyerStatement(deal, buyer, supplier, payments, companyForDoc);
+  
   if (html) openPrintWindow(html);
 }
 
