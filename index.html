@@ -12,24 +12,56 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-  <header class="hdr">
-    <h1>JK Trade Manager</h1>
-    <p>Safe shell version</p>
-  </header>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="./logo.PNG" alt="JK" class="sidebar-logo">
+        <div class="sidebar-title">
+          <h1>JK TRADE</h1>
+          <span>Manager v2.0</span>
+        </div>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="#/" class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">📊</span> Dashboard
+        </a>
+        <a href="#/buyers" class="nav-item" data-page="buyers">
+          <span class="nav-icon">👥</span> Buyers
+        </a>
+        <a href="#/suppliers" class="nav-item" data-page="suppliers">
+          <span class="nav-icon">🏭</span> Suppliers
+        </a>
+        <a href="#/deals" class="nav-item" data-page="deals">
+          <span class="nav-icon">🤝</span> Deals
+        </a>
+        <a href="#/shipping" class="nav-item" data-page="shippingInstructions">
+          <span class="nav-icon">🚢</span> Shipping
+        </a>
+        <a href="#/products" class="nav-item" data-page="products">
+          <span class="nav-icon">📦</span> Products
+        </a>
+        <a href="#/settings" class="nav-item" data-page="settings">
+          <span class="nav-icon">⚙️</span> Settings
+        </a>
+      </nav>
 
-  <nav class="nav">
-  <a href="#/" class="nav-btn active" data-page="dashboard">Dashboard</a>
-  <a href="#/buyers" class="nav-btn" data-page="buyers">Buyers</a>
-  <a href="#/suppliers" class="nav-btn" data-page="suppliers">Suppliers</a>
-  <a href="#/deals" class="nav-btn" data-page="deals">Deals</a>
-  <a href="#/shipping" class="nav-btn" data-page="shippingInstructions">Shipping Instructions</a>
-  <a href="#/products" class="nav-btn" data-page="products">Products</a>
-  <a href="#/settings" class="nav-btn" data-page="settings">Settings</a>
-  <button id="logout-btn" type="button">Logout</button>
-</nav>
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="btn-logout">Logout</button>
+      </div>
+    </aside>
 
-  <main id="content"></main>
+    <main class="main-body">
+      <header class="top-bar">
+        <div class="view-info">
+          <h2 id="view-title">Dashboard</h2>
+        </div>
+      </header>
+      
+      <div id="content" class="content-area"></div>
+    </main>
+  </div>
 
-  <script type="module" src="./app.js?v=53"></script>
+  <script type="module" src="./app.js?v=54"></script>
 </body>
 </html>

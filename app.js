@@ -46,9 +46,15 @@ function handleRoute() {
     state.page = "dashboard";
   }
 
-  document.querySelectorAll(".nav-btn").forEach((btn) => {
+  document.querySelectorAll(".nav-item").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.page === state.page);
   });
+
+  const viewTitle = document.getElementById("view-title");
+  if (viewTitle) {
+    const activeNav = document.querySelector(`.nav-item[data-page="${state.page}"]`);
+    viewTitle.textContent = activeNav ? activeNav.textContent.replace(/[^\w\s]/g, "").trim() : "App";
+  }
 
   render();
 }
