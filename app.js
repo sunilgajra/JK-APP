@@ -297,10 +297,12 @@ function validateDeal(fd) {
     pRateUsd = conv ? pRate / conv : 0;
   }
 
-  totalUsd = quantity * rateUsd;
-  totalAed = quantity * rateAed;
-  pTotalUsd = quantity * pRateUsd;
-  pTotalAed = quantity * pRateAed;
+  const round = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
+  
+  totalUsd = round(quantity * rateUsd);
+  totalAed = round(quantity * rateAed);
+  pTotalUsd = round(quantity * pRateUsd);
+  pTotalAed = round(quantity * pRateAed);
 
   return {
     type: fd.get("type"),
@@ -314,8 +316,8 @@ function validateDeal(fd) {
     quantity,
     rate, // Sale Rate
     purchase_rate: pRate, // Purchase Rate
-    rate_usd: rateUsd,
-    rate_aed: rateAed,
+    rate_usd: round(rateUsd),
+    rate_aed: round(rateAed),
     total_amount: docCurr === "USD" ? totalUsd : totalAed,
     total_amount_usd: totalUsd,
     total_amount_aed: totalAed,
@@ -807,7 +809,7 @@ async function updatePayment(e, dealId, paymentId) {
 
   const amount = Number(fd.get("amount"));
   const rate = Number(fd.get("conversion_rate") || 1);
-  const convertedAmount = currency === dealCurrency ? amount : amount / rate;
+  const convertedAmount = currency === dealCurrency ? amount : Math.round((amount / rate + Number.EPSILON) * 100) / 100;
 
   const { error } = await supabase.from("payments").update({
     amount: amount,
@@ -885,7 +887,7 @@ function bindDealAutoTotal(id = null) {
   const updateQtyFromWeight = (e) => {
     const kg = Number(e.target.value || 0);
     if (kg > 0 && qtyIn) {
-      qtyIn.value = (kg / 1000).toFixed(3);
+      qtyIn.value = (kg / 1000).toFixed(2);
       calc(); 
     }
   };
@@ -900,6 +902,8 @@ function bindDealAutoTotal(id = null) {
     const c = Number(convIn?.value || 0);
     const bc = baseCurrIn?.value || "USD";
 
+    const round = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
+
     // Sale Totals
     let sUsd = 0, sAed = 0;
     if (bc === "USD") {
@@ -909,6 +913,8 @@ function bindDealAutoTotal(id = null) {
       sAed = q * r;
       sUsd = c ? sAed / c : 0;
     }
+    sUsd = round(sUsd);
+    sAed = round(sAed);
 
     // Purchase Totals
     let pUsd = 0, pAed = 0;
@@ -919,6 +925,8 @@ function bindDealAutoTotal(id = null) {
       pAed = q * pr;
       pUsd = c ? pAed / c : 0;
     }
+    pUsd = round(pUsd);
+    pAed = round(pAed);
 
     if (totalUsdIn) totalUsdIn.value = sUsd.toFixed(2);
     if (totalAedIn) totalAedIn.value = sAed.toFixed(2);
