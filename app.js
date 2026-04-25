@@ -1331,7 +1331,19 @@ function printDoc(type, dealId) {
 
   const buyer = getBuyerById(deal?.buyer_id);
   const supplier = state.suppliers.find(s => String(s.id) === String(deal?.supplier_id));
-  const dealDoc = { ...deal, dealNo: deal.deal_no, productName: deal.product_name, totalAmount: deal.total_amount };
+
+  const buyerDeals = state.deals
+    .filter(d => String(d.buyer_id) === String(deal.buyer_id))
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  const dealCount = buyerDeals.findIndex(d => String(d.id) === String(deal.id)) + 1;
+
+  const dealDoc = { 
+    ...deal, 
+    dealNo: deal.deal_no, 
+    productName: deal.product_name, 
+    totalAmount: deal.total_amount,
+    dealCount: dealCount
+  };
   const payments = paymentsForDeal(dealId);
 
   // Map selected bank

@@ -612,6 +612,24 @@ function shippingBlock(deal = {}) {
   `;
 }
 
+function suggestFilename(type, deal, buyer, company) {
+  const docType = type.toUpperCase();
+  const blNo = (deal.bl_no || deal.blNo || "NOBL").replace(/[^A-Z0-9]/gi, "");
+  const shipper = (company.name || "JK").split(/\s+/)[0].toUpperCase();
+  
+  const product = (deal.product_name || deal.productName || "PRODUCT").toUpperCase();
+  let productShort = product.split(/\s+/).filter(w => w.length > 0).map(w => w[0]).join("");
+  if (product.includes("LUBRICATING OIL")) productShort = "LO";
+  else if (product.includes("BASE OIL")) productShort = "BO";
+  else if (product.includes("BITUMEN")) productShort = "BT";
+  
+  const consignee = (buyer?.name || "BUYER").split(/\s+/)[0].toUpperCase();
+  const docNo = String(deal.pi_no || deal.ci_no || deal.pl_no || deal.dealNo || deal.deal_no || "000").replace(/[^A-Z0-9]/gi, "");
+  const count = deal.dealCount || 1;
+  
+  return `${docType}-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}-${count}`;
+}
+
 function additionalDetailsBlock(deal, supplier, docLabel = "Packing list No. Date:", extraHtml = "") {
   return `
     <div class="box" style="margin-top:0;">
@@ -679,12 +697,13 @@ export function buildPI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.created_at || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
   const currency = docCurrency(deal);
+  const filename = suggestFilename("PI", deal, buyer, company);
 
   return `
   <!DOCTYPE html>
   <html>
   <head>
-    <title>PI ${esc(deal.dealNo || "")}</title>
+    <title>${esc(filename)}</title>
     ${commonStyle()}
     ${previewScript()}
   </head>
@@ -784,9 +803,10 @@ export function buildCI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
   const currency = docCurrency(deal);
+  const filename = suggestFilename("CI", deal, buyer, company);
 
   return `
-  <!DOCTYPE html><html><head><title>CI ${esc(deal.dealNo || "")}</title>${commonStyle()}${previewScript()}</head><body>
+  <!DOCTYPE html><html><head><title>${esc(filename)}</title>${commonStyle()}${previewScript()}</head><body>
     ${previewActions()}
     <div class="top">
       ${shipperBlock(company)}
@@ -876,12 +896,13 @@ export function buildCI(deal, buyer, supplier, company = {}) {
 
 export function buildPL(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
+  const filename = suggestFilename("PL", deal, buyer, company);
 
   return `
   <!DOCTYPE html>
   <html>
   <head>
-    <title>PL ${esc(deal.dealNo || "")}</title>
+    <title>${esc(filename)}</title>
     ${commonStyle()}
     ${previewScript()}
   </head>
@@ -933,12 +954,13 @@ export function buildPL(deal, buyer, supplier, company = {}) {
 
 export function buildCOO(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
+  const filename = suggestFilename("COO", deal, buyer, company);
 
   return `
   <!DOCTYPE html>
   <html>
   <head>
-    <title>COO ${esc(deal.dealNo || "")}</title>
+    <title>${esc(filename)}</title>
     ${commonStyle()}
     ${previewScript()}
   </head>
