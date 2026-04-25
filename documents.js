@@ -549,11 +549,12 @@ function containerBlock(deal = {}) {
         .map((x) => x.trim())
         .filter(Boolean);
 
+  const cleanList = list.map(x => String(x).replace(/[^A-Z0-9]/gi, "").toUpperCase());
   const minItems = 20;
-  const totalItems = Math.max(minItems, list.length);
+  const totalItems = Math.max(minItems, cleanList.length);
   const evenTotal = totalItems % 2 === 0 ? totalItems : totalItems + 1;
 
-  const normalized = [...list];
+  const normalized = [...cleanList];
   while (normalized.length < evenTotal) {
     normalized.push("-");
   }
@@ -564,9 +565,9 @@ function containerBlock(deal = {}) {
   }
 
   return `
-    <div class="panel">
+    <div class="panel" style="height:100%">
       <div class="bar">Container Nos:</div>
-      <table class="thin">
+      <table class="thin" style="height:calc(100% - 18px)">
         ${rows.map((r) => `
           <tr style="height:22px">
             <td class="center">${esc(r[0] || "-")}</td>
@@ -650,13 +651,15 @@ export function buildPI(deal, buyer, supplier, company = {}) {
         <th style="width:22%">TOTAL AMOUNT (${esc(currency)})</th>
       </tr>
       <tr style="height:138px">
-        <td style="display:flex; flex-direction:column; justify-content:space-between; height:138px; border:none">
-          <div>
-            <b>${esc(deal.productName || "")}</b><br>
-            HS CODE : : ${esc(deal.hsn_code || "—")}
-          </div>
-          <div style="margin-top:auto">
-            ${esc(currency)} : ${esc(amountWords(total))} ONLY
+        <td style="padding:0">
+          <div style="display:flex; flex-direction:column; justify-content:space-between; height:138px; padding:4px 5px">
+            <div>
+              <b>${esc(deal.productName || "")}</b><br>
+              HS CODE : : ${esc(deal.hsn_code || "—")}
+            </div>
+            <div style="margin-top:auto">
+              ${esc(currency)} : ${esc(amountWords(total))} ONLY
+            </div>
           </div>
         </td>
         <td class="center">${esc(deal.unit || "MTON")}</td>
@@ -667,8 +670,8 @@ export function buildPI(deal, buyer, supplier, company = {}) {
       </tr>
     </table>
 
-    <div class="smallGrid" style="margin-top:0; align-items:start; grid-template-columns: 1.35fr .75fr;">
-      <div class="box">
+    <div class="smallGrid" style="margin-top:0; align-items:stretch; grid-template-columns: 1.35fr .75fr;">
+      <div class="box" style="height:100%">
         <div class="boxHead">Terms of Sale and Other Comments</div>
         <div class="boxBody tight">
           <div><b>Terms of Delivery / Payment :</b></div>
@@ -761,13 +764,15 @@ export function buildCI(deal, buyer, supplier, company = {}) {
         <th style="width:17%">TOTAL AMOUNT (${esc(currency)})</th>
       </tr>
       <tr style="height:145px">
-        <td style="display:flex; flex-direction:column; justify-content:space-between; height:145px; border:none">
-          <div>
-            <b>${esc(deal.productName || "")}</b><br>
-            HS CODE : : ${esc(deal.hsn_code || "—")}
-          </div>
-          <div style="margin-top:auto">
-            ${esc(currency)} : ${esc(amountWords(total))} ONLY
+        <td style="padding:0">
+          <div style="display:flex; flex-direction:column; justify-content:space-between; height:145px; padding:4px 5px">
+            <div>
+              <b>${esc(deal.productName || "")}</b><br>
+              HS CODE : : ${esc(deal.hsn_code || "—")}
+            </div>
+            <div style="margin-top:auto">
+              ${esc(currency)} : ${esc(amountWords(total))} ONLY
+            </div>
           </div>
         </td>
         <td class="center">${esc(deal.unit || "MTON")}</td>
@@ -778,8 +783,8 @@ export function buildCI(deal, buyer, supplier, company = {}) {
       </tr>
     </table>
 
-    <div style="display:grid;grid-template-columns:1.18fr .88fr .64fr;gap:4px;align-items:start;margin-top:6px;">
-      <div class="box">
+    <div style="display:grid;grid-template-columns:1.18fr .88fr .64fr;gap:4px;align-items:stretch;margin-top:6px;">
+      <div class="box" style="height:100%">
         <div class="boxHead">Terms of Sale and Other Comments</div>
         <div class="boxBody tight">
           <div><b>Terms of Delivery / Payment :</b></div>
