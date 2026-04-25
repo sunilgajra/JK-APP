@@ -88,8 +88,22 @@ export function settingsView() {
 
           <div>
             <div class="form-header">AI Settings</div>
-            <label class="form-label">Google Gemini API Key (for Smart Scan)</label>
-            <input name="gemini_api_key" type="password" value="${esc(c.gemini_api_key || "")}" placeholder="Paste your API key here">
+            <div class="grid gap-10">
+              <div>
+                <label class="form-label">Google Gemini API Key (for Smart Scan)</label>
+                <input name="gemini_api_key" type="password" value="${esc(c.gemini_api_key || "")}" placeholder="Paste your API key here">
+              </div>
+              <div>
+                <label class="form-label">Gemini Model</label>
+                <select name="gemini_model">
+                  <option value="gemini-1.5-flash" ${c.gemini_model === "gemini-1.5-flash" ? "selected" : ""}>Gemini 1.5 Flash (Legacy)</option>
+                  <option value="gemini-2.0-flash" ${c.gemini_model === "gemini-2.0-flash" ? "selected" : ""}>Gemini 2.0 Flash</option>
+                  <option value="gemini-2.5-flash" ${c.gemini_model === "gemini-2.5-flash" ? "selected" : ""}>Gemini 2.5 Flash</option>
+                  <option value="gemini-3-flash" ${c.gemini_model === "gemini-3-flash" ? "selected" : ""}>Gemini 3 Flash</option>
+                  <option value="gemini-3-flash-preview" ${c.gemini_model === "gemini-3-flash-preview" ? "selected" : ""}>Gemini 3 Flash Preview</option>
+                </select>
+              </div>
+            </div>
             <div class="item-sub mt-4">Required for scanning documents automatically.</div>
             <button type="button" id="check-ai-btn" class="mt-8" style="background:#4f46e5; color:white">Check AI Connection</button>
           </div>
