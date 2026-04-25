@@ -140,11 +140,13 @@ body {
   box-shadow: var(--shadow-glow);
 }
 
-#content{
-  max-width:1080px;
-  margin:0 auto;
-  padding:18px;
-  padding-bottom:96px;
+#content {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.25rem;
+  padding-bottom: 96px;
+  position: relative;
+  z-index: 10;
 }
 
 .grid{
@@ -309,6 +311,20 @@ button:active {
 form.item { padding: 1.5rem; }
 form .row, form .actions { display: flex; gap: 12px; flex-wrap: wrap; }
 form button { min-height: 44px; }
+
+#back-to-deals {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  padding: 8px 20px;
+  font-size: 0.875rem;
+  z-index: 100;
+}
+
+#back-to-deals:hover {
+  background: var(--surface-hover) !important;
+  border-color: var(--text-dim) !important;
+}
 
 button[data-open-deal] {
   background: var(--info) !important;

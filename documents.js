@@ -252,13 +252,17 @@ function commonStyle() {
     }
 
     .previewActions button {
-      padding: 8px 12px;
+      padding: 12px 18px;
       border: none;
       background: #2f9aa0;
       color: #fff;
-      border-radius: 6px;
-      font-size: 14px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .top {
@@ -453,7 +457,7 @@ function previewActions() {
     <div class="previewActions">
       <button onclick="downloadExactPdf()">Download PDF</button>
       ${isMobile ? "" : `<button onclick="window.print()">Print / Save PDF</button>`}
-      <button onclick="if(window.close && window.opener) { window.close(); } else { history.back(); }">Back</button>
+      <button onclick="if(window.opener) { window.close(); } else { window.location.href = window.location.origin + window.location.pathname + window.location.hash; window.location.reload(); }">Back</button>
     </div>
   `;
 }
