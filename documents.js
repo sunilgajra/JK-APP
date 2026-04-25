@@ -623,8 +623,18 @@ function suggestFilename(type, deal, buyer, company) {
   else if (product.includes("BASE OIL")) productShort = "BO";
   else if (product.includes("BITUMEN")) productShort = "BT";
   
-  const consignee = (buyer?.name || "BUYER").split(/\s+/)[0].toUpperCase();
-  const docNo = String(deal.pi_no || deal.ci_no || deal.pl_no || deal.dealNo || deal.deal_no || "000").replace(/[^A-Z0-9]/gi, "");
+  const consignee = (buyer?.name || "BUYER").split(/\s+/).filter(Boolean).slice(0, 2).join(" ").toUpperCase();
+  
+  // Prioritize the number based on the document type
+  let dNo = "";
+  if (docType === "CI") dNo = deal.ci_no;
+  else if (docType === "PI") dNo = deal.pi_no;
+  else if (docType === "PL") dNo = deal.pl_no;
+  else if (docType === "COO") dNo = deal.coo_no || deal.ci_no;
+  
+  // Fallback if the specific type number is missing
+  const docNo = String(dNo || deal.ci_no || deal.pi_no || deal.pl_no || deal.dealNo || deal.deal_no || "000").replace(/[^A-Z0-9]/gi, "");
+  
   const count = deal.dealCount || 1;
   
   return `${docType}-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}-${count}`;
