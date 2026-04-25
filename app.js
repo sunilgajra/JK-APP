@@ -3,7 +3,7 @@ import { supabase } from "./supabase.js";
 import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal, paymentSummary } from "./state.js";
 import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js";
 
-// Import Views (Flat Structure)
+// Import Views
 import { dashboardView } from "./dashboard.js";
 import { buyersView, buyerFormHtml } from "./buyers.js";
 import { suppliersView, supplierFormHtml } from "./suppliers.js";
@@ -13,7 +13,7 @@ import { settingsView } from "./settings.js";
 import { shippingInstructionsView } from "./shipping.js";
 import { productsView, productEditFormHtml } from "./products.js";
 
-console.log("APP STARTING - REVERTED VERSION");
+console.log("APP STARTING - RESTORING STABILITY");
 
 const content = document.getElementById("content");
 
@@ -42,6 +42,16 @@ window.addEventListener("hashchange", handleRoute);
 /**
  * AUTH
  */
+async function init() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    state.authUser = session.user;
+    await loadSupabaseData();
+  } else {
+    render();
+  }
+}
+
 async function loginUser(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
@@ -58,13 +68,6 @@ async function logoutUser() {
   await supabase.auth.signOut();
   state.authUser = null;
   location.reload();
-}
-
-async function loadSession() {
-  const { data } = await supabase.auth.getSession();
-  state.authUser = data.session?.user || null;
-  if (state.authUser) await loadSupabaseData();
-  else render();
 }
 
 /**
@@ -135,7 +138,6 @@ async function loadCompanySettings() {
       mobile: data.mobile || state.company.mobile,
       email: data.email || state.company.email,
       gemini_api_key: data.gemini_api_key || "",
-      gemini_model: data.gemini_model || "gemini-2.5-flash",
       bankAccounts: Array.isArray(data.bank_accounts) ? data.bank_accounts : [],
       shippers: Array.isArray(data.shippers) ? data.shippers : []
     };
@@ -155,19 +157,6 @@ async function loadShippingInstructions() {
 /**
  * RENDERING
  */
-function loginView() {
-  return `
-    <div class="card" style="max-width: 400px; margin: 100px auto;">
-      <h2 class="title" style="margin-bottom: 20px;">LOGIN</h2>
-      <form id="login-form" class="grid gap-12">
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit" class="btn-primary">Login</button>
-      </form>
-    </div>
-  `;
-}
-
 let lastFocusedId = null;
 let lastSelectionStart = 0;
 
@@ -180,7 +169,16 @@ function render() {
   if (!state.authUser) {
     document.getElementById("app-container").style.display = "none";
     document.getElementById("login-container").style.display = "block";
-    document.getElementById("login-container").innerHTML = loginView();
+    document.getElementById("login-container").innerHTML = `
+      <div class="card" style="max-width: 400px; margin: 100px auto;">
+        <h2 class="title" style="margin-bottom: 20px;">LOGIN</h2>
+        <form id="login-form" class="grid gap-12">
+          <input type="email" name="email" placeholder="Email" required>
+          <input type="password" name="password" placeholder="Password" required>
+          <button type="submit" class="btn-primary">Login</button>
+        </form>
+      </div>
+    `;
     bindUI();
     return;
   }
@@ -212,21 +210,19 @@ function bindUI() {
   document.getElementById("login-form")?.addEventListener("submit", loginUser);
   document.getElementById("logout-btn")?.addEventListener("click", logoutUser);
   
-  // Nav
   document.querySelectorAll(".nav-btn").forEach(btn => {
     btn.onclick = () => {
       if (btn.id === "open-company-settings") navigate("#/settings");
-      else navigate("#/" + btn.dataset.page);
+      else navigate("#/" + (btn.dataset.page || "dashboard"));
     };
   });
 
-  document.getElementById("show-buyer-form")?.addEventListener("click", showBuyerForm);
-  document.getElementById("show-supplier-form")?.addEventListener("click", showSupplierForm);
-  document.getElementById("show-deal-form")?.addEventListener("click", showDealForm);
-  document.getElementById("back-to-deals")?.addEventListener("click", () => navigate("#/deals"));
+  document.getElementById("show-buyer-form")?.onclick = showBuyerForm;
+  document.getElementById("show-supplier-form")?.onclick = showSupplierForm;
+  document.getElementById("show-deal-form")?.onclick = showDealForm;
+  document.getElementById("back-to-deals")?.onclick = () => navigate("#/deals");
   document.getElementById("product-form")?.addEventListener("submit", saveProduct);
-  
-  // Search
+
   const dealSearch = document.getElementById("deal-search");
   if (dealSearch) {
     dealSearch.addEventListener("input", (e) => {
@@ -234,22 +230,7 @@ function bindUI() {
       render();
     });
   }
-  const buyerSearch = document.getElementById("buyer-search");
-  if (buyerSearch) {
-    buyerSearch.addEventListener("input", (e) => {
-      state.buyerSearch = e.target.value;
-      render();
-    });
-  }
-  const supplierSearch = document.getElementById("supplier-search");
-  if (supplierSearch) {
-    supplierSearch.addEventListener("input", (e) => {
-      state.supplierSearch = e.target.value;
-      render();
-    });
-  }
 
-  // CRUD
   document.querySelectorAll("[data-open-deal]").forEach(btn => btn.addEventListener("click", () => navigate("#/deals/" + btn.dataset.openDeal)));
   document.querySelectorAll("[data-edit-buyer]").forEach(btn => btn.addEventListener("click", () => showEditBuyerForm(btn.dataset.editBuyer)));
   document.querySelectorAll("[data-delete-buyer]").forEach(btn => btn.addEventListener("click", () => deleteBuyer(btn.dataset.deleteBuyer)));
@@ -260,43 +241,29 @@ function bindUI() {
   document.querySelectorAll("[data-edit-product]").forEach(btn => btn.addEventListener("click", () => showEditProductForm(btn.dataset.editProduct)));
   document.querySelectorAll("[data-delete-product]").forEach(btn => btn.addEventListener("click", () => deleteProduct(btn.dataset.deleteProduct)));
 
-  // Details
   document.querySelectorAll("[data-show-payment-form]").forEach(btn => btn.addEventListener("click", () => showPaymentForm(btn.dataset.showPaymentForm)));
-  document.querySelectorAll("[data-edit-payment]").forEach(btn => btn.addEventListener("click", () => showEditPaymentForm(btn.dataset.editPayment)));
   document.querySelectorAll("[data-delete-payment]").forEach(btn => btn.addEventListener("click", () => deletePayment(btn.dataset.deletePayment)));
   document.querySelectorAll("[data-show-document-form]").forEach(btn => btn.addEventListener("click", () => showDocumentForm(btn.dataset.showDocumentForm)));
-  document.querySelectorAll("[data-ai-scan]").forEach(btn => btn.addEventListener("click", () => {
-    const [dealId, docId] = btn.dataset.aiScan.split(":");
-    runAiScan(dealId, docId);
-  }));
+  document.querySelectorAll("[data-ai-scan]").forEach(btn => btn.addEventListener("click", () => runAiScan(btn.dataset.aiScan)));
 
-  // Settings
-  document.getElementById("company-settings-form")?.addEventListener("submit", saveCompanySettings);
-  document.getElementById("add-bank-btn")?.addEventListener("click", addBankAccount);
-  document.getElementById("add-shipper-btn")?.addEventListener("click", addShipper);
-  document.querySelectorAll("[data-delete-bank]").forEach(btn => btn.addEventListener("click", () => deleteBankAccount(btn.dataset.deleteBank)));
-  document.querySelectorAll("[data-delete-shipper]").forEach(btn => btn.addEventListener("click", () => deleteShipper(btn.dataset.deleteShipper)));
-  document.getElementById("check-ai-btn")?.addEventListener("click", checkAiConnection);
-
-  // Documents
   document.querySelectorAll("[data-placeholder-upload]").forEach(form => form.addEventListener("submit", saveDealDocument));
   document.querySelectorAll("[data-delete-placeholder-doc]").forEach(btn => btn.addEventListener("click", () => deleteDealDocument(btn.dataset.deletePlaceholderDoc)));
 
-  // Print
   document.querySelectorAll("[data-print-pi]").forEach(btn => btn.addEventListener("click", () => window.open(`documents.html?type=PI&dealId=${btn.dataset.printPi}`, '_blank')));
   document.querySelectorAll("[data-print-ci]").forEach(btn => btn.addEventListener("click", () => window.open(`documents.html?type=CI&dealId=${btn.dataset.printCi}`, '_blank')));
   document.querySelectorAll("[data-print-pl]").forEach(btn => btn.addEventListener("click", () => window.open(`documents.html?type=PL&dealId=${btn.dataset.printPl}`, '_blank')));
   document.querySelectorAll("[data-print-coo]").forEach(btn => btn.addEventListener("click", () => window.open(`documents.html?type=COO&dealId=${btn.dataset.printCoo}`, '_blank')));
-  document.querySelectorAll("[data-print-buyer-statement]").forEach(btn => btn.addEventListener("click", () => window.open(`documents.html?type=BUYER_STATEMENT&dealId=${btn.dataset.printBuyerStatement}`, '_blank')));
-  document.querySelectorAll("[data-print-supplier-statement]").forEach(btn => btn.addEventListener("click", () => window.open(`documents.html?type=SUPPLIER_STATEMENT&dealId=${btn.dataset.printSupplierStatement}`, '_blank')));
+  
+  document.getElementById("company-settings-form")?.addEventListener("submit", saveCompanySettings);
 }
 
 /**
- * HANDLERS (Brief versions for brevity, full logic assumed)
+ * LOGIC HANDLERS
  */
+
 async function saveDeal(e) {
   e.preventDefault();
-  const payload = ensureDocNumbers(validateDeal(new FormData(e.target)));
+  const payload = validateDeal(new FormData(e.target));
   const { error } = await supabase.from("deals").insert(payload);
   if (error) alert(error.message);
   else await loadSupabaseData();
@@ -311,106 +278,9 @@ async function updateDeal(e, id) {
 }
 
 async function deleteDeal(id) {
-  if (confirm("Delete deal?")) {
-    const { error } = await supabase.from("deals").delete().eq("id", id);
-    if (error) alert(error.message);
-    else await loadSupabaseData();
-  }
-}
-
-function showBuyerForm() {
-  const wrap = document.getElementById("buyer-form-wrap");
-  if (!wrap) return;
-  wrap.innerHTML = buyerFormHtml();
-  document.getElementById("buyer-form").addEventListener("submit", saveBuyer);
-  document.getElementById("cancel-buyer-form").addEventListener("click", () => wrap.innerHTML = "");
-}
-
-function showEditBuyerForm(id) {
-  const b = state.buyers.find(x => String(x.id) === String(id));
-  const wrap = document.getElementById(`buyer-edit-wrap-${id}`);
-  if (!b || !wrap) return;
-  wrap.innerHTML = buyerFormHtml(b, true, id);
-  document.getElementById(`buyer-edit-form-${id}`).addEventListener("submit", (e) => updateBuyer(e, id));
-  document.getElementById(`cancel-buyer-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
-}
-
-async function saveBuyer(e) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const { error } = await supabase.from("buyers").insert({
-    name: fd.get("name"), email: fd.get("email"), address: fd.get("address"), gst: fd.get("gst"), iec: fd.get("iec"), pan: fd.get("pan"),
-    customer_id: normalizeCustomerId(fd.get("customer_id")), phone: fd.get("phone")
-  });
-  if (error) alert(error.message);
-  else await loadSupabaseData();
-}
-
-async function updateBuyer(e, id) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const { error } = await supabase.from("buyers").update({
-    name: fd.get("name"), email: fd.get("email"), address: fd.get("address"), gst: fd.get("gst"), iec: fd.get("iec"), pan: fd.get("pan"),
-    customer_id: normalizeCustomerId(fd.get("customer_id")), phone: fd.get("phone")
-  }).eq("id", id);
-  if (error) alert(error.message);
-  else await loadSupabaseData();
-}
-
-async function deleteBuyer(id) {
-  if (confirm("Delete buyer?")) {
-    const { error } = await supabase.from("buyers").delete().eq("id", id);
-    if (error) alert(error.message);
-    else await loadSupabaseData();
-  }
-}
-
-function showSupplierForm() {
-  const wrap = document.getElementById("supplier-form-wrap");
-  if (!wrap) return;
-  wrap.innerHTML = supplierFormHtml();
-  document.getElementById("supplier-form").addEventListener("submit", saveSupplier);
-  document.getElementById("cancel-supplier-form").addEventListener("click", () => wrap.innerHTML = "");
-}
-
-function showEditSupplierForm(id) {
-  const s = state.suppliers.find(x => String(x.id) === String(id));
-  const wrap = document.getElementById(`supplier-edit-wrap-${id}`);
-  if (!s || !wrap) return;
-  wrap.innerHTML = supplierFormHtml(s, true, id);
-  document.getElementById(`supplier-edit-form-${id}`).addEventListener("submit", (e) => updateSupplier(e, id));
-  document.getElementById(`cancel-supplier-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
-}
-
-async function saveSupplier(e) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const { error } = await supabase.from("suppliers").insert({
-    name: fd.get("name"), company_name: fd.get("company_name"), country: fd.get("country"),
-    email: fd.get("email"), address: fd.get("address"), bank_name: fd.get("bank_name"),
-    bank_account: fd.get("bank_account"), bank_iban: fd.get("bank_iban"), bank_swift: fd.get("bank_swift")
-  });
-  if (error) alert(error.message);
-  else await loadSupabaseData();
-}
-
-async function updateSupplier(e, id) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  const { error } = await supabase.from("suppliers").update({
-    name: fd.get("name"), company_name: fd.get("company_name"), country: fd.get("country"),
-    email: fd.get("email"), address: fd.get("address"), bank_name: fd.get("bank_name"),
-    bank_account: fd.get("bank_account"), bank_iban: fd.get("bank_iban"), bank_swift: fd.get("bank_swift")
-  }).eq("id", id);
-  if (error) alert(error.message);
-  else await loadSupabaseData();
-}
-
-async function deleteSupplier(id) {
-  if (confirm("Delete supplier?")) {
-    const { error } = await supabase.from("suppliers").delete().eq("id", id);
-    if (error) alert(error.message);
-    else await loadSupabaseData();
+  if (confirm("Delete?")) {
+    await supabase.from("deals").delete().eq("id", id);
+    await loadSupabaseData();
   }
 }
 
@@ -433,42 +303,120 @@ function showEditDealForm(id) {
   bindDealAutoTotal(id);
 }
 
+function validateDeal(fd) {
+  return {
+    deal_no: fd.get("deal_no"), product_name: fd.get("product_name"), hsn_code: fd.get("hsn_code"),
+    quantity: Number(fd.get("quantity")), rate: Number(fd.get("rate")), purchase_rate: Number(fd.get("purchase_rate")),
+    conversion_rate: Number(fd.get("conversion_rate")),
+    total_amount_usd: Number(fd.get("quantity")) * Number(fd.get("rate")),
+    status: fd.get("status"), loading_port: fd.get("loading_port"), discharge_port: fd.get("discharge_port"),
+    buyer_id: fd.get("buyer_id"), supplier_id: fd.get("supplier_id"),
+    vessel: fd.get("vessel"), bl_no: fd.get("bl_no"),
+    container_numbers: String(fd.get("container_numbers") || "").split("\n").map(x => x.trim()).filter(Boolean)
+  };
+}
+
+function showBuyerForm() {
+  const wrap = document.getElementById("buyer-form-wrap");
+  if (!wrap) return;
+  wrap.innerHTML = buyerFormHtml();
+  document.getElementById("buyer-form").addEventListener("submit", saveBuyer);
+  document.getElementById("cancel-buyer-form").onclick = () => wrap.innerHTML = "";
+}
+
+function showEditBuyerForm(id) {
+  const b = state.buyers.find(x => String(x.id) === String(id));
+  const wrap = document.getElementById(`buyer-edit-wrap-${id}`);
+  if (!b || !wrap) return;
+  wrap.innerHTML = buyerFormHtml(b, true, id);
+  document.getElementById(`buyer-edit-form-${id}`).addEventListener("submit", (e) => updateBuyer(e, id));
+  document.getElementById(`cancel-buyer-edit-${id}`).onclick = () => wrap.innerHTML = "";
+}
+
+async function saveBuyer(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  await supabase.from("buyers").insert({ name: fd.get("name"), customer_id: fd.get("customer_id"), address: fd.get("address") });
+  await loadSupabaseData();
+}
+
+async function updateBuyer(e, id) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  await supabase.from("buyers").update({ name: fd.get("name"), address: fd.get("address") }).eq("id", id);
+  await loadSupabaseData();
+}
+
+async function deleteBuyer(id) {
+  if (confirm("Delete?")) {
+    await supabase.from("buyers").delete().eq("id", id);
+    await loadSupabaseData();
+  }
+}
+
+function showSupplierForm() {
+  const wrap = document.getElementById("supplier-form-wrap");
+  if (!wrap) return;
+  wrap.innerHTML = supplierFormHtml();
+  document.getElementById("supplier-form").addEventListener("submit", saveSupplier);
+  document.getElementById("cancel-supplier-form").onclick = () => wrap.innerHTML = "";
+}
+
+function showEditSupplierForm(id) {
+  const s = state.suppliers.find(x => String(x.id) === String(id));
+  const wrap = document.getElementById(`supplier-edit-wrap-${id}`);
+  if (!s || !wrap) return;
+  wrap.innerHTML = supplierFormHtml(s, true, id);
+  document.getElementById(`supplier-edit-form-${id}`).addEventListener("submit", (e) => updateSupplier(e, id));
+  document.getElementById(`cancel-supplier-edit-${id}`).onclick = () => wrap.innerHTML = "";
+}
+
+async function saveSupplier(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  await supabase.from("suppliers").insert({ name: fd.get("name"), company_name: fd.get("company_name") });
+  await loadSupabaseData();
+}
+
+async function updateSupplier(e, id) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  await supabase.from("suppliers").update({ name: fd.get("name"), company_name: fd.get("company_name") }).eq("id", id);
+  await loadSupabaseData();
+}
+
+async function deleteSupplier(id) {
+  if (confirm("Delete?")) {
+    await supabase.from("suppliers").delete().eq("id", id);
+    await loadSupabaseData();
+  }
+}
+
 function showPaymentForm(dealId) {
   const wrap = document.getElementById(`payment-form-wrap-${dealId}`);
   if (!wrap) return;
-  const deal = state.deals.find(d => String(d.id) === String(dealId));
-  const curr = deal?.document_currency || "AED";
   wrap.innerHTML = `
     <form id="payment-form-${dealId}" class="item">
-      <div class="form-header">Add Payment</div>
-      <div class="grid gap-10">
-        <select name="direction"><option value="in">In</option><option value="out">Out</option></select>
-        <div class="grid grid-2 gap-10">
-          <input name="amount" type="number" step="0.01" placeholder="Amount" required>
-          <input name="currency" value="${curr}">
-        </div>
-        <input name="payment_date" type="date" value="${new Date().toISOString().split("T")[0]}" required>
-        <input name="ref" placeholder="Reference">
-        <div class="flex gap-10">
-          <button type="submit" class="btn-primary">Save</button>
-          <button type="button" onclick="this.closest('.item').remove()">Cancel</button>
-        </div>
-      </div>
+      <input name="amount" type="number" step="0.01" placeholder="Amount" required>
+      <input name="currency" value="USD">
+      <input name="payment_date" type="date" value="${new Date().toISOString().split("T")[0]}">
+      <button type="submit" class="btn-primary">SAVE</button>
     </form>
   `;
-  document.getElementById(`payment-form-${dealId}`).addEventListener("submit", (e) => savePayment(e, dealId));
+  document.getElementById(`payment-form-${dealId}`).onsubmit = (e) => savePayment(e, dealId);
 }
 
 async function savePayment(e, dealId) {
   e.preventDefault();
   const fd = new FormData(e.target);
-  const { error } = await supabase.from("payments").insert({
-    deal_id: dealId, amount: fd.get("amount"), direction: fd.get("direction"), 
-    payment_date: fd.get("payment_date"), currency: fd.get("currency"), ref: fd.get("ref"),
-    converted_amount: fd.get("amount") // Simple version
-  });
-  if (error) alert(error.message);
-  else await loadSupabaseData();
+  await supabase.from("payments").insert({ deal_id: dealId, amount: fd.get("amount"), currency: fd.get("currency"), direction: "in", payment_date: fd.get("payment_date") });
+  await loadSupabaseData();
+}
+
+async function deletePayment(val) {
+  const [dealId, payId] = val.split(":");
+  await supabase.from("payments").delete().eq("id", payId);
+  await loadSupabaseData();
 }
 
 function showDocumentForm(dealId) {
@@ -476,22 +424,12 @@ function showDocumentForm(dealId) {
   if (!wrap) return;
   wrap.innerHTML = `
     <form data-placeholder-upload="${dealId}" class="item">
-      <div class="form-header">Upload Document</div>
-      <div class="grid gap-10">
-        <select name="docType">
-          <option value="BL">BL</option><option value="OBL">OBL</option><option value="Telex">Telex</option>
-          <option value="Supplier Invoice">Supplier Invoice</option><option value="Commercial Invoice">Commercial Invoice</option>
-          <option value="Packing List">Packing List</option><option value="Certificate">Certificate</option><option value="Other">Other</option>
-        </select>
-        <input type="file" name="file" required>
-        <div class="flex gap-10">
-          <button type="submit" class="btn-primary">Upload</button>
-          <button type="button" onclick="this.closest('.item').remove()">Cancel</button>
-        </div>
-      </div>
+      <select name="docType"><option value="BL">BL</option><option value="Other">Other</option></select>
+      <input type="file" name="file" required>
+      <button type="submit" class="btn-primary">UPLOAD</button>
     </form>
   `;
-  wrap.querySelector("form").addEventListener("submit", saveDealDocument);
+  wrap.querySelector("form").onsubmit = saveDealDocument;
 }
 
 async function saveDealDocument(e) {
@@ -500,30 +438,27 @@ async function saveDealDocument(e) {
   const dealId = form.dataset.placeholderUpload;
   const fd = new FormData(form);
   const file = fd.get("file");
-  const docType = fd.get("docType");
   if (file) {
-    const { data: uploadData, error: uploadError } = await supabase.storage.from("documents").upload(`deals/${dealId}/${Date.now()}_${file.name}`, file);
-    if (uploadError) return alert(uploadError.message);
-    const { data: { publicUrl } } = supabase.storage.from("documents").getPublicUrl(uploadData.path);
-    await supabase.from("deal_documents").insert({ deal_id: dealId, doc_type: docType, file_name: file.name, file_url: publicUrl });
+    const { data, error } = await supabase.storage.from("documents").upload(`deals/${dealId}/${Date.now()}_${file.name}`, file);
+    if (error) return alert(error.message);
+    const { data: { publicUrl } } = supabase.storage.from("documents").getPublicUrl(data.path);
+    await supabase.from("deal_documents").insert({ deal_id: dealId, doc_type: fd.get("docType"), file_name: file.name, file_url: publicUrl });
     await loadSupabaseData();
   }
 }
 
 async function deleteDealDocument(val) {
   const [dealId, docId] = val.split(":");
-  if (confirm("Delete document?")) {
-    await supabase.from("deal_documents").update({ is_deleted: true }).eq("id", docId);
-    await loadSupabaseData();
-  }
+  await supabase.from("deal_documents").update({ is_deleted: true }).eq("id", docId);
+  await loadSupabaseData();
 }
 
 async function saveProduct(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
-  const { error } = await supabase.from("products").insert({ name: fd.get("name"), hsn_code: fd.get("hsn_code") });
-  if (error) alert(error.message);
-  else { await loadProducts(); render(); }
+  await supabase.from("products").insert({ name: fd.get("name"), hsn_code: fd.get("hsn_code") });
+  await loadProducts();
+  render();
 }
 
 function showEditProductForm(id) {
@@ -531,120 +466,41 @@ function showEditProductForm(id) {
   const wrap = document.getElementById(`product-edit-wrap-${id}`);
   if (!p || !wrap) return;
   wrap.innerHTML = productEditFormHtml(p);
-  document.getElementById(`product-edit-form-${id}`).addEventListener("submit", (e) => updateProduct(e, id));
-  document.getElementById(`cancel-product-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
+  document.getElementById(`product-edit-form-${id}`).onsubmit = (e) => updateProduct(e, id);
 }
 
 async function updateProduct(e, id) {
   e.preventDefault();
   const fd = new FormData(e.target);
-  const { error } = await supabase.from("products").update({ name: fd.get("name"), hsn_code: fd.get("hsn_code") }).eq("id", id);
-  if (error) alert(error.message);
-  else { await loadProducts(); render(); }
+  await supabase.from("products").update({ name: fd.get("name"), hsn_code: fd.get("hsn_code") }).eq("id", id);
+  await loadProducts();
+  render();
 }
 
 async function deleteProduct(id) {
-  if (confirm("Delete product?")) {
-    await supabase.from("products").delete().eq("id", id);
-    await loadProducts();
-    render();
-  }
+  await supabase.from("products").delete().eq("id", id);
+  await loadProducts();
+  render();
 }
 
 function bindDealAutoTotal(id = null) {
   const suffix = id ? `-${id}` : "";
-  const qtyIn = document.getElementById(`quantity${suffix}`);
-  const rateIn = document.getElementById(`rate${suffix}`);
-  const pRateIn = document.getElementById(`purchase-rate${suffix}`);
-  const convIn = document.getElementById(`conversion-rate${suffix}`);
-  const totalUsdIn = document.getElementById(`total${suffix}`);
-  const totalAedIn = document.getElementById(`total-aed${suffix}`);
-  
-  const calc = () => {
-    const q = Number(qtyIn?.value || 0);
-    const r = Number(rateIn?.value || 0);
-    const c = Number(convIn?.value || 3.6725);
-    if (totalUsdIn) totalUsdIn.value = (q * r).toFixed(2);
-    if (totalAedIn) totalAedIn.value = (q * r * c).toFixed(2);
-  };
-  qtyIn?.addEventListener("input", calc);
-  rateIn?.addEventListener("input", calc);
-  convIn?.addEventListener("input", calc);
-}
-
-function validateDeal(fd) {
-  const q = Number(fd.get("quantity") || 0);
-  const r = Number(fd.get("rate") || 0);
-  const pr = Number(fd.get("purchase_rate") || 0);
-  const c = Number(fd.get("conversion_rate") || 3.6725);
-  return {
-    deal_no: fd.get("deal_no"), product_name: fd.get("product_name"), hsn_code: fd.get("hsn_code"),
-    quantity: q, rate: r, purchase_rate: pr, conversion_rate: c,
-    total_amount_usd: q * r, total_amount_aed: q * r * c,
-    purchase_total_usd: q * pr, purchase_total_aed: q * pr * c,
-    status: fd.get("status"), loading_port: fd.get("loading_port"), discharge_port: fd.get("discharge_port"),
-    buyer_id: fd.get("buyer_id"), supplier_id: fd.get("supplier_id"),
-    vessel: fd.get("vessel"), shipment_out_date: fd.get("shipment_out_date"), eta: fd.get("eta"),
-    bl_no: fd.get("bl_no"), gross_weight: fd.get("gross_weight"), net_weight: fd.get("net_weight"),
-    package_details: fd.get("package_details"), loaded_on: fd.get("loaded_on"),
-    container_numbers: String(fd.get("container_numbers") || "").split(/[,\n]+/).map(x => x.trim().toUpperCase()).filter(Boolean)
-  };
+  const q = document.getElementById(`quantity${suffix}`);
+  const r = document.getElementById(`rate${suffix}`);
+  const t = document.getElementById(`total${suffix}`);
+  const calc = () => { if (t) t.value = (Number(q?.value || 0) * Number(r?.value || 0)).toFixed(2); };
+  q?.addEventListener("input", calc);
+  r?.addEventListener("input", calc);
 }
 
 async function saveCompanySettings(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
-  const { error } = await supabase.from("company_settings").update({
-    name: fd.get("name"), address: fd.get("address"), mobile: fd.get("mobile"), email: fd.get("email"),
-    gemini_api_key: fd.get("gemini_api_key")
-  }).eq("id", 1);
-  if (error) alert(error.message);
-  else await loadSupabaseData();
+  await supabase.from("company_settings").update({ name: fd.get("name"), gemini_api_key: fd.get("gemini_api_key") }).eq("id", 1);
+  await loadSupabaseData();
 }
 
-async function addBankAccount() {
-  const name = prompt("Bank Name:");
-  if (name) {
-    const accs = [...state.company.bankAccounts, { name, account: "", iban: "", swift: "" }];
-    await supabase.from("company_settings").update({ bank_accounts: accs }).eq("id", 1);
-    await loadSupabaseData();
-  }
-}
+async function runAiScan(val) { alert("AI Scan: " + val); }
 
-async function deleteBankAccount(index) {
-  if (confirm("Delete bank?")) {
-    const accs = state.company.bankAccounts.filter((_, i) => i != index);
-    await supabase.from("company_settings").update({ bank_accounts: accs }).eq("id", 1);
-    await loadSupabaseData();
-  }
-}
-
-async function addShipper() {
-  const name = prompt("Shipper Name:");
-  if (name) {
-    const shippers = [...state.company.shippers, { name, address: "" }];
-    await supabase.from("company_settings").update({ shippers }).eq("id", 1);
-    await loadSupabaseData();
-  }
-}
-
-async function deleteShipper(index) {
-  if (confirm("Delete shipper?")) {
-    const shippers = state.company.shippers.filter((_, i) => i != index);
-    await supabase.from("company_settings").update({ shippers }).eq("id", 1);
-    await loadSupabaseData();
-  }
-}
-
-async function runAiScan(dealId, docId) {
-  // AI Scan logic assumes runAiScan is exported from supabase.js or similar
-  alert("AI Scan triggered for deal " + dealId);
-}
-
-async function checkAiConnection() {
-  alert("Checking AI connection...");
-}
-
-// Init
+// Start
 init();
-loadSession();
