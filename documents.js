@@ -294,10 +294,10 @@ function commonStyle() {
       background: #3b9da2;
       color: #fff;
       font-weight: 700;
-      padding: 4px 8px;
+      padding: 2px 5px;
       font-size: 11px;
       text-transform: uppercase;
-      line-height: 1.2;
+      line-height: 1.1;
     }
 
     .panel {
@@ -305,8 +305,8 @@ function commonStyle() {
     }
 
     .panelBody {
-      padding: 5px 2px 0;
-      line-height: 1.45;
+      padding: 4px 2px 0;
+      line-height: 1.35;
       font-size: 10px;
       font-weight: 700;
     }
@@ -331,7 +331,7 @@ function commonStyle() {
 
     th, td {
       border: 2px solid #222;
-      padding: 4px 5px;
+      padding: 3px 5px;
       vertical-align: top;
     }
 
@@ -370,17 +370,16 @@ function commonStyle() {
     .boxHead {
       background: #3b9da2;
       color: #fff;
-      padding: 4px 8px;
+      padding: 2px 6px;
       font-weight: 700;
       text-transform: uppercase;
-      line-height: 1.2;
-      font-size: 12px;
-      letter-spacing: 0.5px;
+      line-height: 1.1;
+      font-size: 11px;
     }
 
     .boxBody {
-      padding: 6px 8px;
-      min-height: 60px;
+      padding: 4px 6px;
+      min-height: 40px;
       font-size: 10px;
       font-weight: 700;
     }
@@ -425,8 +424,8 @@ function commonStyle() {
 
     .plainTable td {
       border: none !important;
-      padding: 3px 0 !important;
-      font-size: 11px;
+      padding: 1px 0 !important;
+      font-size: 10px;
       font-weight: 700;
     }
 
@@ -603,7 +602,7 @@ function additionalDetailsBlock(deal, supplier, docLabel = "Packing list No. Dat
       <div class="boxBody tight">
         <table class="plainTable">
           <tr>
-            <td style="width:160px;">Country of Origin</td>
+            <td style="width:140px;">Country of Origin</td>
             <td>${esc(deal.country_of_origin || supplier?.country || "UAE")}</td>
           </tr>
           <tr>
@@ -641,17 +640,17 @@ function footer(company = {}, date = "", showSignatory = false) {
   return `
     <div class="footer">
       <div>
-        <div style="border-bottom: 2px solid #222; padding-bottom: 3px; font-size: 11px; font-weight: 700; min-height: 22px;">
+        <div style="border-bottom: 2px solid #222; padding-bottom: 2px; font-size: 10px; font-weight: 700; min-height: 18px;">
           FOR ${esc(company.name || "")}
         </div>
         ${showSignatory ? `<div style="font-size:10px;font-weight:700;margin-top:4px;">Authorised Signatory</div>` : ``}
       </div>
       <div class="stamp"><img src="${STAMP_URL}" alt="stamp"></div>
       <div>
-        <div style="border-bottom: 2px solid #222; padding-bottom: 3px; font-size: 11px; font-weight: 700; min-height: 22px; text-align: center;">
+        <div style="border-bottom: 2px solid #222; padding-bottom: 2px; font-size: 10px; font-weight: 700; min-height: 18px; text-align: center;">
           ${esc(fmtDate(date) || "")}
         </div>
-        <div style="font-size:10px;font-weight:700;margin-top:4px; text-align: center;">Date</div>
+        <div style="font-size:10px;font-weight:700;margin-top:2px; text-align: center;">Date</div>
       </div>
     </div>
     <div class="note">This is computer generated Document, No signature required</div>
