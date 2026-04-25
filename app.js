@@ -154,7 +154,7 @@ async function loadCompanySettings() {
       mobile: data.mobile || state.company.mobile,
       email: data.email || state.company.email,
       gemini_api_key: data.gemini_api_key || "",
-      gemini_model: data.gemini_model || "gemini-1.5-flash",
+      gemini_model: data.gemini_model || "gemini-3-flash",
       bankAccounts: Array.isArray(data.bank_accounts) ? data.bank_accounts : [],
       shippers: Array.isArray(data.shippers) ? data.shippers : []
     };
@@ -1332,8 +1332,8 @@ async function runAiScan(dealId, docId) {
     });
 
     // 2. Call Gemini API
-    const model = state.company.gemini_model || "gemini-1.5-flash";
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    const model = state.company.gemini_model || "gemini-3-flash";
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${key}`;
     const prompt = "Analyze this Bill of Lading. Extract the following fields in strict JSON format: bl_no, vessel, loading_port, discharge_port, product_name, quantity (number only), container_list (string), shipment_out_date (YYYY-MM-DD), eta (YYYY-MM-DD). If a field is missing, use null. Only return the JSON object.";
     
     const aiRes = await fetch(apiUrl, {
@@ -1401,7 +1401,7 @@ async function checkAiConnection() {
   btn.textContent = "Checking...";
   
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1/models?key=${key}`);
     const data = await res.json();
     
     if (!res.ok) throw new Error(data.error?.message || "Connection failed");

@@ -23,7 +23,7 @@ export const state = {
     mobile: "+971524396170",
     email: "info@jkpetrochem.com",
     gemini_api_key: "",
-    gemini_model: "gemini-1.5-flash"
+    gemini_model: "gemini-3-flash"
   },
   error: "",
   ready: false
