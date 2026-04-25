@@ -96,8 +96,8 @@ export function settingsView() {
               <div>
                 <label class="form-label">Gemini Model</label>
                 <select name="gemini_model">
-                  <option value="gemini-2.5-flash" ${c.gemini_model === "gemini-2.5-flash" ? "selected" : ""}>Gemini 2.5 Flash</option>
-                  <option value="gemini-3-flash" ${c.gemini_model === "gemini-3-flash" ? "selected" : ""}>Gemini 3 Flash (Recommended)</option>
+                  <option value="gemini-2.5-flash" ${c.gemini_model === "gemini-2.5-flash" ? "selected" : ""}>Gemini 2.5 Flash (Stable)</option>
+                  <option value="gemini-3.1-flash-lite-preview" ${c.gemini_model === "gemini-3.1-flash-lite-preview" ? "selected" : ""}>Gemini 3.1 Flash-Lite</option>
                   <option value="gemini-3-pro" ${c.gemini_model === "gemini-3-pro" ? "selected" : ""}>Gemini 3 Pro</option>
                 </select>
               </div>
