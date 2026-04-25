@@ -79,6 +79,20 @@ export function dealsView() {
                 <b>Supplier:</b> ${esc(supplierName(d.supplier_id))}
               </div>
 
+              <!-- DOCUMENTS & AI SCAN -->
+              <div class="mb-16">
+                <div class="stat-label" style="font-size: 9px; margin-bottom: 8px;">Documents</div>
+                <div class="flex flex-wrap gap-8">
+                  ${documentsForDeal(d.id).length ? documentsForDeal(d.id).map(doc => `
+                    <div class="flex items-center gap-8 p-4 px-8" style="background: rgba(255,255,255,0.05); border-radius: 6px; border: 1px solid var(--border);">
+                      <span style="font-size: 11px; font-weight: 600;">${esc(doc.doc_type || "DOC")}</span>
+                      ${doc.file_url ? `<a href="${doc.file_url}" target="_blank" style="font-size: 10px; color: var(--info);">View</a>` : ''}
+                      ${doc.doc_type === 'BL' ? `<button data-ai-scan="${d.id}:${doc.id}" class="text-primary" style="background:none; border:none; font-size:10px; font-weight:700; cursor:pointer; padding:0">Scan</button>` : ''}
+                    </div>
+                  `).join("") : `<span class="item-sub" style="font-style: italic;">No documents</span>`}
+                </div>
+              </div>
+
               <div class="mt-auto pt-16 flex gap-8" style="border-top: 1px solid var(--border);">
                 <button data-open-deal="${d.id}" class="btn btn-primary btn-small w-full">Open Dashboard</button>
                 <button data-edit-deal="${d.id}" class="btn btn-outline btn-small">Edit</button>
@@ -192,6 +206,24 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
               <div class="form-group mb-0"><label>Purchase Rate</label><input name="purchase_rate" id="purchase-rate${suffix}" type="number" step="0.01" value="${esc(d.purchase_rate || "")}"></div>
               <div class="form-group mb-0"><label>Quantity (MTON)</label><input name="quantity" id="quantity${suffix}" type="number" step="0.001" value="${esc(d.quantity || "")}"></div>
               <div class="form-group mb-0"><label>Conv. Rate</label><input name="conversion_rate" id="conversion-rate${suffix}" type="number" step="0.0001" value="${esc(d.conversion_rate || "3.6725")}"></div>
+           </div>
+
+           <!-- PACKING & CONTAINERS SECTION -->
+           <div class="mt-16 pt-16" style="border-top: 1px solid var(--border);">
+              <h4 class="item-title mb-12">📦 Packing & Containers</h4>
+              <div class="grid grid-3 gap-12 mb-12">
+                 <div class="form-group mb-0"><label>Package Details</label><input name="package_details" value="${esc(d.package_details || "20FT X 10 CONTAINERS")}"></div>
+                 <div class="form-group mb-0"><label>Loaded On</label><input name="loaded_on" value="${esc(d.loaded_on || "ISO TANK")}"></div>
+                 <div class="form-group mb-0"><label>CFS</label><input name="cfs" value="${esc(d.cfs || "")}"></div>
+              </div>
+              <div class="form-group mb-0">
+                 <label>Container Numbers (One per line)</label>
+                 <textarea name="container_numbers" style="min-height: 120px; font-family: monospace;" placeholder="Enter container numbers...">${
+                   Array.isArray(d.container_numbers) 
+                     ? d.container_numbers.join("\n") 
+                     : esc(d.container_numbers || "")
+                 }</textarea>
+              </div>
            </div>
 
            <!-- AUTO CALCULATED TOTALS -->

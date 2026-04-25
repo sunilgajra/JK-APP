@@ -64,18 +64,20 @@ export function dealDetailView() {
         </div>
 
         <div class="card">
-          <h3 class="section-title">🏢 Trading Parties</h3>
+          <h3 class="section-title">⚖️ Packing & Containers</h3>
           <div class="grid grid-2 gap-16">
-            <div>
-              <label>Buyer (Consignee)</label>
-              <div class="item-title">${esc(buyer?.name || "—")}</div>
-              <div class="item-sub">${esc(buyer?.address || "")}</div>
-            </div>
-            <div>
-              <label>Supplier</label>
-              <div class="item-title">${esc(supplier?.name || "—")}</div>
-              <div class="item-sub">${esc(supplier?.company_name || "")}</div>
-            </div>
+            <div><label>Gross Weight</label><div class="item-title">${esc(d.gross_weight || "—")} KGS</div></div>
+            <div><label>Net Weight</label><div class="item-title">${esc(d.net_weight || "—")} KGS</div></div>
+            <div><label>Package Details</label><div class="item-title">${esc(d.package_details || "—")}</div></div>
+            <div><label>Loaded On</label><div class="item-title">${esc(d.loaded_on || "—")}</div></div>
+          </div>
+          <div class="mt-16 pt-16" style="border-top: 1px solid var(--border);">
+            <label>Container Numbers</label>
+            <div class="item-sub" style="white-space: pre-line; color: var(--text-main); font-family: monospace; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; margin-top: 8px;">${
+              Array.isArray(d.container_numbers) 
+                ? d.container_numbers.join("\n") 
+                : esc(d.container_numbers || "No containers listed")
+            }</div>
           </div>
         </div>
 
@@ -110,6 +112,22 @@ export function dealDetailView() {
                 <span class="stat-label">Margin</span>
                 <div class="stat-value" style="color: var(--success); font-size: 22px;">${(s.sale > 0 ? ((s.sale - s.purchase) / s.sale) * 100 : 0).toFixed(2)}%</div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="section-title">🏢 Trading Parties</h3>
+          <div class="grid gap-16">
+            <div>
+              <label>Buyer (Consignee)</label>
+              <div class="item-title">${esc(buyer?.name || "—")}</div>
+              <div class="item-sub">${esc(buyer?.address || "")}</div>
+            </div>
+            <div style="padding-top: 12px; border-top: 1px solid var(--border);">
+              <label>Supplier</label>
+              <div class="item-title">${esc(supplier?.name || "—")}</div>
+              <div class="item-sub">${esc(supplier?.company_name || "")}</div>
             </div>
           </div>
         </div>
