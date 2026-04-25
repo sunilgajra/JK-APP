@@ -2,40 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JK Trade Manager</title>
+  <link rel="icon" href="./favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-  <div id="login-container"></div>
+  <header class="hdr">
+    <h1>JK Trade Manager</h1>
+    <p>Safe shell version</p>
+  </header>
 
-  <div id="app-container" style="display: none;">
-    <header class="hdr">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <h1>JK TRADE MANAGER</h1>
-          <p>Excellence in Trade Management</p>
-        </div>
-        <button id="logout-btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); padding: 8px 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 11px;">Logout</button>
-      </div>
-    </header>
+  <nav class="nav">
+  <a href="#/" class="nav-btn active" data-page="dashboard">Dashboard</a>
+  <a href="#/buyers" class="nav-btn" data-page="buyers">Buyers</a>
+  <a href="#/suppliers" class="nav-btn" data-page="suppliers">Suppliers</a>
+  <a href="#/deals" class="nav-btn" data-page="deals">Deals</a>
+  <a href="#/shipping" class="nav-btn" data-page="shippingInstructions">Shipping Instructions</a>
+  <a href="#/products" class="nav-btn" data-page="products">Products</a>
+  <a href="#/settings" class="nav-btn" data-page="settings">Settings</a>
+  <button id="logout-btn" type="button">Logout</button>
+</nav>
 
-    <nav class="nav">
-      <button class="nav-btn" data-page="dashboard">DASHBOARD</button>
-      <button class="nav-btn" data-page="deals">DEALS</button>
-      <button class="nav-btn" data-page="buyers">BUYERS</button>
-      <button class="nav-btn" data-page="suppliers">SUPPLIERS</button>
-      <button class="nav-btn" data-page="products">PRODUCTS</button>
-      <button class="nav-btn" id="open-company-settings">SETTINGS</button>
-    </nav>
+  <main id="content"></main>
 
-    <main id="content"></main>
-  </div>
-
-  <script type="module" src="app.js?v=3"></script>
+  <script type="module" src="./app.js?v=53"></script>
 </body>
 </html>
