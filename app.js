@@ -241,6 +241,26 @@ function bindUI() {
 
   document.getElementById("check-ai-btn")?.addEventListener("click", checkAiConnection);
 
+  // Mobile Menu
+  const menuToggle = document.getElementById("menu-toggle");
+  const layout = document.querySelector(".app-layout");
+  const overlay = document.querySelector(".sidebar-overlay");
+
+  menuToggle?.addEventListener("click", () => {
+    layout?.classList.toggle("sidebar-open");
+  });
+
+  overlay?.addEventListener("click", () => {
+    layout?.classList.remove("sidebar-open");
+  });
+
+  // Close sidebar on nav click (mobile)
+  document.querySelectorAll(".nav-item").forEach(link => {
+    link.addEventListener("click", () => {
+      layout?.classList.remove("sidebar-open");
+    });
+  });
+
   // Search - with preservation of cursor
   const dealSearch = document.getElementById("deal-search");
   if (dealSearch) {

@@ -159,6 +159,34 @@ body {
   border-color: var(--danger);
 }
 
+.sidebar-open .sidebar {
+  transform: translateX(0);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 95;
+}
+
+.sidebar-open .sidebar-overlay {
+  display: block;
+}
+
+.menu-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+  margin-left: -8px;
+}
+
 /* Top Bar */
 .top-bar {
   height: 70px;
@@ -168,6 +196,7 @@ body {
   padding: 0 32px;
   display: flex;
   align-items: center;
+  gap: 16px;
   position: sticky;
   top: 0;
   z-index: 90;
@@ -376,9 +405,13 @@ input:focus, select:focus, textarea:focus {
 @media (max-width: 1024px) {
   .sidebar {
     transform: translateX(-100%);
+    box-shadow: 20px 0 50px rgba(0,0,0,0.5);
   }
   .main-body {
     margin-left: 0;
+  }
+  .menu-btn {
+    display: block;
   }
   .grid-4, .grid-3 {
     grid-template-columns: repeat(2, 1fr);

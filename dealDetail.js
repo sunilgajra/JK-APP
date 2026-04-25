@@ -34,6 +34,8 @@ export function dealDetailView() {
       </div>
     </div>
 
+    <div id="deal-edit-wrap-${d.id}" class="mb-24"></div>
+
     <div class="grid grid-2 fade-in" style="align-items: start;">
       
       <!-- Left Column: Info & Shipping -->
