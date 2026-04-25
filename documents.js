@@ -673,23 +673,25 @@ export function buildPI(deal, buyer, supplier, company = {}) {
     <div class="smallGrid" style="margin-top:0; align-items:stretch; grid-template-columns: 1.35fr .75fr;">
       <div class="box" style="height:100%">
         <div class="boxHead">Terms of Sale and Other Comments</div>
-        <div class="boxBody tight">
-          <div><b>Terms of Delivery / Payment :</b></div>
-          <div style="margin-top:3px">
-            ${esc(deal.terms_delivery || (deal.dischargePort ? `CFR ${deal.dischargePort},INDIA` : "CFR MUNDRA PORT,INDIA"))}
-            / <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span>
+        <div class="boxBody tight" style="display:flex; flex-direction:column; justify-content:space-between; height:calc(100% - 20px)">
+          <div>
+            <div><b>Terms of Delivery / Payment :</b></div>
+            <div style="margin-top:3px">
+              ${esc(deal.terms_delivery || (deal.discharge_port ? `CFR ${deal.discharge_port},INDIA` : "CFR MUNDRA PORT,INDIA"))}
+              / <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span>
+            </div>
           </div>
 
-          <div style="margin-top:8px"><b>BANK TERMS:</b> ${esc(deal.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}</div>
+          <div>
+            <div style="margin-top:8px"><b>Our Bank Details:-</b></div>
+            <div>Account Name: ${esc(company.name || "")}</div>
+            <div>Account Number (${esc(currency)}): ${esc(company.bankAccount || "")}</div>
+            <div>IBAN: ${esc(company.bankIBAN || "")}</div>
+            <div>SWIFT ID: ${esc(company.bankSWIFT || "")}</div>
+            <div>Bank Name: ${esc(company.bankName || "")}${company.branchName ? ` / Branch: ${esc(company.branchName)}` : ""}</div>
+          </div>
 
-          <div style="margin-top:8px"><b>Our Bank Details:-</b></div>
-          <div>Account Name: ${esc(company.name || "")}</div>
-          <div>Account Number (${esc(currency)}): ${esc(company.bankAccount || "")}</div>
-          <div>IBAN: ${esc(company.bankIBAN || "")}</div>
-          <div>SWIFT ID: ${esc(company.bankSWIFT || "")}</div>
-          <div>Bank Name: ${esc(company.bankName || "")}${company.branchName ? ` / Branch: ${esc(company.branchName)}` : ""}</div>
-
-          <div style="margin-top:8px"><b>BANK TERMS:</b> ${esc(deal.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}</div>
+          <div><b>BANK TERMS:</b> ${esc(deal.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}</div>
         </div>
       </div>
 
@@ -786,16 +788,22 @@ export function buildCI(deal, buyer, supplier, company = {}) {
     <div style="display:grid;grid-template-columns:1.18fr .88fr .64fr;gap:4px;align-items:stretch;margin-top:6px;">
       <div class="box" style="height:100%">
         <div class="boxHead">Terms of Sale and Other Comments</div>
-        <div class="boxBody tight">
-          <div><b>Terms of Delivery / Payment :</b></div>
-          <div>${esc(deal.terms_delivery || `CFR ${deal.dischargePort || "MUNDRA PORT"}`)} / <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span></div>
-          <div style="margin-top:8px"><b>Our Bank Details:-</b></div>
-          <div>Account Name: ${esc(company.name || "")}</div>
-          <div>Account Number (${esc(currency)}): ${esc(company.bankAccount || "")}</div>
-          <div>IBAN: ${esc(company.bankIBAN || "")}</div>
-          <div>SWIFT ID: ${esc(company.bankSWIFT || "")}</div>
-          <div>Bank Name: ${esc(company.bankName || "")}</div>
-          <div style="margin-top:8px"><b>BANK TERMS:</b> ${esc(deal.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}</div>
+        <div class="boxBody tight" style="display:flex; flex-direction:column; justify-content:space-between; height:calc(100% - 20px)">
+          <div>
+            <div><b>Terms of Delivery / Payment :</b></div>
+            <div>${esc(deal.terms_delivery || `CFR ${deal.discharge_port || "MUNDRA PORT"}`)} / <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span></div>
+          </div>
+
+          <div>
+            <div style="margin-top:8px"><b>Our Bank Details:-</b></div>
+            <div>Account Name: ${esc(company.name || "")}</div>
+            <div>Account Number (${esc(currency)}): ${esc(company.bankAccount || "")}</div>
+            <div>IBAN: ${esc(company.bankIBAN || "")}</div>
+            <div>SWIFT ID: ${esc(company.bankSWIFT || "")}</div>
+            <div>Bank Name: ${esc(company.bankName || "")}</div>
+          </div>
+
+          <div><b>BANK TERMS:</b> ${esc(deal.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}</div>
         </div>
       </div>
 
