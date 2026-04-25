@@ -325,11 +325,11 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
           <div class="grid grid-2 gap-10 mt-10">
             <div>
               <label class="form-label">Gross Weight</label>
-              <input name="gross_weight" type="number" step="0.001" value="${esc(d.gross_weight || "")}">
+              <input name="gross_weight" id="${edit ? `gross-weight-${id}` : "gross-weight"}" type="number" step="0.001" value="${esc(d.gross_weight || "")}">
             </div>
             <div>
               <label class="form-label">Net Weight</label>
-              <input name="net_weight" type="number" step="0.001" value="${esc(d.net_weight || "")}">
+              <input name="net_weight" id="${edit ? `net-weight-${id}` : "net-weight"}" type="number" step="0.001" value="${esc(d.net_weight || "")}">
             </div>
             <div>
               <label class="form-label">Package Details</label>

@@ -874,11 +874,24 @@ function bindDealAutoTotal(id = null) {
   const pRateIn = document.getElementById(`purchase-rate${suffix}`);
   const convIn = document.getElementById(`conversion-rate${suffix}`);
   const baseCurrIn = document.getElementById(`base-currency${suffix}`);
+  const netIn = document.getElementById(`net-weight${suffix}`);
+  const grossIn = document.getElementById(`gross-weight${suffix}`);
   
   const totalUsdIn = document.getElementById(`total${suffix}`);
   const totalAedIn = document.getElementById(`total-aed${suffix}`);
   const pTotalUsdIn = document.getElementById(`purchase-total${suffix}`);
   const pTotalAedIn = document.getElementById(`purchase-total-aed${suffix}`);
+
+  const updateQtyFromWeight = (e) => {
+    const kg = Number(e.target.value || 0);
+    if (kg > 0 && qtyIn) {
+      qtyIn.value = (kg / 1000).toFixed(3);
+      calc(); 
+    }
+  };
+
+  netIn?.addEventListener("input", updateQtyFromWeight);
+  grossIn?.addEventListener("input", updateQtyFromWeight);
 
   const calc = () => {
     const q = Number(qtyIn?.value || 0);
