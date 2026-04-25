@@ -584,12 +584,29 @@ function shippingBlock(deal = {}) {
     <div class="panel">
       <div class="bar">Shipping Details</div>
       <div class="panelBody tight">
-        <div><b>Freight Type</b> &nbsp;&nbsp;&nbsp;&nbsp; ${esc(deal.freight_type || "BY SEA")}</div>
-        <div><b>Shippment Date</b> &nbsp;&nbsp; [--------------]</div>
-        <div><b>Gross Weight</b> &nbsp;&nbsp; [${esc(deal.gross_weight || "")}${deal.gross_weight ? " KGS" : ""}]</div>
-        <div><b>Net Weight</b> &nbsp;&nbsp;&nbsp;&nbsp; [${esc(deal.net_weight || "")}${deal.net_weight ? " KGS" : ""}]</div>
-        <div><b>Total Packages</b> &nbsp; ${esc(deal.package_details || "20ft x 10 Containers")}</div>
-        <div class="red center" style="margin-top:6px">( Loaded on ${esc(deal.loaded_on || "ISO TANK")} )</div>
+        <table class="plainTable">
+          <tr>
+            <td style="width:95px;">Freight Type</td>
+            <td>${esc(deal.freight_type || "BY SEA")}</td>
+          </tr>
+          <tr>
+            <td>Shippment Date</td>
+            <td>[--------------]</td>
+          </tr>
+          <tr>
+            <td>Gross Weight</td>
+            <td>[${esc(deal.gross_weight || "")}${deal.gross_weight ? " KGS" : ""}]</td>
+          </tr>
+          <tr>
+            <td>Net Weight</td>
+            <td>[${esc(deal.net_weight || "")}${deal.net_weight ? " KGS" : ""}]</td>
+          </tr>
+          <tr>
+            <td>Total Packages</td>
+            <td>${esc(deal.package_details || "20ft x 10 Containers")}</td>
+          </tr>
+        </table>
+        <div class="red center" style="margin-top:4px">( Loaded on ${esc(deal.loaded_on || "ISO TANK")} )</div>
       </div>
     </div>
   `;
