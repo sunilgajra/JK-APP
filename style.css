@@ -33,6 +33,10 @@
   --radius-md: 14px;
   --radius-lg: 20px;
   --glass: blur(12px) saturate(180%);
+  
+  /* Legacy support */
+  --primary: #d4af37;
+  --primary-rgb: 212, 175, 55;
 }
 
 * { box-sizing: border-box; }
