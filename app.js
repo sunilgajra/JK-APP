@@ -217,10 +217,18 @@ function bindUI() {
     };
   });
 
-  document.getElementById("show-buyer-form")?.onclick = showBuyerForm;
-  document.getElementById("show-supplier-form")?.onclick = showSupplierForm;
-  document.getElementById("show-deal-form")?.onclick = showDealForm;
-  document.getElementById("back-to-deals")?.onclick = () => navigate("#/deals");
+  const showBuyerBtn = document.getElementById("show-buyer-form");
+  if (showBuyerBtn) showBuyerBtn.onclick = showBuyerForm;
+
+  const showSupplierBtn = document.getElementById("show-supplier-form");
+  if (showSupplierBtn) showSupplierBtn.onclick = showSupplierForm;
+
+  const showDealBtn = document.getElementById("show-deal-form");
+  if (showDealBtn) showDealBtn.onclick = showDealForm;
+
+  const backDealsBtn = document.getElementById("back-to-deals");
+  if (backDealsBtn) backDealsBtn.onclick = () => navigate("#/deals");
+
   document.getElementById("product-form")?.addEventListener("submit", saveProduct);
 
   const dealSearch = document.getElementById("deal-search");
