@@ -650,14 +650,18 @@ export function buildPI(deal, buyer, supplier, company = {}) {
         <th style="width:22%">TOTAL AMOUNT (${esc(currency)})</th>
       </tr>
       <tr style="height:138px">
-        <td>
-          <b>${esc(deal.productName || "")}</b><br>
-          HS CODE : : ${esc(deal.hsn || "—")}<br><br><br><br>
-          ${esc(currency)} : ${esc(amountWords(total))} ONLY
+        <td style="display:flex; flex-direction:column; justify-content:space-between; height:138px; border:none">
+          <div>
+            <b>${esc(deal.productName || "")}</b><br>
+            HS CODE : : ${esc(deal.hsn_code || "—")}
+          </div>
+          <div style="margin-top:auto">
+            ${esc(currency)} : ${esc(amountWords(total))} ONLY
+          </div>
         </td>
         <td class="center">${esc(deal.unit || "MTON")}</td>
         <td class="center">${esc(deal.quantity || "")}</td>
-        <td class="right">${fmt(deal.rate || 0)}</td>
+        <td class="center">${fmt(deal.rate || 0)}</td>
         <td class="center">-</td>
         <td class="right">${fmt(total)}</td>
       </tr>
@@ -712,11 +716,11 @@ export function buildPI(deal, buyer, supplier, company = {}) {
           </tr>
           <tr>
             <td>Port of Loading</td>
-            <td>${esc(deal.loadingPort || "")}</td>
+            <td>${esc(deal.loading_port || "")}</td>
           </tr>
           <tr>
             <td>Port of Discharge</td>
-            <td>${esc(deal.dischargePort || "")}</td>
+            <td>${esc(deal.discharge_port || "")}</td>
           </tr>
         </table>
       </div>
@@ -757,14 +761,18 @@ export function buildCI(deal, buyer, supplier, company = {}) {
         <th style="width:17%">TOTAL AMOUNT (${esc(currency)})</th>
       </tr>
       <tr style="height:145px">
-        <td>
-          <b>${esc(deal.productName || "")}</b><br>
-          HS CODE : : ${esc(deal.hsn || "—")}<br><br>
-          ${esc(currency)} : ${esc(amountWords(total))} ONLY
+        <td style="display:flex; flex-direction:column; justify-content:space-between; height:145px; border:none">
+          <div>
+            <b>${esc(deal.productName || "")}</b><br>
+            HS CODE : : ${esc(deal.hsn_code || "—")}
+          </div>
+          <div style="margin-top:auto">
+            ${esc(currency)} : ${esc(amountWords(total))} ONLY
+          </div>
         </td>
         <td class="center">${esc(deal.unit || "MTON")}</td>
         <td class="center">${esc(deal.quantity || "")}</td>
-        <td class="right">${fmt(deal.rate || 0)}</td>
+        <td class="center">${fmt(deal.rate || 0)}</td>
         <td class="center">-</td>
         <td class="right">${fmt(total)}</td>
       </tr>
@@ -808,8 +816,8 @@ export function buildCI(deal, buyer, supplier, company = {}) {
       <div class="boxBody tight">
         <div>Country of Origin ${esc(deal.country_of_origin || supplier?.country || "UAE")}</div>
         <div>Packing list No. Date: ${esc(String(deal.pl_no || "—").replace(/\s+/g, ""))}</div>
-        <div>Port of Loading ${esc(deal.loadingPort || "—")}</div>
-        <div>Port of Discharge ${esc(deal.dischargePort || "—")}</div>
+        <div>Port of Loading ${esc(deal.loading_port || "—")}</div>
+        <div>Port of Discharge ${esc(deal.discharge_port || "—")}</div>
         <div>BL NO: ${esc(deal.bl_no || "—")}</div>
         <div>Vessel / Voyage No. ${esc(deal.vessel_voyage || deal.vessel || "—")}</div>
         <div>CFS: ${esc(deal.cfs || "-")}</div>
@@ -855,7 +863,7 @@ export function buildPL(deal, buyer, supplier, company = {}) {
       <tr style="height:122px">
         <td>
           <b>${esc(deal.productName || "")}</b><br>
-          HS CODE : : ${esc(deal.hsn || "—")}
+          HS CODE : : ${esc(deal.hsn_code || "—")}
         </td>
         <td class="center">${esc(deal.unit || "MTON")}</td>
         <td class="center">${esc(deal.quantity || "")}</td>
@@ -884,11 +892,11 @@ export function buildPL(deal, buyer, supplier, company = {}) {
           </tr>
           <tr>
             <td>Port of Loading</td>
-            <td>${esc(deal.loadingPort || "—")}</td>
+            <td>${esc(deal.loading_port || "—")}</td>
           </tr>
           <tr>
             <td>Port of Discharge</td>
-            <td>${esc(deal.dischargePort || "—")}</td>
+            <td>${esc(deal.discharge_port || "—")}</td>
           </tr>
           <tr>
             <td>BL NO:</td>
@@ -969,11 +977,11 @@ export function buildCOO(deal, buyer, supplier, company = {}) {
           </tr>
           <tr>
             <td>Port of Loading</td>
-            <td>${esc(deal.loadingPort || "—")}</td>
+            <td>${esc(deal.loading_port || "—")}</td>
           </tr>
           <tr>
             <td>Port of Discharge</td>
-            <td>${esc(deal.dischargePort || "—")}</td>
+            <td>${esc(deal.discharge_port || "—")}</td>
           </tr>
           <tr>
             <td>BL NO:</td>

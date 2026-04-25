@@ -1391,7 +1391,10 @@ async function runAiScan(dealId, docId) {
     const data = JSON.parse(jsonStr);
 
     // 3. Confirm and Update
-    const containerCount = Array.isArray(data.container_numbers) ? data.container_numbers.length : 0;
+    const rawContainers = Array.isArray(data.container_numbers) ? data.container_numbers : [];
+    const cleanContainers = rawContainers.map(c => String(c).replace(/[^A-Z0-9]/gi, "").toUpperCase());
+    const containerCount = cleanContainers.length;
+    
     const summary = [
       `BL No: ${data.bl_no || "—"}`,
       `Vessel/Voyage: ${data.vessel || "—"}${data.voyage_no ? ` / ${data.voyage_no}` : ""}`,
@@ -1399,23 +1402,29 @@ async function runAiScan(dealId, docId) {
       `Product: ${data.product_name || "—"}`,
       `Qty: ${data.quantity || "—"}`,
       `Weights: G:${data.gross_weight || "—"} / N:${data.net_weight || "—"}`,
-      `Containers (${containerCount}): ${containerCount > 0 ? data.container_numbers.slice(0, 3).join(", ") + (containerCount > 3 ? "..." : "") : "None found"}`
+      `Containers (${containerCount}): ${containerCount > 0 ? cleanContainers.slice(0, 3).join(", ") + (containerCount > 3 ? "..." : "") : "None found"}`
     ].join("\n");
 
     if (confirm(`AI found the following details:\n\n${summary}\n\nApply these changes to the deal?`)) {
       const updateData = {};
-      if (data.bl_no) updateData.bl_no = data.bl_no;
-      if (data.vessel) updateData.vessel = data.vessel;
+      if (data.bl_no) updateData.bl_no = String(data.bl_no).replace(/[^A-Z0-9\-\/]/gi, "").toUpperCase();
+      if (data.vessel) updateData.vessel = String(data.vessel).trim().toUpperCase();
       if (data.vessel || data.voyage_no) {
-        updateData.vessel_voyage = [data.vessel, data.voyage_no].filter(Boolean).join(" / ");
+        const v = String(data.vessel || "").trim().toUpperCase();
+        const voy = String(data.voyage_no || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+        updateData.vessel_voyage = [v, voy].filter(Boolean).join(" / ");
       }
-      if (data.loading_port) updateData.loading_port = data.loading_port;
-      if (data.discharge_port) updateData.discharge_port = data.discharge_port;
-      if (data.product_name) updateData.product_name = data.product_name;
+      if (data.loading_port) updateData.loading_port = String(data.loading_port).trim().toUpperCase();
+      if (data.discharge_port) updateData.discharge_port = String(data.discharge_port).trim().toUpperCase();
+      if (data.product_name) updateData.product_name = String(data.product_name).trim().toUpperCase();
       if (data.quantity) updateData.quantity = data.quantity;
       if (data.gross_weight) updateData.gross_weight = Number(data.gross_weight);
       if (data.net_weight) updateData.net_weight = Number(data.net_weight);
-      if (data.container_numbers) updateData.container_numbers = data.container_numbers;
+      if (data.container_numbers) {
+        updateData.container_numbers = data.container_numbers.map(c => 
+          String(c).replace(/[^A-Z0-9]/gi, "").toUpperCase()
+        );
+      }
       if (data.shipment_out_date) updateData.shipment_out_date = data.shipment_out_date;
       if (data.eta) updateData.eta = data.eta;
 
