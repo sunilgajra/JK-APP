@@ -453,7 +453,7 @@ function previewActions() {
     <div class="previewActions">
       <button onclick="downloadExactPdf()">Download PDF</button>
       ${isMobile ? "" : `<button onclick="window.print()">Print / Save PDF</button>`}
-      <button onclick="history.back()">Back</button>
+      <button onclick="if(window.close && window.opener) { window.close(); } else { history.back(); }">Back</button>
     </div>
   `;
 }
