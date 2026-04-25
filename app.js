@@ -1345,7 +1345,21 @@ async function runAiScan(dealId, docId) {
     // 2. Call Gemini API
     const model = state.company.gemini_model || "gemini-2.5-flash";
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-    const prompt = "Analyze this Bill of Lading. Extract the following fields in strict JSON format: bl_no, vessel, loading_port, discharge_port, product_name, quantity (number only), container_list (string), shipment_out_date (YYYY-MM-DD), eta (YYYY-MM-DD). If a field is missing, use null. Only return the JSON object.";
+    const prompt = `Analyze this Bill of Lading and extract the following details. Be very thorough as these fields are critical:
+    - bl_no: The Bill of Lading number.
+    - vessel: The name of the vessel.
+    - voyage_no: The voyage number (often listed next to or below the vessel name).
+    - loading_port: Port of loading.
+    - discharge_port: Port of discharge.
+    - product_name: Description of goods/product.
+    - quantity: Total quantity/weight of the main product (number only).
+    - gross_weight: Total Gross Weight (number only).
+    - net_weight: Total Net Weight (number only).
+    - container_numbers: A list/array of all container numbers mentioned (e.g. ["MSCU1234567", "MSCU7654321"]). Look in the 'Container No.' or 'Marks & Nos' section.
+    - shipment_out_date: Date of shipment or 'Shipped on Board' date (YYYY-MM-DD).
+    - eta: Estimated time of arrival if mentioned (YYYY-MM-DD).
+    
+    Return the data in strict JSON format. If a field is missing, use null. Only return the JSON object.`;
     
     const aiRes = await fetch(apiUrl, {
       method: "POST",
@@ -1377,14 +1391,31 @@ async function runAiScan(dealId, docId) {
     const data = JSON.parse(jsonStr);
 
     // 3. Confirm and Update
-    if (confirm(`AI found the following details:\n\nBL No: ${data.bl_no}\nVessel: ${data.vessel}\nLoading: ${data.loading_port}\nDischarge: ${data.discharge_port}\nProduct: ${data.product_name}\n\nApply these changes to the deal?`)) {
+    const containerCount = Array.isArray(data.container_numbers) ? data.container_numbers.length : 0;
+    const summary = [
+      `BL No: ${data.bl_no || "—"}`,
+      `Vessel/Voyage: ${data.vessel || "—"}${data.voyage_no ? ` / ${data.voyage_no}` : ""}`,
+      `Port: ${data.loading_port || "—"} -> ${data.discharge_port || "—"}`,
+      `Product: ${data.product_name || "—"}`,
+      `Qty: ${data.quantity || "—"}`,
+      `Weights: G:${data.gross_weight || "—"} / N:${data.net_weight || "—"}`,
+      `Containers (${containerCount}): ${containerCount > 0 ? data.container_numbers.slice(0, 3).join(", ") + (containerCount > 3 ? "..." : "") : "None found"}`
+    ].join("\n");
+
+    if (confirm(`AI found the following details:\n\n${summary}\n\nApply these changes to the deal?`)) {
       const updateData = {};
       if (data.bl_no) updateData.bl_no = data.bl_no;
       if (data.vessel) updateData.vessel = data.vessel;
+      if (data.vessel || data.voyage_no) {
+        updateData.vessel_voyage = [data.vessel, data.voyage_no].filter(Boolean).join(" / ");
+      }
       if (data.loading_port) updateData.loading_port = data.loading_port;
       if (data.discharge_port) updateData.discharge_port = data.discharge_port;
       if (data.product_name) updateData.product_name = data.product_name;
       if (data.quantity) updateData.quantity = data.quantity;
+      if (data.gross_weight) updateData.gross_weight = Number(data.gross_weight);
+      if (data.net_weight) updateData.net_weight = Number(data.net_weight);
+      if (data.container_numbers) updateData.container_numbers = data.container_numbers;
       if (data.shipment_out_date) updateData.shipment_out_date = data.shipment_out_date;
       if (data.eta) updateData.eta = data.eta;
 
