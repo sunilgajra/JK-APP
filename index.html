@@ -2,68 +2,40 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>JK Trade Manager</title>
-  <link rel="icon" href="./favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <div class="app-layout">
-    <div class="sidebar-overlay"></div>
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <img src="./logo.PNG" alt="JK" class="sidebar-logo">
-        <div class="sidebar-title">
-          <h1>JK TRADE</h1>
-          <span>Manager v2.0</span>
-        </div>
-      </div>
-      
-      <nav class="sidebar-nav">
-        <a href="#/" class="nav-item active" data-page="dashboard">
-          <span class="nav-icon">📊</span> Dashboard
-        </a>
-        <a href="#/buyers" class="nav-item" data-page="buyers">
-          <span class="nav-icon">👥</span> Buyers
-        </a>
-        <a href="#/suppliers" class="nav-item" data-page="suppliers">
-          <span class="nav-icon">🏭</span> Suppliers
-        </a>
-        <a href="#/deals" class="nav-item" data-page="deals">
-          <span class="nav-icon">🤝</span> Deals
-        </a>
-        <a href="#/shipping" class="nav-item" data-page="shippingInstructions">
-          <span class="nav-icon">🚢</span> Shipping
-        </a>
-        <a href="#/products" class="nav-item" data-page="products">
-          <span class="nav-icon">📦</span> Products
-        </a>
-        <a href="#/settings" class="nav-item" data-page="settings">
-          <span class="nav-icon">⚙️</span> Settings
-        </a>
-      </nav>
+  <div id="login-container"></div>
 
-      <div class="sidebar-footer">
-        <button id="logout-btn" class="btn-logout">Logout</button>
-      </div>
-    </aside>
-
-    <main class="main-body">
-      <header class="top-bar">
-        <button id="menu-toggle" class="menu-btn">☰</button>
-        <div class="view-info">
-          <h2 id="view-title">Dashboard</h2>
+  <div id="app-container" style="display: none;">
+    <header class="hdr">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h1>JK TRADE MANAGER</h1>
+          <p>Excellence in Trade Management</p>
         </div>
-      </header>
-      
-      <div id="content" class="content-area"></div>
-    </main>
+        <button id="logout-btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); padding: 8px 12px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 11px;">Logout</button>
+      </div>
+    </header>
+
+    <nav class="nav">
+      <button class="nav-btn" data-page="dashboard">DASHBOARD</button>
+      <button class="nav-btn" data-page="deals">DEALS</button>
+      <button class="nav-btn" data-page="buyers">BUYERS</button>
+      <button class="nav-btn" data-page="suppliers">SUPPLIERS</button>
+      <button class="nav-btn" data-page="products">PRODUCTS</button>
+      <button class="nav-btn" id="open-company-settings">SETTINGS</button>
+    </nav>
+
+    <main id="content"></main>
   </div>
 
-  <script type="module" src="./app.js?v=54"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

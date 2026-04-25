@@ -3,112 +3,41 @@ import { esc } from "./utils.js";
 
 export function settingsView() {
   const c = state.company;
-
   return `
-    <div class="card">
-      <div class="title">Company Settings</div>
+    <div class="grid">
+      <h2 class="title">COMPANY SETTINGS</h2>
+      
+      <div class="card">
+        <form id="company-settings-form" class="grid gap-12">
+          <input name="name" value="${esc(c.name)}" placeholder="Company Name" required>
+          <textarea name="address" placeholder="Address">${esc(c.address)}</textarea>
+          <input name="mobile" value="${esc(c.mobile)}" placeholder="Mobile">
+          <input name="email" value="${esc(c.email)}" placeholder="Email">
+          
+          <div class="title mt-10">AI INTEGRATION</div>
+          <input name="gemini_api_key" value="${esc(c.gemini_api_key)}" placeholder="Gemini API Key" type="password">
+          <button id="check-ai-btn" type="button" class="btn-outline btn-small">CHECK CONNECTION</button>
 
-      <form id="company-settings-form" class="item mt-12">
-        <div class="grid gap-10">
-          <div>
-            <label class="form-label">Company Name</label>
-            <input name="name" value="${esc(c.name || "")}" placeholder="Company name">
-          </div>
+          <button type="submit" class="btn-primary mt-12">SAVE SETTINGS</button>
+        </form>
+      </div>
 
-          <div>
-            <label class="form-label">Address</label>
-            <textarea name="address" placeholder="Address" class="min-h-90">${esc(c.address || "")}</textarea>
-          </div>
-
-          <div>
-            <div class="form-header">Bank Accounts</div>
-
-            <div id="bank-list" class="grid gap-10">
-              ${(c.bankAccounts || []).map((b, i) => `
-                <div class="item mb-0">
-                  <div class="grid grid-2 gap-10">
-                    <div>
-                      <label class="form-label">Bank Name</label>
-                      <input value="${esc(b.bankName || "")}" data-bank-field="bankName" data-bank-index="${i}" placeholder="Bank name">
-                    </div>
-                    <div>
-                      <label class="form-label">Account Number</label>
-                      <input value="${esc(b.account || "")}" data-bank-field="account" data-bank-index="${i}" placeholder="Account number">
-                    </div>
-                    <div>
-                      <label class="form-label">IBAN</label>
-                      <input value="${esc(b.iban || "")}" data-bank-field="iban" data-bank-index="${i}" placeholder="IBAN">
-                    </div>
-                    <div>
-                      <label class="form-label">SWIFT</label>
-                      <input value="${esc(b.swift || "")}" data-bank-field="swift" data-bank-index="${i}" placeholder="SWIFT">
-                    </div>
-                  </div>
-
-                  <button type="button" data-delete-bank="${i}" class="mt-10">Delete</button>
-                </div>
-              `).join("")}
-            </div>
-
-            <button type="button" id="add-bank-btn" class="mt-10">+ Add Bank</button>
-          </div>
-
-          <div>
-            <div class="form-header">Saved Shippers</div>
-
-            <div id="shipper-list" class="grid gap-10">
-              ${(c.shippers || []).map((s, i) => `
-                <div class="item mb-0">
-                  <div class="grid grid-2 gap-10">
-                    <div>
-                      <label class="form-label">Shipper Name</label>
-                      <input value="${esc(s.name || "")}" data-shipper-field="name" data-shipper-index="${i}" placeholder="Shipper name">
-                    </div>
-                    <div>
-                      <label class="form-label">Mobile</label>
-                      <input value="${esc(s.mobile || "")}" data-shipper-field="mobile" data-shipper-index="${i}" placeholder="Mobile">
-                    </div>
-                    <div style="grid-column:1 / -1">
-                      <label class="form-label">Address</label>
-                      <textarea data-shipper-field="address" data-shipper-index="${i}" placeholder="Address" class="min-h-80">${esc(s.address || "")}</textarea>
-                    </div>
-                    <div style="grid-column:1 / -1">
-                      <label class="form-label">Email</label>
-                      <input value="${esc(s.email || "")}" data-shipper-field="email" data-shipper-index="${i}" placeholder="Email">
-                    </div>
-                  </div>
-
-                  <button type="button" data-delete-shipper="${i}" class="mt-10">Delete</button>
-                </div>
-              `).join("")}
-            </div>
-
-            <button type="button" id="add-shipper-btn" class="mt-10">+ Add Shipper</button>
-          </div>
-
-          <div>
-            <div class="form-header">AI Settings</div>
-            <div class="grid gap-10">
-              <div>
-                <label class="form-label">Google Gemini API Key (for Smart Scan)</label>
-                <input name="gemini_api_key" type="password" value="${esc(c.gemini_api_key || "")}" placeholder="Paste your API key here">
-              </div>
-              <div>
-                <label class="form-label">Gemini Model</label>
-                <select name="gemini_model">
-                  <option value="gemini-2.5-flash" ${c.gemini_model === "gemini-2.5-flash" ? "selected" : ""}>Gemini 2.5 Flash (Stable)</option>
-                  <option value="gemini-3.1-flash-lite-preview" ${c.gemini_model === "gemini-3.1-flash-lite-preview" ? "selected" : ""}>Gemini 3.1 Flash-Lite</option>
-                  <option value="gemini-3-pro" ${c.gemini_model === "gemini-3-pro" ? "selected" : ""}>Gemini 3 Pro</option>
-                </select>
-              </div>
-            </div>
-            <div class="item-sub mt-4">Required for scanning documents automatically.</div>
-            <button type="button" id="check-ai-btn" class="mt-8" style="background:#4f46e5; color:white">Check AI Connection</button>
-          </div>
-
-          <button type="submit" class="btn-primary">Save Settings</button>
+      <div class="card">
+        <div class="flex-between mb-12">
+          <div class="title">BANK ACCOUNTS</div>
+          <button id="add-bank-btn" class="btn-primary btn-small">+ ADD</button>
         </div>
-      </form>
+        <div class="list">
+          ${c.bankAccounts.map((b, i) => `
+            <div class="item">
+              <div class="flex-between">
+                <div class="item-title">${esc(b.name)}</div>
+                <button data-delete-bank="${i}" class="btn-danger btn-small">X</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
     </div>
   `;
 }
