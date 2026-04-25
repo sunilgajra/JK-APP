@@ -25,9 +25,9 @@ export function dealsView() {
     <div class="card">
       <div class="flex flex-between flex-center gap-12 mb-12 flex-wrap">
         <div class="title mb-0">Deals</div>
-        <div class="flex gap-8 flex-wrap">
+        <div class="flex gap-12 flex-wrap">
           <button id="export-deals-csv">Export CSV</button>
-          <button id="show-deal-form" class="btn-primary" style="margin-left: 7.7%">Add Deal</button>
+          <button id="show-deal-form" class="btn-primary">Add Deal</button>
         </div>
       </div>
 
