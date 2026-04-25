@@ -84,6 +84,7 @@ export function dealsView() {
                 <button data-edit-deal="${d.id}" class="btn btn-outline btn-small">Edit</button>
                 <button data-delete-deal="${d.id}" class="btn btn-logout btn-small">Delete</button>
               </div>
+              <div id="deal-edit-wrap-${d.id}" class="mt-10"></div>
             </div>
           `;
         }).join("") : `<div class="empty card">No matching deals found.</div>`}
@@ -94,13 +95,15 @@ export function dealsView() {
 
 export function dealFormHtml(d = {}, edit = false, id = "") {
   const currentDocCurrency = d.document_currency || d.currency || "USD";
+  const suffix = id ? `-${id}` : "";
 
   return `
-    <div class="card mb-24 fade-in" style="border: 1px solid var(--primary);">
+    <div class="card mb-24 fade-in" style="border: 1px solid var(--primary); background: #111827;">
       <h3 class="section-title">${edit ? "Update Trade Deal" : "Initialize New Trade Deal"}</h3>
       <form id="${edit ? `deal-edit-form-${id}` : "deal-form"}" class="grid gap-16">
         
-        <div class="card" style="background: rgba(0,0,0,0.1);">
+        <!-- SECTION 1: CORE -->
+        <div class="card" style="background: rgba(0,0,0,0.2);">
            <h4 class="item-title mb-12">📦 Basic Information</h4>
            <div class="grid grid-3 gap-16">
               <div class="form-group mb-0">
@@ -128,7 +131,7 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
            <div class="grid grid-2 gap-16 mt-16">
               <div class="form-group mb-0">
                 <label>Product</label>
-                <select name="product_name" id="${edit ? `product-name-${id}` : "product-name"}" required>
+                <select name="product_name" id="product-name${suffix}" required>
                   <option value="">Select product</option>
                   ${(state.products || []).map((p) => `
                     <option value="${esc(p.name)}" data-hsn="${esc(p.hsn_code || "")}" ${d.product_name === p.name ? "selected" : ""}>${esc(p.name)}</option>
@@ -137,49 +140,99 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
               </div>
               <div class="form-group mb-0">
                 <label>HSN Code</label>
-                <input name="hsn_code" id="${edit ? `hsn-code-${id}` : "hsn-code"}" value="${esc(d.hsn_code || "")}">
+                <input name="hsn_code" id="hsn-code${suffix}" value="${esc(d.hsn_code || "")}">
               </div>
            </div>
         </div>
 
-        <div class="grid grid-2 gap-24">
-           <div class="card" style="background: rgba(0,0,0,0.1);">
-              <h4 class="item-title mb-12">🚢 Shipment Details</h4>
+        <!-- SECTION 2: LOGISTICS -->
+        <div class="grid grid-2 gap-16">
+           <div class="card" style="background: rgba(0,0,0,0.2);">
+              <h4 class="item-title mb-12">🚢 Shipping Details</h4>
               <div class="grid grid-2 gap-12">
                  <div class="form-group mb-0"><label>Loading Port</label><input name="loading_port" value="${esc(d.loading_port || "")}"></div>
                  <div class="form-group mb-0"><label>Discharge Port</label><input name="discharge_port" value="${esc(d.discharge_port || "")}"></div>
-                 <div class="form-group mb-0"><label>Vessel Name</label><input name="vessel" value="${esc(d.vessel || "")}"></div>
+                 <div class="form-group mb-0"><label>Vessel Name</label><input name="vessel" id="vessel${suffix}" value="${esc(d.vessel || "")}"></div>
+                 <div class="form-group mb-0"><label>Vessel / Voyage</label><input name="vessel_voyage" value="${esc(d.vessel_voyage || "")}"></div>
                  <div class="form-group mb-0"><label>Shipment Date</label><input name="shipment_out_date" type="date" value="${esc(d.shipment_out_date || "")}"></div>
+                 <div class="form-group mb-0"><label>ETA</label><input name="eta" type="date" value="${esc(d.eta || "")}"></div>
               </div>
            </div>
 
-           <div class="card" style="background: rgba(0,0,0,0.1);">
-              <h4 class="item-title mb-12">💰 Financial Settings</h4>
+           <div class="card" style="background: rgba(0,0,0,0.2);">
+              <h4 class="item-title mb-12">⚖️ Weights & Packing</h4>
               <div class="grid grid-2 gap-12">
-                 <div class="form-group mb-0">
-                    <label>Base Currency</label>
-                    <select name="base_currency" id="${edit ? `base-currency-${id}` : "base-currency"}">
-                      <option value="USD" ${(d.base_currency || "USD") === "USD" ? "selected" : ""}>USD</option>
-                      <option value="AED" ${d.base_currency === "AED" ? "selected" : ""}>AED</option>
-                    </select>
-                 </div>
-                 <div class="form-group mb-0">
-                    <label>Doc Currency</label>
-                    <select name="document_currency">
-                      <option value="AED" ${currentDocCurrency === "AED" ? "selected" : ""}>AED</option>
-                      <option value="USD" ${currentDocCurrency === "USD" ? "selected" : ""}>USD</option>
-                    </select>
-                 </div>
-                 <div class="form-group mb-0"><label>Sale Rate</label><input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}"></div>
-                 <div class="form-group mb-0"><label>Purchase Rate</label><input name="purchase_rate" id="${edit ? `purchase-rate-${id}` : "purchase-rate"}" type="number" step="0.01" value="${esc(d.purchase_rate || "")}"></div>
-                 <div class="form-group mb-0"><label>Quantity</label><input name="quantity" id="${edit ? `quantity-${id}` : "quantity"}" type="number" step="0.001" value="${esc(d.quantity || "")}"></div>
-                 <div class="form-group mb-0"><label>Conv. Rate</label><input name="conversion_rate" id="${edit ? `conversion-rate-${id}` : "conversion-rate"}" type="number" step="0.0001" value="${esc(d.conversion_rate || "3.6725")}"></div>
+                 <div class="form-group mb-0"><label>Gross Weight (KGS)</label><input name="gross_weight" id="gross-weight${suffix}" type="number" step="0.001" value="${esc(d.gross_weight || "")}"></div>
+                 <div class="form-group mb-0"><label>Net Weight (KGS)</label><input name="net_weight" id="net-weight${suffix}" type="number" step="0.001" value="${esc(d.net_weight || "")}"></div>
+                 <div class="form-group mb-0"><label>Package Details</label><input name="package_details" value="${esc(d.package_details || "20FT X 10 CONTAINERS")}"></div>
+                 <div class="form-group mb-0"><label>BL Number</label><input name="bl_no" value="${esc(d.bl_no || "")}"></div>
               </div>
+           </div>
+        </div>
+
+        <!-- SECTION 3: FINANCIALS -->
+        <div class="card" style="background: rgba(0,0,0,0.2);">
+           <h4 class="item-title mb-12">💰 Financial Settings</h4>
+           <div class="grid grid-4 gap-12">
+              <div class="form-group mb-0">
+                <label>Base Currency</label>
+                <select name="base_currency" id="base-currency${suffix}">
+                  <option value="USD" ${(d.base_currency || "USD") === "USD" ? "selected" : ""}>USD</option>
+                  <option value="AED" ${d.base_currency === "AED" ? "selected" : ""}>AED</option>
+                </select>
+              </div>
+              <div class="form-group mb-0">
+                <label>Doc Currency</label>
+                <select name="document_currency">
+                  <option value="AED" ${currentDocCurrency === "AED" ? "selected" : ""}>AED</option>
+                  <option value="USD" ${currentDocCurrency === "USD" ? "selected" : ""}>USD</option>
+                </select>
+              </div>
+              <div class="form-group mb-0"><label>Sale Rate</label><input name="rate" id="rate${suffix}" type="number" step="0.01" value="${esc(d.rate || "")}"></div>
+              <div class="form-group mb-0"><label>Purchase Rate</label><input name="purchase_rate" id="purchase-rate${suffix}" type="number" step="0.01" value="${esc(d.purchase_rate || "")}"></div>
+              <div class="form-group mb-0"><label>Quantity (MTON)</label><input name="quantity" id="quantity${suffix}" type="number" step="0.001" value="${esc(d.quantity || "")}"></div>
+              <div class="form-group mb-0"><label>Conv. Rate</label><input name="conversion_rate" id="conversion-rate${suffix}" type="number" step="0.0001" value="${esc(d.conversion_rate || "3.6725")}"></div>
+           </div>
+
+           <!-- AUTO CALCULATED TOTALS -->
+           <div class="grid grid-2 gap-12 mt-16 p-12" style="background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px dashed var(--border);">
+             <div>
+                <label class="stat-label">Calculated Sale Total</label>
+                <div class="flex gap-8">
+                   <input id="total${suffix}" readonly style="background: transparent; border: none; font-weight: 800; color: var(--success); padding:0" placeholder="0.00 USD">
+                   <input id="total-aed${suffix}" readonly style="background: transparent; border: none; font-weight: 800; color: var(--success); padding:0" placeholder="0.00 AED">
+                </div>
+             </div>
+             <div>
+                <label class="stat-label">Calculated Purchase Total</label>
+                <div class="flex gap-8">
+                   <input id="purchase-total${suffix}" readonly style="background: transparent; border: none; font-weight: 800; color: var(--danger); padding:0" placeholder="0.00 USD">
+                   <input id="purchase-total-aed${suffix}" readonly style="background: transparent; border: none; font-weight: 800; color: var(--danger); padding:0" placeholder="0.00 AED">
+                </div>
+             </div>
+           </div>
+        </div>
+
+        <!-- SECTION 4: PARTIES -->
+        <div class="grid grid-2 gap-16">
+           <div class="form-group mb-0">
+             <label>Buyer (Consignee)</label>
+             <select name="buyer_id" required>
+               <option value="">Select buyer</option>
+               ${state.buyers.map((b) => `<option value="${b.id}" ${String(d.buyer_id) === String(b.id) ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
+             </select>
+           </div>
+           <div class="form-group mb-0">
+             <label>Supplier</label>
+             <select name="supplier_id" required>
+               <option value="">Select supplier</option>
+               ${state.suppliers.map((s) => `<option value="${s.id}" ${String(d.supplier_id) === String(s.id) ? "selected" : ""}>${esc(s.name)}</option>`).join("")}
+             </select>
            </div>
         </div>
 
         <div class="flex gap-12 mt-12">
-          <button type="submit" class="btn btn-primary">${edit ? "Update Deal" : "Create Deal"}</button>
+          <button type="submit" class="btn btn-primary">${edit ? "Apply Changes" : "Save Deal"}</button>
           <button type="button" class="btn btn-outline" id="${edit ? `cancel-deal-edit-${id}` : "cancel-deal-form"}">Discard</button>
         </div>
       </form>

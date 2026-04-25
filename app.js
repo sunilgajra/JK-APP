@@ -207,7 +207,11 @@ function render() {
   else if (state.page === "products") content.innerHTML = productsView();
   else if (state.page === "settings") content.innerHTML = settingsView();
 
-  bindUI();
+  try {
+    bindUI();
+  } catch (err) {
+    console.error("CRITICAL UI ERROR:", err);
+  }
 
   // Restore focus
   if (lastFocusedId) {
@@ -295,7 +299,12 @@ function bindUI() {
   document.querySelectorAll("[data-delete-buyer]").forEach(btn => btn.addEventListener("click", () => deleteBuyer(btn.dataset.deleteBuyer)));
   document.querySelectorAll("[data-edit-supplier]").forEach(btn => btn.addEventListener("click", () => showEditSupplierForm(btn.dataset.editSupplier)));
   document.querySelectorAll("[data-delete-supplier]").forEach(btn => btn.addEventListener("click", () => deleteSupplier(btn.dataset.deleteSupplier)));
-  document.querySelectorAll("[data-edit-deal]").forEach(btn => btn.addEventListener("click", () => showEditDealForm(btn.dataset.editDeal)));
+  document.querySelectorAll("[data-edit-deal]").forEach(btn => {
+    btn.onclick = (e) => {
+      console.log("Edit Deal clicked:", btn.dataset.editDeal);
+      showEditDealForm(btn.dataset.editDeal);
+    };
+  });
   document.querySelectorAll("[data-delete-deal]").forEach(btn => btn.addEventListener("click", () => deleteDeal(btn.dataset.deleteDeal)));
   document.querySelectorAll("[data-edit-product]").forEach(btn => btn.addEventListener("click", () => showEditProductForm(btn.dataset.editProduct)));
   document.querySelectorAll("[data-delete-product]").forEach(btn => btn.addEventListener("click", () => deleteProduct(btn.dataset.deleteProduct)));
@@ -956,12 +965,28 @@ function showDealForm() {
   bindProductHsnLookup();
 }
 function showEditDealForm(id) {
+  console.log("Attempting to show edit form for deal:", id);
   const d = state.deals.find(x => String(x.id) === String(id));
   const wrap = document.getElementById(`deal-edit-wrap-${id}`);
-  if (!d || !wrap) return;
+  
+  if (!d) return console.error("Deal not found for ID:", id);
+  if (!wrap) return console.error("Edit wrap not found for ID:", `deal-edit-wrap-${id}`);
+  
+  console.log("Found deal and wrap. Rendering form...");
   wrap.innerHTML = dealFormHtml(d, true, id);
-  document.getElementById(`deal-edit-form-${id}`).addEventListener("submit", (e) => updateDeal(e, id));
-  document.getElementById(`cancel-deal-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
+  
+  const form = document.getElementById(`deal-edit-form-${id}`);
+  if (form) {
+    form.addEventListener("submit", (e) => updateDeal(e, id));
+  }
+  
+  const cancelBtn = document.getElementById(`cancel-deal-edit-${id}`);
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", () => {
+      wrap.innerHTML = "";
+    });
+  }
+  
   bindDealAutoTotal(id);
   bindProductHsnLookup(id);
 }
