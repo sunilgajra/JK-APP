@@ -270,14 +270,39 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
           </div>
         </div>
 
-        <div class="grid grid-2 gap-10">
-          <div>
-            <label class="form-label">Sale Rate (to Buyer)</label>
-            <input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}">
+        <div class="card">
+          <div class="title">Sale Rates (to Buyer)</div>
+          <div class="grid grid-3 gap-10 mt-10">
+            <div>
+              <label class="form-label">Total Sale Rate</label>
+              <input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}">
+            </div>
+            <div>
+              <label class="form-label">Invoice Rate</label>
+              <input name="sale_invoice_rate" id="${edit ? `sale-inv-rate-${id}` : "sale-inv-rate"}" type="number" step="0.01" value="${esc(d.sale_invoice_rate || "")}">
+            </div>
+            <div>
+              <label class="form-label">Yard Rate</label>
+              <input name="sale_yard_rate" id="${edit ? `sale-yard-rate-${id}` : "sale-yard-rate"}" type="number" step="0.01" value="${esc(d.sale_yard_rate || "")}">
+            </div>
           </div>
-          <div>
-            <label class="form-label">Purchase Rate (from Supplier)</label>
-            <input name="purchase_rate" id="${edit ? `purchase-rate-${id}` : "purchase-rate"}" type="number" step="0.01" value="${esc(d.purchase_rate || "")}">
+        </div>
+
+        <div class="card">
+          <div class="title">Purchase Rates (from Supplier)</div>
+          <div class="grid grid-3 gap-10 mt-10">
+            <div>
+              <label class="form-label">Total Purchase Rate</label>
+              <input name="purchase_rate" id="${edit ? `purchase-rate-${id}` : "purchase-rate"}" type="number" step="0.01" value="${esc(d.purchase_rate || "")}">
+            </div>
+            <div>
+              <label class="form-label">Invoice Rate</label>
+              <input name="purchase_invoice_rate" id="${edit ? `purchase-inv-rate-${id}` : "purchase-inv-rate"}" type="number" step="0.01" value="${esc(d.purchase_invoice_rate || "")}">
+            </div>
+            <div>
+              <label class="form-label">Yard Rate</label>
+              <input name="purchase_yard_rate" id="${edit ? `purchase-yard-rate-${id}` : "purchase-yard-rate"}" type="number" step="0.01" value="${esc(d.purchase_yard_rate || "")}">
+            </div>
           </div>
         </div>
 

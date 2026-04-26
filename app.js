@@ -344,6 +344,26 @@ function validateDeal(fd) {
 
   const round = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
   
+  const sInv = cleanNumber(fd.get("sale_invoice_rate"));
+  const sYard = cleanNumber(fd.get("sale_yard_rate"));
+  const pInv = cleanNumber(fd.get("purchase_invoice_rate"));
+  const pYard = cleanNumber(fd.get("purchase_yard_rate"));
+
+  let sInvUsd = 0, sInvAed = 0, sYardUsd = 0, sYardAed = 0;
+  let pInvUsd = 0, pInvAed = 0, pYardUsd = 0, pYardAed = 0;
+
+  if (baseCurr === "USD") {
+    sInvUsd = sInv; sInvAed = saleConv ? sInv * saleConv : 0;
+    sYardUsd = sYard; sYardAed = saleConv ? sYard * saleConv : 0;
+    pInvUsd = pInv; pInvAed = purchaseConv ? pInv * purchaseConv : 0;
+    pYardUsd = pYard; pYardAed = purchaseConv ? pYard * purchaseConv : 0;
+  } else {
+    sInvAed = sInv; sInvUsd = saleConv ? sInv / saleConv : 0;
+    sYardAed = sYard; sYardUsd = saleConv ? sYard / saleConv : 0;
+    pInvAed = pInv; pInvUsd = purchaseConv ? pInv / purchaseConv : 0;
+    pYardAed = pYard; pYardUsd = purchaseConv ? pYard / purchaseConv : 0;
+  }
+
   totalUsd = round(quantity * rateUsd);
   totalAed = round(quantity * rateAed);
   pTotalUsd = round(quantity * pRateUsd);
@@ -362,6 +382,18 @@ function validateDeal(fd) {
     quantity,
     rate, // Sale Rate
     purchase_rate: pRate, // Purchase Rate
+    sale_invoice_rate: cleanNumber(fd.get("sale_invoice_rate")),
+    sale_yard_rate: cleanNumber(fd.get("sale_yard_rate")),
+    purchase_invoice_rate: cleanNumber(fd.get("purchase_invoice_rate")),
+    purchase_yard_rate: cleanNumber(fd.get("purchase_yard_rate")),
+    sale_invoice_rate_usd: round(sInvUsd),
+    sale_invoice_rate_aed: round(sInvAed),
+    sale_yard_rate_usd: round(sYardUsd),
+    sale_yard_rate_aed: round(sYardAed),
+    purchase_invoice_rate_usd: round(pInvUsd),
+    purchase_invoice_rate_aed: round(pInvAed),
+    purchase_yard_rate_usd: round(pYardUsd),
+    purchase_yard_rate_aed: round(pYardAed),
     rate_usd: round(rateUsd),
     rate_aed: round(rateAed),
     purchase_rate_usd: round(pRateUsd),
@@ -954,7 +986,13 @@ function bindDealAutoTotal(id = null) {
   const suffix = id ? `-${id}` : "";
   const qtyIn = document.getElementById(`quantity${suffix}`);
   const rateIn = document.getElementById(`rate${suffix}`);
+  const sInvIn = document.getElementById(`sale-inv-rate${suffix}`);
+  const sYardIn = document.getElementById(`sale-yard-rate${suffix}`);
+  
   const pRateIn = document.getElementById(`purchase-rate${suffix}`);
+  const pInvIn = document.getElementById(`purchase-inv-rate${suffix}`);
+  const pYardIn = document.getElementById(`purchase-yard-rate${suffix}`);
+
   const saleConvIn = document.getElementById(`sale-conv${suffix}`);
   const purchaseConvIn = document.getElementById(`purchase-conv${suffix}`);
   const baseCurrIn = document.getElementById(`base-currency${suffix}`);
@@ -975,6 +1013,29 @@ function bindDealAutoTotal(id = null) {
       calc(); 
     }
   };
+
+  const handleRateSplit = (totalEl, invEl, yardEl) => {
+    const t = Number(totalEl.value || 0);
+    const i = Number(invEl.value || 0);
+    const y = t - i;
+    yardEl.value = y > 0 ? y.toFixed(2) : "0.00";
+    calc();
+  };
+
+  const handleYardChange = (totalEl, invEl, yardEl) => {
+    const i = Number(invEl.value || 0);
+    const y = Number(yardEl.value || 0);
+    totalEl.value = (i + y).toFixed(2);
+    calc();
+  };
+
+  rateIn?.addEventListener("input", () => handleRateSplit(rateIn, sInvIn, sYardIn));
+  sInvIn?.addEventListener("input", () => handleRateSplit(rateIn, sInvIn, sYardIn));
+  sYardIn?.addEventListener("input", () => handleYardChange(rateIn, sInvIn, sYardIn));
+
+  pRateIn?.addEventListener("input", () => handleRateSplit(pRateIn, pInvIn, pYardIn));
+  pInvIn?.addEventListener("input", () => handleRateSplit(pRateIn, pInvIn, pYardIn));
+  pYardIn?.addEventListener("input", () => handleYardChange(pRateIn, pInvIn, pYardIn));
 
   netIn?.addEventListener("input", updateQtyFromWeight);
   grossIn?.addEventListener("input", updateQtyFromWeight);
@@ -1024,8 +1085,8 @@ function bindDealAutoTotal(id = null) {
     if (commTotalIn) commTotalIn.value = commTotal.toFixed(2);
   };
 
-  [qtyIn, rateIn, pRateIn, saleConvIn, purchaseConvIn, baseCurrIn, commRateIn].forEach(el => el?.addEventListener("input", calc));
-  [qtyIn, rateIn, pRateIn, saleConvIn, purchaseConvIn, baseCurrIn, commRateIn].forEach(el => el?.addEventListener("change", calc));
+  [qtyIn, saleConvIn, purchaseConvIn, baseCurrIn, commRateIn].forEach(el => el?.addEventListener("input", calc));
+  [qtyIn, saleConvIn, purchaseConvIn, baseCurrIn, commRateIn].forEach(el => el?.addEventListener("change", calc));
 }
 
 // Misc
@@ -1431,8 +1492,8 @@ function printDoc(type, dealId) {
     ...deal, 
     dealNo: deal.deal_no, 
     productName: deal.product_name, 
-    totalAmount: deal.total_amount,
-    docRate: deal.document_currency === "USD" ? deal.rate_usd : deal.rate_aed,
+    totalAmount: deal.document_currency === "USD" ? (deal.quantity * (deal.sale_invoice_rate_usd || deal.rate_usd)) : (deal.quantity * (deal.sale_invoice_rate_aed || deal.rate_aed)),
+    docRate: deal.document_currency === "USD" ? (deal.sale_invoice_rate_usd || deal.rate_usd) : (deal.sale_invoice_rate_aed || deal.rate_aed),
     docPurchaseRate: deal.document_currency === "USD" ? (deal.purchase_rate_usd || deal.purchase_rate) : (deal.purchase_rate_aed || deal.purchase_rate),
     dealCount: dealCount
   };
