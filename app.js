@@ -1488,15 +1488,25 @@ function printDoc(type, dealId) {
     .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   const dealCount = buyerDeals.findIndex(d => String(d.id) === String(deal.id)) + 1;
 
-  const dealDoc = { 
-    ...deal, 
-    dealNo: deal.deal_no, 
-    productName: deal.product_name, 
-    totalAmount: deal.document_currency === "USD" ? (deal.quantity * (deal.sale_invoice_rate_usd || deal.rate_usd)) : (deal.quantity * (deal.sale_invoice_rate_aed || deal.rate_aed)),
-    docRate: deal.document_currency === "USD" ? (deal.sale_invoice_rate_usd || deal.rate_usd) : (deal.sale_invoice_rate_aed || deal.rate_aed),
-    docPurchaseRate: deal.document_currency === "USD" ? (deal.purchase_rate_usd || deal.purchase_rate) : (deal.purchase_rate_aed || deal.purchase_rate),
-    dealCount: dealCount
-  };
+    const docRate = deal.document_currency === "USD" 
+      ? (deal.sale_invoice_rate ? deal.sale_invoice_rate_usd : deal.rate_usd)
+      : (deal.sale_invoice_rate ? deal.sale_invoice_rate_aed : deal.rate_aed);
+
+    const docPurchaseRate = deal.document_currency === "USD"
+      ? (deal.purchase_invoice_rate ? deal.purchase_invoice_rate_usd : (deal.purchase_rate_usd || deal.purchase_rate))
+      : (deal.purchase_invoice_rate ? deal.purchase_invoice_rate_aed : (deal.purchase_rate_aed || deal.purchase_rate));
+
+    const totalAmount = deal.quantity * docRate;
+
+    const dealDoc = { 
+      ...deal, 
+      dealNo: deal.deal_no, 
+      productName: deal.product_name, 
+      totalAmount: totalAmount,
+      docRate: docRate,
+      docPurchaseRate: docPurchaseRate,
+      dealCount: dealCount
+    };
   const payments = paymentsForDeal(dealId);
 
   // Map selected bank

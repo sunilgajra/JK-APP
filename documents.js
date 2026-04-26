@@ -1030,7 +1030,7 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
   const outPayments = payments.filter(p => p.direction === "out");
   const purchaseTotalUsd = Number(deal.purchase_total_usd || 0);
   const purchaseTotalAed = Number(deal.purchase_total_aed || 0);
-  const conv = Number(deal.conversion_rate || 3.67);
+  const conv = Number(deal.purchase_conversion_rate || deal.conversion_rate || 3.6725);
 
   let paidAed = 0;
   let paidUsd = 0;
@@ -1165,7 +1165,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
   const inPayments = payments.filter(p => p.direction === "in");
   const saleTotalUsd = Number(deal.total_amount_usd || 0);
   const saleTotalAed = Number(deal.total_amount_aed || 0);
-  const conv = Number(deal.conversion_rate || 3.67);
+  const conv = Number(deal.sale_conversion_rate || deal.conversion_rate || 3.6725);
 
   let recAed = 0;
   let recUsd = 0;
