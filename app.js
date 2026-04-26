@@ -362,6 +362,8 @@ function validateDeal(fd) {
     purchase_rate: pRate, // Purchase Rate
     rate_usd: round(rateUsd),
     rate_aed: round(rateAed),
+    purchase_rate_usd: round(pRateUsd),
+    purchase_rate_aed: round(pRateAed),
     total_amount: docCurr === "USD" ? totalUsd : totalAed,
     total_amount_usd: totalUsd,
     total_amount_aed: totalAed,
@@ -1426,6 +1428,8 @@ function printDoc(type, dealId) {
     dealNo: deal.deal_no, 
     productName: deal.product_name, 
     totalAmount: deal.total_amount,
+    docRate: deal.document_currency === "USD" ? deal.rate_usd : deal.rate_aed,
+    docPurchaseRate: deal.document_currency === "USD" ? (deal.purchase_rate_usd || deal.purchase_rate) : (deal.purchase_rate_aed || deal.purchase_rate),
     dealCount: dealCount
   };
   const payments = paymentsForDeal(dealId);

@@ -759,7 +759,7 @@ export function buildPI(deal, buyer, supplier, company = {}) {
         </td>
         <td class="center">${esc(deal.unit || "MTON")}</td>
         <td class="center">${esc(deal.quantity || "")}</td>
-        <td class="center">${fmt(deal.rate || 0)}</td>
+        <td class="center">${fmt(deal.docRate || deal.rate || 0)}</td>
         <td class="center">-</td>
         <td class="right">${fmt(total)}</td>
       </tr>
@@ -857,7 +857,7 @@ export function buildCI(deal, buyer, supplier, company = {}) {
         </td>
         <td class="center">${esc(deal.unit || "MTON")}</td>
         <td class="center">${esc(deal.quantity || "")}</td>
-        <td class="center">${fmt(deal.rate || 0)}</td>
+        <td class="center">${fmt(deal.docRate || deal.rate || 0)}</td>
         <td class="center">-</td>
         <td class="right">${fmt(total)}</td>
       </tr>
@@ -1082,7 +1082,7 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
       <tr>
         <td class="center">${esc(deal.product_name)}</td>
         <td class="center">${fmt(deal.quantity)}</td>
-        <td class="center">${fmt(deal.purchase_rate)}</td>
+        <td class="center">${fmt(deal.docPurchaseRate || deal.purchase_rate)}</td>
         <td class="right">${fmt(purchaseTotalUsd)}</td>
         <td class="right">${fmt(purchaseTotalAed)}</td>
         <td class="center">100%</td>
@@ -1217,7 +1217,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
       <tr>
         <td class="center">${esc(deal.product_name)}</td>
         <td class="center">${fmt(deal.quantity)}</td>
-        <td class="center">${fmt(deal.rate)}</td>
+        <td class="center">${fmt(deal.docRate || deal.rate)}</td>
         <td class="right">${fmt(saleTotalUsd)}</td>
         <td class="right">${fmt(saleTotalAed)}</td>
         <td class="center">100%</td>
