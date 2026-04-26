@@ -396,7 +396,11 @@ function validateDeal(fd) {
     document_bank_index: fd.get("document_bank_index") || null,
     shipper_index: fd.get("shipper_index") || null,
     shipment_status: fd.get("shipment_status") || "pending",
-    container_numbers: String(fd.get("container_numbers") || "").split(/[,\n]+/).map(x => x.trim().toUpperCase()).filter(Boolean)
+    container_numbers: String(fd.get("container_numbers") || "").split(/[,\n]+/).map(x => x.trim().toUpperCase()).filter(Boolean),
+    commission_name: fd.get("commission_name") || null,
+    commission_rate: cleanNumber(fd.get("commission_rate")),
+    commission_currency: fd.get("commission_currency") || "USD",
+    commission_total: cleanNumber(fd.get("commission_total"))
   };
 }
 
@@ -642,6 +646,7 @@ function showPaymentForm(dealId) {
         <select name="method" id="payment-method-${dealId}">
           <option value="Bank">Bank</option>
           <option value="Token">Token</option>
+          <option value="Commission">Commission</option>
           <option value="Other">Other</option>
         </select>
         <input name="method_other" id="payment-method-other-${dealId}" placeholder="Specify other payment type" style="display:none">
@@ -823,7 +828,8 @@ async function showEditPaymentForm(val) {
         <select name="method" id="pe-method-${paymentId}">
           <option value="Bank" ${p.method === "Bank" ? "selected" : ""}>Bank</option>
           <option value="Token" ${p.method === "Token" ? "selected" : ""}>Token</option>
-          <option value="Other" ${!["Bank","Token"].includes(p.method) ? "selected" : ""}>Other</option>
+          <option value="Commission" ${p.method === "Commission" ? "selected" : ""}>Commission</option>
+          <option value="Other" ${!["Bank","Token","Commission"].includes(p.method) ? "selected" : ""}>Other</option>
         </select>
         <input name="method_other" id="pe-method-other-${paymentId}" value="${!["Bank","Token"].includes(p.method) ? p.method : ""}" placeholder="Specify method" style="display:${!["Bank","Token"].includes(p.method) ? "block" : "none"}">
         
@@ -954,6 +960,8 @@ function bindDealAutoTotal(id = null) {
   const totalAedIn = document.getElementById(`total-aed${suffix}`);
   const pTotalUsdIn = document.getElementById(`purchase-total${suffix}`);
   const pTotalAedIn = document.getElementById(`purchase-total-aed${suffix}`);
+  const commRateIn = document.getElementById(`commission-rate${suffix}`);
+  const commTotalIn = document.getElementById(`commission-total${suffix}`);
 
   const updateQtyFromWeight = (e) => {
     const kg = Number(e.target.value || 0);
@@ -972,6 +980,7 @@ function bindDealAutoTotal(id = null) {
     const pr = Number(pRateIn?.value || 0);
     const c = Number(convIn?.value || 0);
     const bc = baseCurrIn?.value || "USD";
+    const cr = Number(commRateIn?.value || 0);
 
     const round = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
 
@@ -999,14 +1008,18 @@ function bindDealAutoTotal(id = null) {
     pUsd = round(pUsd);
     pAed = round(pAed);
 
+    // Commission Total
+    const commTotal = round(q * cr);
+
     if (totalUsdIn) totalUsdIn.value = sUsd.toFixed(2);
     if (totalAedIn) totalAedIn.value = sAed.toFixed(2);
     if (pTotalUsdIn) pTotalUsdIn.value = pUsd.toFixed(2);
     if (pTotalAedIn) pTotalAedIn.value = pAed.toFixed(2);
+    if (commTotalIn) commTotalIn.value = commTotal.toFixed(2);
   };
 
-  [qtyIn, rateIn, pRateIn, convIn, baseCurrIn].forEach(el => el?.addEventListener("input", calc));
-  [qtyIn, rateIn, pRateIn, convIn, baseCurrIn].forEach(el => el?.addEventListener("change", calc));
+  [qtyIn, rateIn, pRateIn, convIn, baseCurrIn, commRateIn].forEach(el => el?.addEventListener("input", calc));
+  [qtyIn, rateIn, pRateIn, convIn, baseCurrIn, commRateIn].forEach(el => el?.addEventListener("change", calc));
 }
 
 // Misc
