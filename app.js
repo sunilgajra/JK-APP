@@ -322,7 +322,8 @@ function validateDeal(fd) {
   const quantity = cleanNumber(fd.get("quantity"));
   const rate = cleanNumber(fd.get("rate")); // Sale Rate
   const pRate = cleanNumber(fd.get("purchase_rate")); // Purchase Rate
-  const conv = cleanNumber(fd.get("conversion_rate"));
+  const saleConv = cleanNumber(fd.get("sale_conversion_rate"));
+  const purchaseConv = cleanNumber(fd.get("purchase_conversion_rate"));
   const baseCurr = fd.get("base_currency") || "USD";
   const docCurr = fd.get("document_currency") || baseCurr;
 
@@ -331,14 +332,14 @@ function validateDeal(fd) {
 
   if (baseCurr === "USD") {
     rateUsd = rate;
-    rateAed = conv ? rate * conv : 0;
+    rateAed = saleConv ? rate * saleConv : 0;
     pRateUsd = pRate;
-    pRateAed = conv ? pRate * conv : 0;
+    pRateAed = purchaseConv ? pRate * purchaseConv : 0;
   } else {
     rateAed = rate;
-    rateUsd = conv ? rate / conv : 0;
+    rateUsd = saleConv ? rate / saleConv : 0;
     pRateAed = pRate;
-    pRateUsd = conv ? pRate / conv : 0;
+    pRateUsd = purchaseConv ? pRate / purchaseConv : 0;
   }
 
   const round = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
@@ -356,7 +357,8 @@ function validateDeal(fd) {
     unit: cleanUpper(fd.get("unit")),
     base_currency: baseCurr,
     document_currency: docCurr,
-    conversion_rate: conv,
+    sale_conversion_rate: saleConv,
+    purchase_conversion_rate: purchaseConv,
     quantity,
     rate, // Sale Rate
     purchase_rate: pRate, // Purchase Rate
@@ -953,7 +955,8 @@ function bindDealAutoTotal(id = null) {
   const qtyIn = document.getElementById(`quantity${suffix}`);
   const rateIn = document.getElementById(`rate${suffix}`);
   const pRateIn = document.getElementById(`purchase-rate${suffix}`);
-  const convIn = document.getElementById(`conversion-rate${suffix}`);
+  const saleConvIn = document.getElementById(`sale-conv${suffix}`);
+  const purchaseConvIn = document.getElementById(`purchase-conv${suffix}`);
   const baseCurrIn = document.getElementById(`base-currency${suffix}`);
   const netIn = document.getElementById(`net-weight${suffix}`);
   const grossIn = document.getElementById(`gross-weight${suffix}`);
@@ -980,7 +983,8 @@ function bindDealAutoTotal(id = null) {
     const q = Number(qtyIn?.value || 0);
     const r = Number(rateIn?.value || 0);
     const pr = Number(pRateIn?.value || 0);
-    const c = Number(convIn?.value || 0);
+    const sc = Number(saleConvIn?.value || 0);
+    const pc = Number(purchaseConvIn?.value || 0);
     const bc = baseCurrIn?.value || "USD";
     const cr = Number(commRateIn?.value || 0);
 
@@ -990,10 +994,10 @@ function bindDealAutoTotal(id = null) {
     let sUsd = 0, sAed = 0;
     if (bc === "USD") {
       sUsd = q * r;
-      sAed = c ? sUsd * c : 0;
+      sAed = sc ? sUsd * sc : 0;
     } else {
       sAed = q * r;
-      sUsd = c ? sAed / c : 0;
+      sUsd = sc ? sAed / sc : 0;
     }
     sUsd = round(sUsd);
     sAed = round(sAed);
@@ -1002,10 +1006,10 @@ function bindDealAutoTotal(id = null) {
     let pUsd = 0, pAed = 0;
     if (bc === "USD") {
       pUsd = q * pr;
-      pAed = c ? pUsd * c : 0;
+      pAed = pc ? pUsd * pc : 0;
     } else {
       pAed = q * pr;
-      pUsd = c ? pAed / c : 0;
+      pUsd = pc ? pAed / pc : 0;
     }
     pUsd = round(pUsd);
     pAed = round(pAed);
@@ -1020,8 +1024,8 @@ function bindDealAutoTotal(id = null) {
     if (commTotalIn) commTotalIn.value = commTotal.toFixed(2);
   };
 
-  [qtyIn, rateIn, pRateIn, convIn, baseCurrIn, commRateIn].forEach(el => el?.addEventListener("input", calc));
-  [qtyIn, rateIn, pRateIn, convIn, baseCurrIn, commRateIn].forEach(el => el?.addEventListener("change", calc));
+  [qtyIn, rateIn, pRateIn, saleConvIn, purchaseConvIn, baseCurrIn, commRateIn].forEach(el => el?.addEventListener("input", calc));
+  [qtyIn, rateIn, pRateIn, saleConvIn, purchaseConvIn, baseCurrIn, commRateIn].forEach(el => el?.addEventListener("change", calc));
 }
 
 // Misc

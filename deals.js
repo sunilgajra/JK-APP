@@ -231,11 +231,18 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
           </div>
         </div>
 
-        <div class="grid grid-4 gap-10">
+        <div class="grid grid-2 gap-10">
           <div>
-            <label class="form-label">Conversion Rate (USD → AED)</label>
-            <input name="conversion_rate" id="${edit ? `conversion-rate-${id}` : "conversion-rate"}" type="number" step="0.0001" value="${esc(d.conversion_rate || "")}" placeholder="e.g. 3.6725">
+            <label class="form-label">Sale Conv. Rate (USD → AED)</label>
+            <input name="sale_conversion_rate" id="${edit ? `sale-conv-${id}` : "sale-conv"}" type="number" step="0.0001" value="${esc(d.sale_conversion_rate || d.conversion_rate || "")}" placeholder="e.g. 3.6725">
           </div>
+          <div>
+            <label class="form-label">Purchase Conv. Rate (USD → AED)</label>
+            <input name="purchase_conversion_rate" id="${edit ? `purchase-conv-${id}` : "purchase-conv"}" type="number" step="0.0001" value="${esc(d.purchase_conversion_rate || d.conversion_rate || "")}" placeholder="e.g. 3.6725">
+          </div>
+        </div>
+
+        <div class="grid grid-3 gap-10">
           <div>
             <label class="form-label">Document Currency</label>
             <select name="document_currency">
