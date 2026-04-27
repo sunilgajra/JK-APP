@@ -1575,6 +1575,8 @@ async function runAiScan(dealId, docId) {
     - unit: Unit of measurement (e.g. MTON, KGS).
     - gross_weight: Total Gross Weight (number only).
     - net_weight: Total Net Weight (number only).
+    - package_details: Details about packages (e.g. 20FT X 10 CONTAINERS).
+    - loaded_on: What the goods are loaded on (e.g. ISO TANK, FLEXI TANK).
     - container_numbers: A list/array of all container numbers mentioned (e.g. ["MSCU1234567", "MSCU7654321"]). Look in the 'Container No.' or 'Marks & Nos' section.
     - shipment_out_date: Date of shipment or 'Shipped on Board' date (YYYY-MM-DD).
     - country_of_origin: Country of origin if mentioned.
@@ -1624,6 +1626,7 @@ async function runAiScan(dealId, docId) {
       `Product: ${data.product_name || "—"}`,
       `Qty: ${data.quantity || "—"} ${data.unit || ""}`,
       `HSN: ${data.hsn_code || "—"}`,
+      `Pkg: ${data.package_details || "—"} | Loaded: ${data.loaded_on || "—"}`,
       `Weights: G:${data.gross_weight || "—"} / N:${data.net_weight || "—"}`,
       `Containers (${containerCount}): ${containerCount > 0 ? cleanContainers.slice(0, 3).join(", ") + (containerCount > 3 ? "..." : "") : "None found"}`
     ].join("\n");
@@ -1652,6 +1655,8 @@ async function runAiScan(dealId, docId) {
       if (data.country_of_origin) updateData.country_of_origin = String(data.country_of_origin).trim().toUpperCase();
       if (data.hsn_code) updateData.hsn_code = String(data.hsn_code).replace(/[^A-Z0-9]/gi, "").toUpperCase();
       if (data.unit) updateData.unit = String(data.unit).trim().toUpperCase();
+      if (data.package_details) updateData.package_details = String(data.package_details).trim().toUpperCase();
+      if (data.loaded_on) updateData.loaded_on = String(data.loaded_on).trim().toUpperCase();
       if (data.eta) updateData.eta = data.eta;
 
       const { error } = await supabase.from("deals").update(updateData).eq("id", dealId);
