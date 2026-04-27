@@ -49,7 +49,26 @@ export function suppliersView() {
               <button data-edit-supplier="${s.id}">Edit</button>
               <button data-delete-supplier="${s.id}">Delete</button>
               <button data-show-supplier-docs="${s.id}">Documents</button>
-              <button data-print-supplier-master="${s.id}" class="btn-info">Master Settlement</button>
+              <button data-show-supplier-master-deals="${s.id}" class="btn-info">Master Settlement</button>
+            </div>
+            <div id="supplier-master-deals-wrap-${s.id}" class="mt-10" style="display:none; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; border:1px solid rgba(59,157,162,0.3)">
+              <div class="item-title mb-8" style="font-size:14px; color:var(--accent-primary)">Select Deals for Master Settlement</div>
+              <div class="list" style="max-height:200px; overflow-y:auto">
+                ${state.deals.filter(d => String(d.supplier_id) === String(s.id)).map(d => `
+                  <label class="flex flex-center gap-10 p-6 hover-bg" style="cursor:pointer; border-radius:4px">
+                    <input type="checkbox" name="master_deal_ids_${s.id}" value="${d.id}" checked>
+                    <div class="text-xs">
+                      <span class="font-bold">${esc(d.deal_no)}</span> · 
+                      <span>${esc(d.product_name)}</span> · 
+                      <span class="opacity-60">${new Date(d.invoice_date || d.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </label>
+                `).join("")}
+              </div>
+              <div class="mt-8 flex gap-8">
+                <button data-print-supplier-master-selected="${s.id}" class="btn-primary btn-xs">Generate Settlement</button>
+                <button onclick="document.getElementById('supplier-master-deals-wrap-${s.id}').style.display='none'" class="btn-xs">Cancel</button>
+              </div>
             </div>
             <div id="supplier-edit-wrap-${s.id}" class="mt-10"></div>
             <div id="supplier-docs-wrap-${s.id}" class="mt-10" style="display:none; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px">

@@ -36,7 +36,26 @@ export function buyersView() {
             <div class="mt-8 flex gap-8">
               <button data-edit-buyer="${b.id}">Edit</button>
               <button data-delete-buyer="${b.id}">Delete</button>
-              <button data-print-buyer-master="${b.id}" class="btn-info">Master Settlement</button>
+              <button data-show-buyer-master-deals="${b.id}" class="btn-info">Master Settlement</button>
+            </div>
+            <div id="buyer-master-deals-wrap-${b.id}" class="mt-10" style="display:none; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; border:1px solid rgba(59,157,162,0.3)">
+              <div class="item-title mb-8" style="font-size:14px; color:var(--accent-primary)">Select Deals for Master Settlement</div>
+              <div class="list" style="max-height:200px; overflow-y:auto">
+                ${state.deals.filter(d => String(d.buyer_id) === String(b.id)).map(d => `
+                  <label class="flex flex-center gap-10 p-6 hover-bg" style="cursor:pointer; border-radius:4px">
+                    <input type="checkbox" name="master_deal_ids_${b.id}" value="${d.id}" checked>
+                    <div class="text-xs">
+                      <span class="font-bold">${esc(d.deal_no)}</span> · 
+                      <span>${esc(d.product_name)}</span> · 
+                      <span class="opacity-60">${new Date(d.invoice_date || d.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </label>
+                `).join("")}
+              </div>
+              <div class="mt-8 flex gap-8">
+                <button data-print-buyer-master-selected="${b.id}" class="btn-primary btn-xs">Generate Settlement</button>
+                <button onclick="document.getElementById('buyer-master-deals-wrap-${b.id}').style.display='none'" class="btn-xs">Cancel</button>
+              </div>
             </div>
             <div id="buyer-edit-wrap-${b.id}" class="mt-10"></div>
           </div>

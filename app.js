@@ -303,8 +303,32 @@ function bindUI() {
   document.querySelectorAll("[data-print-coo]").forEach(btn => btn.addEventListener("click", () => printDoc("coo", btn.dataset.printCoo)));
   document.querySelectorAll("[data-print-supplier-statement]").forEach(btn => btn.addEventListener("click", () => printDoc("supplier-statement", btn.dataset.printSupplierStatement)));
   document.querySelectorAll("[data-print-buyer-statement]").forEach(btn => btn.addEventListener("click", () => printDoc("buyer-statement", btn.dataset.printBuyerStatement)));
-  document.querySelectorAll("[data-print-supplier-master]").forEach(btn => btn.addEventListener("click", () => printMasterStatement("supplier", btn.dataset.printSupplierMaster)));
-  document.querySelectorAll("[data-print-buyer-master]").forEach(btn => btn.addEventListener("click", () => printMasterStatement("buyer", btn.dataset.printBuyerMaster)));
+  
+  // Master Settlement Selection UI
+  document.querySelectorAll("[data-show-supplier-master-deals]").forEach(btn => btn.addEventListener("click", () => {
+    const id = btn.dataset.showSupplierMasterDeals;
+    const wrap = document.getElementById(`supplier-master-deals-wrap-${id}`);
+    if (wrap) wrap.style.display = wrap.style.display === "none" ? "block" : "none";
+  }));
+  document.querySelectorAll("[data-show-buyer-master-deals]").forEach(btn => btn.addEventListener("click", () => {
+    const id = btn.dataset.showBuyerMasterDeals;
+    const wrap = document.getElementById(`buyer-master-deals-wrap-${id}`);
+    if (wrap) wrap.style.display = wrap.style.display === "none" ? "block" : "none";
+  }));
+
+  // Master Settlement Print Handlers
+  document.querySelectorAll("[data-print-supplier-master-selected]").forEach(btn => btn.addEventListener("click", () => {
+    const supplierId = btn.dataset.printSupplierMasterSelected;
+    const selectedIds = Array.from(document.querySelectorAll(`input[name="master_deal_ids_${supplierId}"]:checked`)).map(cb => cb.value);
+    if (!selectedIds.length) return alert("Please select at least one deal.");
+    printMasterStatement("supplier", supplierId, selectedIds);
+  }));
+  document.querySelectorAll("[data-print-buyer-master-selected]").forEach(btn => btn.addEventListener("click", () => {
+    const buyerId = btn.dataset.printBuyerMasterSelected;
+    const selectedIds = Array.from(document.querySelectorAll(`input[name="master_deal_ids_${buyerId}"]:checked`)).map(cb => cb.value);
+    if (!selectedIds.length) return alert("Please select at least one deal.");
+    printMasterStatement("buyer", buyerId, selectedIds);
+  }));
 
   // Payments and Docs
   document.querySelectorAll("[data-show-payment-form]").forEach(btn => btn.addEventListener("click", () => showPaymentForm(btn.dataset.showPaymentForm)));
@@ -1616,23 +1640,21 @@ function printDoc(type, dealId) {
   if (html) openPrintWindow(html);
 }
 
-function printMasterStatement(entityType, id) {
+function printMasterStatement(entityType, id, selectedDealIds = []) {
   const company = state.company;
   let html = "";
   
   if (entityType === "supplier") {
     const supplier = state.suppliers.find(s => String(s.id) === String(id));
     if (!supplier) return;
-    const deals = state.deals.filter(d => String(d.supplier_id) === String(id));
-    const dealIds = deals.map(d => String(d.id));
-    const allPayments = Object.values(state.paymentsByDeal).flat().filter(p => dealIds.includes(String(p.deal_id)));
+    const deals = state.deals.filter(d => selectedDealIds.includes(String(d.id)));
+    const allPayments = Object.values(state.paymentsByDeal).flat().filter(p => selectedDealIds.includes(String(p.deal_id)));
     html = buildSupplierMasterStatement(supplier, deals, allPayments, company);
   } else {
     const buyer = state.buyers.find(b => String(b.id) === String(id));
     if (!buyer) return;
-    const deals = state.deals.filter(d => String(d.buyer_id) === String(id));
-    const dealIds = deals.map(d => String(d.id));
-    const allPayments = Object.values(state.paymentsByDeal).flat().filter(p => dealIds.includes(String(p.deal_id)));
+    const deals = state.deals.filter(d => selectedDealIds.includes(String(d.id)));
+    const allPayments = Object.values(state.paymentsByDeal).flat().filter(p => selectedDealIds.includes(String(p.deal_id)));
     html = buildBuyerMasterStatement(buyer, deals, allPayments, company);
   }
 
