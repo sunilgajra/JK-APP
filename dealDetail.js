@@ -126,20 +126,18 @@ export function dealDetailView() {
         </form>
 
         <div class="list mt-12">
-          ${
-            documents.length
-              ? documents.map((doc, idx) => `
+          ${documents.length
+      ? documents.map((doc, idx) => `
             <div class="item" style="padding:10px">
               <div class="item-title">${esc(doc.doc_type || doc.type || "Document")}</div>
               <div class="item-sub">${esc(doc.file_name || "No file selected")}</div>
               <div class="item-sub">${esc(doc.mime_type || "Uploaded file")}</div>
               <div class="mt-8 flex gap-8 flex-wrap">
-                ${
-                  doc.file_url
-                    ? `<a href="${doc.file_url}" target="_blank" rel="noopener noreferrer">View</a>
+                ${doc.file_url
+          ? `<a href="${doc.file_url}" target="_blank" rel="noopener noreferrer">View</a>
                        <a href="${doc.file_url}" download="${esc(doc.file_name || "file")}">Download</a>`
-                    : `<span style="opacity:.6">No file URL</span>`
-                }
+          : `<span style="opacity:.6">No file URL</span>`
+        }
                 <button data-edit-document="${d.id}:${doc.id}" type="button">Edit</button>
                 <button data-delete-placeholder-doc="${d.id}:${doc.id}" type="button">Delete</button>
                 ${doc.doc_type === 'BL' ? `<button data-ai-scan="${d.id}:${doc.id}" class="btn-primary" style="background:#6366f1">Scan with AI</button>` : ''}
@@ -147,8 +145,8 @@ export function dealDetailView() {
               <div id="document-edit-wrap-${doc.id}" class="mt-8"></div>
             </div>
           `).join("")
-              : `<div class="item-sub">No documents added yet.</div>`
-          }
+      : `<div class="item-sub">No documents added yet.</div>`
+    }
         </div>
       </div>
 
@@ -159,9 +157,8 @@ export function dealDetailView() {
         </div>
         <div id="payment-form-wrap-${d.id}" class="mt-10"></div>
         <div class="list mt-10">
-          ${
-            payments.length
-              ? payments.map((p) => `
+          ${payments.length
+      ? payments.map((p) => `
             <div class="item" style="padding:10px">
               <div class="item-title">${esc(p.currency || d.currency || "AED")} ${fmtMoney(p.amount)}</div>
               <div class="item-sub">${esc(p.direction || "in")} · ${esc(p.method || "—")} · ${esc(p.status || "pending")}</div>
@@ -173,17 +170,16 @@ export function dealDetailView() {
               <div id="payment-edit-wrap-${p.id}" class="mt-8"></div>
             </div>
           `).join("")
-              : `<div class="item-sub">No payments yet.</div>`
-          }
+      : `<div class="item-sub">No payments yet.</div>`
+    }
         </div>
       </div>
 
       <div class="item mt-12">
         <div class="item-title">Activity History</div>
         <div class="list mt-10">
-          ${
-            dealAuditLogs(d.id).length
-              ? dealAuditLogs(d.id).map((log) => `
+          ${dealAuditLogs(d.id).length
+      ? dealAuditLogs(d.id).map((log) => `
                 <div class="item" style="padding:10px">
                   <div class="item-title">${esc(log.action || "update")}${log.field_name ? ` · ${esc(log.field_name)}` : ""}</div>
                   <div class="item-sub">Old: ${esc(formatAuditValue(log.old_value))}</div>
@@ -191,8 +187,8 @@ export function dealDetailView() {
                   <div class="item-sub">${esc(formatAuditTime(log.created_at))}</div>
                 </div>
               `).join("")
-              : `<div class="item-sub">No activity yet.</div>`
-          }
+      : `<div class="item-sub">No activity yet.</div>`
+    }
         </div>
       </div>
     </div>

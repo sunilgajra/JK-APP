@@ -59,6 +59,8 @@ export function reportsView() {
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="purchase_rate"> Purchase Rate</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="sale_total" checked> Sale Total</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="vessel"> Vessel</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="loading_port"> Loading Port</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="discharge_port"> Discharge Port</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="container_count"> Containers Count</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="received_bank"> Rec. Bank (Inv)</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="received_yard"> Rec. Yard/Token</label>
@@ -72,6 +74,7 @@ export function reportsView() {
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="purchase_yard_total"> Pur. Yard Amt</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bal_inv_supplier"> Bal. Inv (Sup)</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bal_yard_supplier"> Bal. Yard (Sup)</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bl_no"> BL No</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="status"> Status</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="origin"> Origin</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="commission_total"> Commission</label>

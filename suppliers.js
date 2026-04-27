@@ -48,8 +48,36 @@ export function suppliersView() {
             <div class="mt-8 flex gap-8">
               <button data-edit-supplier="${s.id}">Edit</button>
               <button data-delete-supplier="${s.id}">Delete</button>
+              <button data-show-supplier-docs="${s.id}">Documents</button>
             </div>
             <div id="supplier-edit-wrap-${s.id}" class="mt-10"></div>
+            <div id="supplier-docs-wrap-${s.id}" class="mt-10" style="display:none; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px">
+              <div class="item-title mb-8">Supplier Documents</div>
+              <form data-supplier-doc-upload="${s.id}" class="grid gap-10">
+                <input type="text" name="docType" placeholder="Document Type (e.g. Master PI, Agreement)" required>
+                <input type="file" name="file" required>
+                <button type="submit" class="btn-primary btn-xs">Upload</button>
+              </form>
+              <div class="list mt-10">
+                ${(state.documentsBySupplier[s.id] || []).length 
+                  ? state.documentsBySupplier[s.id].map(doc => `
+                    <div class="item" style="padding:6px; background:rgba(0,0,0,0.2)">
+                      <div class="flex flex-between flex-center">
+                        <div>
+                          <div class="text-xs font-bold">${esc(doc.doc_type || "Document")}</div>
+                          <div class="text-xs opacity-60">${esc(doc.file_name)}</div>
+                        </div>
+                        <div class="flex gap-8">
+                          <a href="${doc.file_url}" target="_blank" class="text-xs">View</a>
+                          <button data-delete-supplier-doc="${s.id}:${doc.id}" class="text-xs text-danger">Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  `).join("")
+                  : `<div class="text-xs opacity-50">No documents uploaded.</div>`
+                }
+              </div>
+            </div>
           </div>
         `).join("")
             : `<div class="empty">No matching suppliers found.</div>`

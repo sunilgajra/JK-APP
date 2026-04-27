@@ -12,6 +12,7 @@ export const state = {
   supplierSearch: "",
   paymentsByDeal: {},
   documentsByDeal: {},
+  documentsBySupplier: {},
   auditLogsByEntity: {},
   selectedDealId: null,
   company: {

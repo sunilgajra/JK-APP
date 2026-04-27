@@ -191,7 +191,11 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
         <div class="grid grid-2 gap-10">
           <div>
             <label class="form-label">Unit</label>
-            <input name="unit" value="${esc(d.unit || "MTON")}" placeholder="Unit">
+            <select name="unit">
+              <option value="MTON" ${(d.unit || "MTON") === "MTON" ? "selected" : ""}>MTON</option>
+              <option value="KG" ${d.unit === "KG" ? "selected" : ""}>KG</option>
+              <option value="LTR" ${d.unit === "LTR" ? "selected" : ""}>LTR</option>
+            </select>
           </div>
           <div>
             <label class="form-label">Base Currency</label>

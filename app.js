@@ -118,14 +118,21 @@ async function loadSupabaseData() {
     state.paymentsByDeal = groupedPayments;
 
     const groupedDocs = {};
-    console.log("FETCHED DOCS COUNT:", (documentsRes.data || []).length);
+    const groupedSupplierDocs = {};
     (documentsRes.data || []).forEach(doc => {
-      const k = String(doc.deal_id);
-      if (!groupedDocs[k]) groupedDocs[k] = [];
-      groupedDocs[k].push(doc);
+      if (doc.deal_id) {
+        const k = String(doc.deal_id);
+        if (!groupedDocs[k]) groupedDocs[k] = [];
+        groupedDocs[k].push(doc);
+      }
+      if (doc.supplier_id) {
+        const k = String(doc.supplier_id);
+        if (!groupedSupplierDocs[k]) groupedSupplierDocs[k] = [];
+        groupedSupplierDocs[k].push(doc);
+      }
     });
-    console.log("GROUPED DOCS:", groupedDocs);
     state.documentsByDeal = groupedDocs;
+    state.documentsBySupplier = groupedSupplierDocs;
 
     const groupedAudit = {};
     (auditRes.data || []).forEach(log => {
@@ -1286,6 +1293,60 @@ Generated via JK Trade Manager`;
   a.download = `shipping-instruction-${deal}.txt`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+async function saveSupplierDocument(e) {
+  e.preventDefault();
+  const supplierId = e.target.getAttribute("data-supplier-doc-upload");
+  const fd = new FormData(e.target);
+  const file = fd.get("file");
+  const docType = fd.get("docType");
+  
+  if (!file || file.size === 0) return alert("Please select a file.");
+  
+  const fileExt = file.name.split('.').pop();
+  const fileName = `supplier_${supplierId}_${Date.now()}.${fileExt}`;
+  const filePath = `suppliers/${supplierId}/${fileName}`;
+  
+  const btn = e.target.querySelector("button");
+  btn.textContent = "Uploading...";
+  btn.disabled = true;
+
+  try {
+    const { error: uploadError } = await supabase.storage.from("deal-documents").upload(filePath, file);
+    if (uploadError) throw uploadError;
+    
+    const { data: publicUrlData } = supabase.storage.from("deal-documents").getPublicUrl(filePath);
+    
+    const { error } = await supabase.from("deal_documents").insert({
+      supplier_id: supplierId,
+      doc_type: docType,
+      file_name: file.name,
+      file_url: publicUrlData.publicUrl,
+      file_path: filePath,
+      mime_type: file.type || "application/octet-stream"
+    });
+    
+    if (error) throw error;
+    await loadSupabaseData();
+    render();
+  } catch (err) {
+    alert("Upload failed: " + err.message);
+    btn.textContent = "Upload";
+    btn.disabled = false;
+  }
+}
+
+async function deleteSupplierDocument(val) {
+  const [supplierId, docId] = val.split(":");
+  if (confirm("Delete this supplier document?")) {
+    const { error } = await supabase.from("deal_documents").update({ is_deleted: true }).eq("id", docId);
+    if (error) alert(error.message);
+    else {
+      await loadSupabaseData();
+      render();
+    }
+  }
 }
 
 // Document Actions
