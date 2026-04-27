@@ -322,7 +322,8 @@ function validateDeal(fd) {
   const quantity = cleanNumber(fd.get("quantity"));
   const rate = cleanNumber(fd.get("rate")); // Sale Rate
   const pRate = cleanNumber(fd.get("purchase_rate")); // Purchase Rate
-  const conv = cleanNumber(fd.get("conversion_rate"));
+  const saleConv = cleanNumber(fd.get("sale_conversion_rate"));
+  const purchaseConv = cleanNumber(fd.get("purchase_conversion_rate"));
   const baseCurr = fd.get("base_currency") || "USD";
   const docCurr = fd.get("document_currency") || baseCurr;
 
@@ -331,18 +332,38 @@ function validateDeal(fd) {
 
   if (baseCurr === "USD") {
     rateUsd = rate;
-    rateAed = conv ? rate * conv : 0;
+    rateAed = saleConv ? rate * saleConv : 0;
     pRateUsd = pRate;
-    pRateAed = conv ? pRate * conv : 0;
+    pRateAed = purchaseConv ? pRate * purchaseConv : 0;
   } else {
     rateAed = rate;
-    rateUsd = conv ? rate / conv : 0;
+    rateUsd = saleConv ? rate / saleConv : 0;
     pRateAed = pRate;
-    pRateUsd = conv ? pRate / conv : 0;
+    pRateUsd = purchaseConv ? pRate / purchaseConv : 0;
   }
 
   const round = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
   
+  const sInv = cleanNumber(fd.get("sale_invoice_rate"));
+  const sYard = cleanNumber(fd.get("sale_yard_rate"));
+  const pInv = cleanNumber(fd.get("purchase_invoice_rate"));
+  const pYard = cleanNumber(fd.get("purchase_yard_rate"));
+
+  let sInvUsd = 0, sInvAed = 0, sYardUsd = 0, sYardAed = 0;
+  let pInvUsd = 0, pInvAed = 0, pYardUsd = 0, pYardAed = 0;
+
+  if (baseCurr === "USD") {
+    sInvUsd = sInv; sInvAed = saleConv ? sInv * saleConv : 0;
+    sYardUsd = sYard; sYardAed = saleConv ? sYard * saleConv : 0;
+    pInvUsd = pInv; pInvAed = purchaseConv ? pInv * purchaseConv : 0;
+    pYardUsd = pYard; pYardAed = purchaseConv ? pYard * purchaseConv : 0;
+  } else {
+    sInvAed = sInv; sInvUsd = saleConv ? sInv / saleConv : 0;
+    sYardAed = sYard; sYardUsd = saleConv ? sYard / saleConv : 0;
+    pInvAed = pInv; pInvUsd = purchaseConv ? pInv / purchaseConv : 0;
+    pYardAed = pYard; pYardUsd = purchaseConv ? pYard / purchaseConv : 0;
+  }
+
   totalUsd = round(quantity * rateUsd);
   totalAed = round(quantity * rateAed);
   pTotalUsd = round(quantity * pRateUsd);
@@ -356,12 +377,27 @@ function validateDeal(fd) {
     unit: cleanUpper(fd.get("unit")),
     base_currency: baseCurr,
     document_currency: docCurr,
-    conversion_rate: conv,
+    sale_conversion_rate: saleConv,
+    purchase_conversion_rate: purchaseConv,
     quantity,
     rate, // Sale Rate
     purchase_rate: pRate, // Purchase Rate
+    sale_invoice_rate: cleanNumber(fd.get("sale_invoice_rate")),
+    sale_yard_rate: cleanNumber(fd.get("sale_yard_rate")),
+    purchase_invoice_rate: cleanNumber(fd.get("purchase_invoice_rate")),
+    purchase_yard_rate: cleanNumber(fd.get("purchase_yard_rate")),
+    sale_invoice_rate_usd: round(sInvUsd),
+    sale_invoice_rate_aed: round(sInvAed),
+    sale_yard_rate_usd: round(sYardUsd),
+    sale_yard_rate_aed: round(sYardAed),
+    purchase_invoice_rate_usd: round(pInvUsd),
+    purchase_invoice_rate_aed: round(pInvAed),
+    purchase_yard_rate_usd: round(pYardUsd),
+    purchase_yard_rate_aed: round(pYardAed),
     rate_usd: round(rateUsd),
     rate_aed: round(rateAed),
+    purchase_rate_usd: round(pRateUsd),
+    purchase_rate_aed: round(pRateAed),
     total_amount: docCurr === "USD" ? totalUsd : totalAed,
     total_amount_usd: totalUsd,
     total_amount_aed: totalAed,
@@ -396,7 +432,11 @@ function validateDeal(fd) {
     document_bank_index: fd.get("document_bank_index") || null,
     shipper_index: fd.get("shipper_index") || null,
     shipment_status: fd.get("shipment_status") || "pending",
-    container_numbers: String(fd.get("container_numbers") || "").split(/[,\n]+/).map(x => x.trim().toUpperCase()).filter(Boolean)
+    container_numbers: String(fd.get("container_numbers") || "").split(/[,\n]+/).map(x => x.trim().toUpperCase()).filter(Boolean),
+    commission_name: fd.get("commission_name") || null,
+    commission_rate: cleanNumber(fd.get("commission_rate")),
+    commission_currency: fd.get("commission_currency") || "USD",
+    commission_total: cleanNumber(fd.get("commission_total"))
   };
 }
 
@@ -642,6 +682,7 @@ function showPaymentForm(dealId) {
         <select name="method" id="payment-method-${dealId}">
           <option value="Bank">Bank</option>
           <option value="Token">Token</option>
+          <option value="Commission">Commission</option>
           <option value="Other">Other</option>
         </select>
         <input name="method_other" id="payment-method-other-${dealId}" placeholder="Specify other payment type" style="display:none">
@@ -823,7 +864,8 @@ async function showEditPaymentForm(val) {
         <select name="method" id="pe-method-${paymentId}">
           <option value="Bank" ${p.method === "Bank" ? "selected" : ""}>Bank</option>
           <option value="Token" ${p.method === "Token" ? "selected" : ""}>Token</option>
-          <option value="Other" ${!["Bank","Token"].includes(p.method) ? "selected" : ""}>Other</option>
+          <option value="Commission" ${p.method === "Commission" ? "selected" : ""}>Commission</option>
+          <option value="Other" ${!["Bank","Token","Commission"].includes(p.method) ? "selected" : ""}>Other</option>
         </select>
         <input name="method_other" id="pe-method-other-${paymentId}" value="${!["Bank","Token"].includes(p.method) ? p.method : ""}" placeholder="Specify method" style="display:${!["Bank","Token"].includes(p.method) ? "block" : "none"}">
         
@@ -944,8 +986,15 @@ function bindDealAutoTotal(id = null) {
   const suffix = id ? `-${id}` : "";
   const qtyIn = document.getElementById(`quantity${suffix}`);
   const rateIn = document.getElementById(`rate${suffix}`);
+  const sInvIn = document.getElementById(`sale-inv-rate${suffix}`);
+  const sYardIn = document.getElementById(`sale-yard-rate${suffix}`);
+  
   const pRateIn = document.getElementById(`purchase-rate${suffix}`);
-  const convIn = document.getElementById(`conversion-rate${suffix}`);
+  const pInvIn = document.getElementById(`purchase-inv-rate${suffix}`);
+  const pYardIn = document.getElementById(`purchase-yard-rate${suffix}`);
+
+  const saleConvIn = document.getElementById(`sale-conv${suffix}`);
+  const purchaseConvIn = document.getElementById(`purchase-conv${suffix}`);
   const baseCurrIn = document.getElementById(`base-currency${suffix}`);
   const netIn = document.getElementById(`net-weight${suffix}`);
   const grossIn = document.getElementById(`gross-weight${suffix}`);
@@ -954,6 +1003,8 @@ function bindDealAutoTotal(id = null) {
   const totalAedIn = document.getElementById(`total-aed${suffix}`);
   const pTotalUsdIn = document.getElementById(`purchase-total${suffix}`);
   const pTotalAedIn = document.getElementById(`purchase-total-aed${suffix}`);
+  const commRateIn = document.getElementById(`commission-rate${suffix}`);
+  const commTotalIn = document.getElementById(`commission-total${suffix}`);
 
   const updateQtyFromWeight = (e) => {
     const kg = Number(e.target.value || 0);
@@ -963,6 +1014,29 @@ function bindDealAutoTotal(id = null) {
     }
   };
 
+  const handleRateSplit = (totalEl, invEl, yardEl) => {
+    const t = Number(totalEl.value || 0);
+    const i = Number(invEl.value || 0);
+    const y = t - i;
+    yardEl.value = y > 0 ? y.toFixed(2) : "0.00";
+    calc();
+  };
+
+  const handleYardChange = (totalEl, invEl, yardEl) => {
+    const i = Number(invEl.value || 0);
+    const y = Number(yardEl.value || 0);
+    totalEl.value = (i + y).toFixed(2);
+    calc();
+  };
+
+  rateIn?.addEventListener("input", () => handleRateSplit(rateIn, sInvIn, sYardIn));
+  sInvIn?.addEventListener("input", () => handleRateSplit(rateIn, sInvIn, sYardIn));
+  sYardIn?.addEventListener("input", () => handleYardChange(rateIn, sInvIn, sYardIn));
+
+  pRateIn?.addEventListener("input", () => handleRateSplit(pRateIn, pInvIn, pYardIn));
+  pInvIn?.addEventListener("input", () => handleRateSplit(pRateIn, pInvIn, pYardIn));
+  pYardIn?.addEventListener("input", () => handleYardChange(pRateIn, pInvIn, pYardIn));
+
   netIn?.addEventListener("input", updateQtyFromWeight);
   grossIn?.addEventListener("input", updateQtyFromWeight);
 
@@ -970,8 +1044,10 @@ function bindDealAutoTotal(id = null) {
     const q = Number(qtyIn?.value || 0);
     const r = Number(rateIn?.value || 0);
     const pr = Number(pRateIn?.value || 0);
-    const c = Number(convIn?.value || 0);
+    const sc = Number(saleConvIn?.value || 0);
+    const pc = Number(purchaseConvIn?.value || 0);
     const bc = baseCurrIn?.value || "USD";
+    const cr = Number(commRateIn?.value || 0);
 
     const round = (num) => Math.round((num + Number.EPSILON) * 100) / 100;
 
@@ -979,10 +1055,10 @@ function bindDealAutoTotal(id = null) {
     let sUsd = 0, sAed = 0;
     if (bc === "USD") {
       sUsd = q * r;
-      sAed = c ? sUsd * c : 0;
+      sAed = sc ? sUsd * sc : 0;
     } else {
       sAed = q * r;
-      sUsd = c ? sAed / c : 0;
+      sUsd = sc ? sAed / sc : 0;
     }
     sUsd = round(sUsd);
     sAed = round(sAed);
@@ -991,22 +1067,26 @@ function bindDealAutoTotal(id = null) {
     let pUsd = 0, pAed = 0;
     if (bc === "USD") {
       pUsd = q * pr;
-      pAed = c ? pUsd * c : 0;
+      pAed = pc ? pUsd * pc : 0;
     } else {
       pAed = q * pr;
-      pUsd = c ? pAed / c : 0;
+      pUsd = pc ? pAed / pc : 0;
     }
     pUsd = round(pUsd);
     pAed = round(pAed);
+
+    // Commission Total
+    const commTotal = round(q * cr);
 
     if (totalUsdIn) totalUsdIn.value = sUsd.toFixed(2);
     if (totalAedIn) totalAedIn.value = sAed.toFixed(2);
     if (pTotalUsdIn) pTotalUsdIn.value = pUsd.toFixed(2);
     if (pTotalAedIn) pTotalAedIn.value = pAed.toFixed(2);
+    if (commTotalIn) commTotalIn.value = commTotal.toFixed(2);
   };
 
-  [qtyIn, rateIn, pRateIn, convIn, baseCurrIn].forEach(el => el?.addEventListener("input", calc));
-  [qtyIn, rateIn, pRateIn, convIn, baseCurrIn].forEach(el => el?.addEventListener("change", calc));
+  [qtyIn, saleConvIn, purchaseConvIn, baseCurrIn, commRateIn].forEach(el => el?.addEventListener("input", calc));
+  [qtyIn, saleConvIn, purchaseConvIn, baseCurrIn, commRateIn].forEach(el => el?.addEventListener("change", calc));
 }
 
 // Misc
@@ -1408,13 +1488,25 @@ function printDoc(type, dealId) {
     .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   const dealCount = buyerDeals.findIndex(d => String(d.id) === String(deal.id)) + 1;
 
-  const dealDoc = { 
-    ...deal, 
-    dealNo: deal.deal_no, 
-    productName: deal.product_name, 
-    totalAmount: deal.total_amount,
-    dealCount: dealCount
-  };
+    const docRate = deal.document_currency === "USD" 
+      ? (deal.sale_invoice_rate ? deal.sale_invoice_rate_usd : deal.rate_usd)
+      : (deal.sale_invoice_rate ? deal.sale_invoice_rate_aed : deal.rate_aed);
+
+    const docPurchaseRate = deal.document_currency === "USD"
+      ? (deal.purchase_invoice_rate ? deal.purchase_invoice_rate_usd : (deal.purchase_rate_usd || deal.purchase_rate))
+      : (deal.purchase_invoice_rate ? deal.purchase_invoice_rate_aed : (deal.purchase_rate_aed || deal.purchase_rate));
+
+    const totalAmount = deal.quantity * docRate;
+
+    const dealDoc = { 
+      ...deal, 
+      dealNo: deal.deal_no, 
+      productName: deal.product_name, 
+      totalAmount: totalAmount,
+      docRate: docRate,
+      docPurchaseRate: docPurchaseRate,
+      dealCount: dealCount
+    };
   const payments = paymentsForDeal(dealId);
 
   // Map selected bank

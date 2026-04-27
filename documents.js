@@ -710,6 +710,8 @@ function footer(company = {}, date = "", showSignatory = false) {
 export function buildPI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.created_at || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
+  const roundedTotal = Math.round(total);
+  const roundOff = roundedTotal - total;
   const currency = docCurrency(deal);
   const filename = suggestFilename("PI", deal, buyer, company);
 
@@ -759,7 +761,7 @@ export function buildPI(deal, buyer, supplier, company = {}) {
         </td>
         <td class="center">${esc(deal.unit || "MTON")}</td>
         <td class="center">${esc(deal.quantity || "")}</td>
-        <td class="center">${fmt(deal.rate || 0)}</td>
+        <td class="center">${fmt(deal.docRate || deal.rate || 0)}</td>
         <td class="center">-</td>
         <td class="right">${fmt(total)}</td>
       </tr>
@@ -799,9 +801,8 @@ export function buildPI(deal, buyer, supplier, company = {}) {
         <tr><td>Insurance</td><td class="right">-</td></tr>
         <tr><td>Legal/Consular</td><td class="right">-</td></tr>
         <tr><td>Inspection/Cert.</td><td class="right">-</td></tr>
-        <tr><td>Other (specify)</td><td class="right">-</td></tr>
-        <tr><td>Other (specify)</td><td class="right">-</td></tr>
-        <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(total)}</b></td></tr>
+        <tr><td>Round off (+/-)</td><td class="right">${roundOff !== 0 ? fmt(roundOff) : "-"}</td></tr>
+        <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(roundedTotal)}</b></td></tr>
         <tr><td>Currency</td><td class="right">${esc(currency)}</td></tr>
       </table>
     </div>
@@ -816,6 +817,8 @@ export function buildPI(deal, buyer, supplier, company = {}) {
 export function buildCI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
+  const roundedTotal = Math.round(total);
+  const roundOff = roundedTotal - total;
   const currency = docCurrency(deal);
   const filename = suggestFilename("CI", deal, buyer, company);
 
@@ -857,7 +860,7 @@ export function buildCI(deal, buyer, supplier, company = {}) {
         </td>
         <td class="center">${esc(deal.unit || "MTON")}</td>
         <td class="center">${esc(deal.quantity || "")}</td>
-        <td class="center">${fmt(deal.rate || 0)}</td>
+        <td class="center">${fmt(deal.docRate || deal.rate || 0)}</td>
         <td class="center">-</td>
         <td class="right">${fmt(total)}</td>
       </tr>
@@ -895,9 +898,9 @@ export function buildCI(deal, buyer, supplier, company = {}) {
         <tr><td>Insurance</td><td class="right">-</td></tr>
         <tr><td>Legal/Consular</td><td class="right">-</td></tr>
         <tr><td>Inspection/Cert.</td><td class="right">-</td></tr>
-        <tr><td>Rounded off:</td><td class="right">-</td></tr>
+        <tr><td>Round off (+/-)</td><td class="right">${roundOff !== 0 ? fmt(roundOff) : "-"}</td></tr>
         <tr><td>Other (specify)</td><td class="right">-</td></tr>
-        <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(total)}</b></td></tr>
+        <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(roundedTotal)}</b></td></tr>
         <tr><td>Currency</td><td class="right">${esc(currency)}</td></tr>
       </table>
     </div>
@@ -1027,7 +1030,7 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
   const outPayments = payments.filter(p => p.direction === "out");
   const purchaseTotalUsd = Number(deal.purchase_total_usd || 0);
   const purchaseTotalAed = Number(deal.purchase_total_aed || 0);
-  const conv = Number(deal.conversion_rate || 3.67);
+  const conv = Number(deal.purchase_conversion_rate || deal.conversion_rate || 3.6725);
 
   let paidAed = 0;
   let paidUsd = 0;
@@ -1082,7 +1085,7 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
       <tr>
         <td class="center">${esc(deal.product_name)}</td>
         <td class="center">${fmt(deal.quantity)}</td>
-        <td class="center">${fmt(deal.purchase_rate)}</td>
+        <td class="center">${fmt(deal.docPurchaseRate || deal.purchase_rate)}</td>
         <td class="right">${fmt(purchaseTotalUsd)}</td>
         <td class="right">${fmt(purchaseTotalAed)}</td>
         <td class="center">100%</td>
@@ -1162,7 +1165,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
   const inPayments = payments.filter(p => p.direction === "in");
   const saleTotalUsd = Number(deal.total_amount_usd || 0);
   const saleTotalAed = Number(deal.total_amount_aed || 0);
-  const conv = Number(deal.conversion_rate || 3.67);
+  const conv = Number(deal.sale_conversion_rate || deal.conversion_rate || 3.6725);
 
   let recAed = 0;
   let recUsd = 0;
@@ -1217,7 +1220,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
       <tr>
         <td class="center">${esc(deal.product_name)}</td>
         <td class="center">${fmt(deal.quantity)}</td>
-        <td class="center">${fmt(deal.rate)}</td>
+        <td class="center">${fmt(deal.docRate || deal.rate)}</td>
         <td class="right">${fmt(saleTotalUsd)}</td>
         <td class="right">${fmt(saleTotalAed)}</td>
         <td class="center">100%</td>

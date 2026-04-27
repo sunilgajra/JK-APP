@@ -58,7 +58,7 @@ export function dealsView() {
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
               <div class="item-sub">Buyer: ${esc(buyerName(d.buyer_id))} · Supplier: ${esc(supplierName(d.supplier_id))}</div>
               
-              <div class="grid grid-2 mt-8 p-10" style="background:rgba(255,255,255,0.03); border-radius:4px">
+              <div class="grid grid-3 mt-8 p-10" style="background:rgba(255,255,255,0.03); border-radius:4px">
                 <div>
                   <div class="item-sub" style="font-weight:bold; color:var(--success)">Receivable (Buyer)</div>
                   <div class="item-title" style="font-size:14px">${curr} ${fmtMoney(s.receivable)}</div>
@@ -68,6 +68,11 @@ export function dealsView() {
                   <div class="item-sub" style="font-weight:bold; color:var(--danger)">Payable (Supplier)</div>
                   <div class="item-title" style="font-size:14px">${curr} ${fmtMoney(s.payable)}</div>
                   <div class="item-sub">Total: ${fmtMoney(s.purchase)} | Sent: ${fmtMoney(s.sent)}</div>
+                </div>
+                <div>
+                  <div class="item-sub" style="font-weight:bold; color:var(--warning)">Commission</div>
+                  <div class="item-title" style="font-size:14px">${d.commission_currency || curr} ${fmtMoney(d.commission_total || 0)}</div>
+                  <div class="item-sub">${esc(d.commission_name || "No agent")}</div>
                 </div>
               </div>
 
@@ -187,9 +192,7 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
               placeholder="HSN Code"
             >
           </div>
-        </div>
-
-        <div class="grid grid-3 gap-10">
+        <div class="grid grid-2 gap-10">
           <div>
             <label class="form-label">Unit</label>
             <input name="unit" value="${esc(d.unit || "MTON")}" placeholder="Unit">
@@ -201,24 +204,45 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
               <option value="AED" ${d.base_currency === "AED" ? "selected" : ""}>AED</option>
             </select>
           </div>
-          <div>
-            <label class="form-label">Document Shipper</label>
-            <select name="shipper_index">
-              <option value="">Default Company</option>
-              ${(state.company.shippers || []).map((s, i) => `
-                <option value="${i}" ${String(d.shipper_index ?? "") === String(i) ? "selected" : ""}>
-                  ${esc(s.name || "Shipper")} - ${esc(s.mobile || "")}
-                </option>
-              `).join("")}
-            </select>
+        </div>
+
+        <div class="card">
+          <div class="title">Commission Details</div>
+          <div class="grid grid-3 gap-10 mt-10">
+            <div>
+              <label class="form-label">Commission Name</label>
+              <input name="commission_name" value="${esc(d.commission_name || "")}" placeholder="Agent / Name">
+            </div>
+            <div>
+              <label class="form-label">Comm. Rate (per MT)</label>
+              <input name="commission_rate" id="${edit ? `commission-rate-${id}` : "commission-rate"}" type="number" step="0.01" value="${esc(d.commission_rate || "")}" placeholder="Rate">
+            </div>
+            <div>
+              <label class="form-label">Currency</label>
+              <select name="commission_currency">
+                <option value="USD" ${d.commission_currency === "USD" ? "selected" : ""}>USD</option>
+                <option value="AED" ${d.commission_currency === "AED" ? "selected" : ""}>AED</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-10" style="background:rgba(255,255,255,0.03); padding:8px; border-radius:4px">
+            <label class="form-label">Total Commission</label>
+            <input name="commission_total" id="${edit ? `commission-total-${id}` : "commission-total"}" type="number" step="0.01" value="${esc(d.commission_total || "")}" readonly style="background:transparent">
           </div>
         </div>
 
-        <div class="grid grid-4 gap-10">
+        <div class="grid grid-2 gap-10">
           <div>
-            <label class="form-label">Conversion Rate (USD → AED)</label>
-            <input name="conversion_rate" id="${edit ? `conversion-rate-${id}` : "conversion-rate"}" type="number" step="0.0001" value="${esc(d.conversion_rate || "")}" placeholder="e.g. 3.6725">
+            <label class="form-label">Sale Conv. Rate (USD → AED)</label>
+            <input name="sale_conversion_rate" id="${edit ? `sale-conv-${id}` : "sale-conv"}" type="number" step="0.0001" value="${esc(d.sale_conversion_rate || d.conversion_rate || "")}" placeholder="e.g. 3.6725">
           </div>
+          <div>
+            <label class="form-label">Purchase Conv. Rate (USD → AED)</label>
+            <input name="purchase_conversion_rate" id="${edit ? `purchase-conv-${id}` : "purchase-conv"}" type="number" step="0.0001" value="${esc(d.purchase_conversion_rate || d.conversion_rate || "")}" placeholder="e.g. 3.6725">
+          </div>
+        </div>
+
+        <div class="grid grid-3 gap-10">
           <div>
             <label class="form-label">Document Currency</label>
             <select name="document_currency">
@@ -246,14 +270,39 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
           </div>
         </div>
 
-        <div class="grid grid-2 gap-10">
-          <div>
-            <label class="form-label">Sale Rate (to Buyer)</label>
-            <input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}">
+        <div class="card">
+          <div class="title">Sale Rates (to Buyer)</div>
+          <div class="grid grid-3 gap-10 mt-10">
+            <div>
+              <label class="form-label">Total Sale Rate</label>
+              <input name="rate" id="${edit ? `rate-${id}` : "rate"}" type="number" step="0.01" value="${esc(d.rate || "")}">
+            </div>
+            <div>
+              <label class="form-label">Invoice Rate</label>
+              <input name="sale_invoice_rate" id="${edit ? `sale-inv-rate-${id}` : "sale-inv-rate"}" type="number" step="0.01" value="${esc(d.sale_invoice_rate || "")}">
+            </div>
+            <div>
+              <label class="form-label">Yard Rate</label>
+              <input name="sale_yard_rate" id="${edit ? `sale-yard-rate-${id}` : "sale-yard-rate"}" type="number" step="0.01" value="${esc(d.sale_yard_rate || "")}">
+            </div>
           </div>
-          <div>
-            <label class="form-label">Purchase Rate (from Supplier)</label>
-            <input name="purchase_rate" id="${edit ? `purchase-rate-${id}` : "purchase-rate"}" type="number" step="0.01" value="${esc(d.purchase_rate || "")}">
+        </div>
+
+        <div class="card">
+          <div class="title">Purchase Rates (from Supplier)</div>
+          <div class="grid grid-3 gap-10 mt-10">
+            <div>
+              <label class="form-label">Total Purchase Rate</label>
+              <input name="purchase_rate" id="${edit ? `purchase-rate-${id}` : "purchase-rate"}" type="number" step="0.01" value="${esc(d.purchase_rate || "")}">
+            </div>
+            <div>
+              <label class="form-label">Invoice Rate</label>
+              <input name="purchase_invoice_rate" id="${edit ? `purchase-inv-rate-${id}` : "purchase-inv-rate"}" type="number" step="0.01" value="${esc(d.purchase_invoice_rate || "")}">
+            </div>
+            <div>
+              <label class="form-label">Yard Rate</label>
+              <input name="purchase_yard_rate" id="${edit ? `purchase-yard-rate-${id}` : "purchase-yard-rate"}" type="number" step="0.01" value="${esc(d.purchase_yard_rate || "")}">
+            </div>
           </div>
         </div>
 
