@@ -61,12 +61,19 @@ export function reportsView() {
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="purchase_total" checked> Purchase Total</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="profit" checked> Profit</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="margin" checked> Margin %</label>
-            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="loading_port"> Loading Port</label>
-            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="discharge_port"> Discharge Port</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="vessel"> Vessel</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="container_count"> Containers Count</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="eta"> ETA</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bl_no"> BL No</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="status"> Status</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="received"> Received (Buyer)</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="sent"> Paid (Supplier)</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="sale_inv_total"> Sale Inv. Amt</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="sale_yard_total"> Sale Yard Amt</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bal_buyer"> Balance (Buyer)</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="purchase_inv_total"> Pur. Inv. Amt</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="purchase_yard_total"> Pur. Yard Amt</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bal_supplier"> Balance (Supplier)</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="shipment_status"> Ship Status</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="origin"> Origin</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="gross_weight"> Gross Wt</label>
@@ -141,6 +148,8 @@ function renderReport() {
 
   // Calculate Totals
   let totalSale = 0, totalPurchase = 0, totalProfit = 0, totalQty = 0;
+  let totalReceived = 0, totalSent = 0, totalBalBuyer = 0, totalBalSupplier = 0;
+  let totalSaleInv = 0, totalSaleYard = 0, totalPurInv = 0, totalPurYard = 0, totalContainers = 0;
 
   const rows = deals.map(d => {
     const s = paymentSummary(d.id, d.total_amount_aed, d.purchase_total_aed);
@@ -151,6 +160,23 @@ function renderReport() {
     totalPurchase += s.purchase;
     totalProfit += profit;
     totalQty += Number(d.quantity || 0);
+    totalReceived += s.received;
+    totalSent += s.sent;
+    totalBalBuyer += s.receivable;
+    totalBalSupplier += s.payable;
+
+    const qty = Number(d.quantity || 0);
+    const saleInvTotal = qty * Number(d.sale_invoice_rate_aed || 0);
+    const saleYardTotal = qty * Number(d.sale_yard_rate_aed || 0);
+    const purInvTotal = qty * Number(d.purchase_invoice_rate_aed || 0);
+    const purYardTotal = qty * Number(d.purchase_yard_rate_aed || 0);
+    const cCount = Array.isArray(d.container_numbers) ? d.container_numbers.length : 0;
+
+    totalSaleInv += saleInvTotal;
+    totalSaleYard += saleYardTotal;
+    totalPurInv += purInvTotal;
+    totalPurYard += purYardTotal;
+    totalContainers += cCount;
 
     return {
       deal_no: d.deal_no,
@@ -171,9 +197,18 @@ function renderReport() {
       loading_port: d.loading_port,
       discharge_port: d.discharge_port,
       vessel: d.vessel_voyage || d.vessel,
+      container_count: cCount,
       eta: d.eta,
       bl_no: d.bl_no,
       status: d.status,
+      received: s.received,
+      sent: s.sent,
+      sale_inv_total: saleInvTotal,
+      sale_yard_total: saleYardTotal,
+      bal_buyer: s.receivable,
+      purchase_inv_total: purInvTotal,
+      purchase_yard_total: purYardTotal,
+      bal_supplier: s.payable,
       shipment_status: d.shipment_status,
       origin: d.country_of_origin,
       gross_weight: d.gross_weight,
@@ -192,7 +227,7 @@ function renderReport() {
       <tbody>
         ${rows.map(r => `
           <tr>
-            ${selectedCols.map(c => `<td>${r[c] !== undefined ? (typeof r[c] === 'number' && c !== 'qty' ? fmtMoney(r[c]) : esc(r[c])) : "—"}</td>`).join("")}
+            ${selectedCols.map(c => `<td>${r[c] !== undefined ? (typeof r[c] === 'number' && c !== 'qty' && c !== 'container_count' ? fmtMoney(r[c]) : esc(r[c])) : "—"}</td>`).join("")}
           </tr>
         `).join("")}
       </tbody>
@@ -203,6 +238,15 @@ function renderReport() {
             if (c === "purchase_total") return `<td>${fmtMoney(totalPurchase)}</td>`;
             if (c === "profit") return `<td>${fmtMoney(totalProfit)}</td>`;
             if (c === "qty") return `<td>${fmtMoney(totalQty)}</td>`;
+            if (c === "received") return `<td>${fmtMoney(totalReceived)}</td>`;
+            if (c === "sent") return `<td>${fmtMoney(totalSent)}</td>`;
+            if (c === "bal_buyer") return `<td>${fmtMoney(totalBalBuyer)}</td>`;
+            if (c === "bal_supplier") return `<td>${fmtMoney(totalBalSupplier)}</td>`;
+            if (c === "sale_inv_total") return `<td>${fmtMoney(totalSaleInv)}</td>`;
+            if (c === "sale_yard_total") return `<td>${fmtMoney(totalSaleYard)}</td>`;
+            if (c === "purchase_inv_total") return `<td>${fmtMoney(totalPurInv)}</td>`;
+            if (c === "purchase_yard_total") return `<td>${fmtMoney(totalPurYard)}</td>`;
+            if (c === "container_count") return `<td>${totalContainers}</td>`;
             if (c === "deal_no") return `<td>TOTAL (${rows.length})</td>`;
             return `<td></td>`;
           }).join("")}
