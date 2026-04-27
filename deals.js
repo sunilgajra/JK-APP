@@ -50,10 +50,6 @@ export function dealsView() {
                 const profitAed = d.document_currency === "USD" ? profit * (d.conversion_rate || 3.6725) : profit;
                 return `
             <div class="item relative">
-              <div style="position:absolute; top:15px; right:15px; text-align:right">
-                <div class="item-sub" style="font-weight:bold; color:var(--primary)">Margin: ${margin.toFixed(1)}%</div>
-                <div class="item-sub">Profit (AED): ${fmtMoney(profitAed)}</div>
-              </div>
               <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
               <div class="item-sub">Buyer: ${esc(buyerName(d.buyer_id))} · Supplier: ${esc(supplierName(d.supplier_id))}</div>

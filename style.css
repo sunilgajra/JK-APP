@@ -432,6 +432,8 @@ form > div, form .grid, form .list { gap: 12px; }
   border-color: var(--text-dim) !important;
 }
 
+.relative { position: relative; }
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
