@@ -12,6 +12,7 @@ import { dealDetailView } from "./dealDetail.js";
 import { settingsView } from "./settings.js";
 import { shippingInstructionsView } from "./shipping.js";
 import { productsView, productEditFormHtml } from "./products.js";
+import { reportsView, bindReportsUI } from "./reports.js";
 
 console.log("APP STARTING - VERSION 12");
 
@@ -42,6 +43,8 @@ function handleRoute() {
     state.page = "shippingInstructions";
   } else if (hash === "#/products") {
     state.page = "products";
+  } else if (hash === "#/reports") {
+    state.page = "reports";
   } else {
     state.page = "dashboard";
   }
@@ -199,6 +202,7 @@ function render() {
   else if (state.page === "dealDetail") content.innerHTML = dealDetailView();
   else if (state.page === "shippingInstructions") content.innerHTML = shippingInstructionsView();
   else if (state.page === "products") content.innerHTML = productsView();
+  else if (state.page === "reports") content.innerHTML = reportsView();
   else if (state.page === "settings") content.innerHTML = settingsView();
 
   bindUI();
@@ -219,6 +223,8 @@ function bindUI() {
   console.log("Binding UI for page:", state.page);
   document.getElementById("login-form")?.addEventListener("submit", loginUser);
   document.getElementById("logout-btn")?.addEventListener("click", logoutUser);
+  
+  if (state.page === "reports") bindReportsUI();
   
   // Navigation
   document.getElementById("show-buyer-form")?.addEventListener("click", showBuyerForm);
