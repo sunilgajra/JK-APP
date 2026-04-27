@@ -807,7 +807,22 @@ export function buildPI(deal, buyer, supplier, company = {}) {
       </table>
     </div>
 
-    ${additionalDetailsBlock(deal, supplier, "Packing list No. Date:")}
+    <div style="margin-top:10px; width:60%">
+      <table class="plainTable">
+        <tr>
+          <td style="width:140px;">Country of Origin</td>
+          <td>: ${esc(deal.country_of_origin || supplier?.country || "UAE")}</td>
+        </tr>
+        <tr>
+          <td>Port of Loading</td>
+          <td>: ${esc(deal.loading_port || "—")}</td>
+        </tr>
+        <tr>
+          <td>Port of Discharge</td>
+          <td>: ${esc(deal.discharge_port || "—")}</td>
+        </tr>
+      </table>
+    </div>
 
     ${footer(company, date, true)}
   </body>
