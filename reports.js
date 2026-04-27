@@ -70,10 +70,12 @@ export function reportsView() {
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="sale_yard_total"> Sale Yard Amt</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bal_inv_buyer"> Bal. Inv (Buyer)</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bal_yard_buyer"> Bal. Yard (Buyer)</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bal_total_buyer"> Total Bal (Buyer)</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="purchase_inv_total"> Pur. Inv. Amt</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="purchase_yard_total"> Pur. Yard Amt</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bal_inv_supplier"> Bal. Inv (Sup)</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bal_yard_supplier"> Bal. Yard (Sup)</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bal_total_supplier"> Total Bal (Sup)</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bl_no"> BL No</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="status"> Status</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="origin"> Origin</label>
@@ -149,6 +151,7 @@ function renderReport() {
   let totalSale = 0, totalPurchase = 0, totalProfit = 0, totalQty = 0;
   let tRecBank = 0, tRecYard = 0, tSentBank = 0, tSentYard = 0;
   let tBalInvBuyer = 0, tBalYardBuyer = 0, tBalInvSup = 0, tBalYardSup = 0;
+  let tBalTotalBuyer = 0, tBalTotalSup = 0;
   let tSaleInv = 0, tSaleYard = 0, tPurInv = 0, tPurYard = 0, totalContainers = 0;
 
   const rows = deals.map(d => {
@@ -182,7 +185,23 @@ function renderReport() {
     const saleYardTotal = qty * Number(d.sale_yard_rate_aed || 0);
     const purInvTotal = qty * Number(d.purchase_invoice_rate_aed || 0);
     const purYardTotal = qty * Number(d.purchase_yard_rate_aed || 0);
-    const cCount = Array.isArray(d.container_numbers) ? d.container_numbers.length : 0;
+
+    // Robust Container Count
+    let cCount = 0;
+    if (Array.isArray(d.container_numbers)) {
+      cCount = d.container_numbers.length;
+    } else if (typeof d.container_numbers === "string" && d.container_numbers.trim()) {
+      if (d.container_numbers.startsWith("[")) {
+        try {
+          const parsed = JSON.parse(d.container_numbers);
+          if (Array.isArray(parsed)) cCount = parsed.length;
+        } catch(e) {
+          cCount = d.container_numbers.split(/[,\n]+/).filter(x => x.trim()).length;
+        }
+      } else {
+        cCount = d.container_numbers.split(/[,\n]+/).filter(x => x.trim()).length;
+      }
+    }
 
     const balInvBuyer = saleInvTotal - recBank;
     const balYardBuyer = saleYardTotal - recYard;
@@ -193,6 +212,8 @@ function renderReport() {
     tSentBank += sentBank; tSentYard += sentYard;
     tBalInvBuyer += balInvBuyer; tBalYardBuyer += balYardBuyer;
     tBalInvSup += balInvSup; tBalYardSup += balYardSup;
+    tBalTotalBuyer += (balInvBuyer + balYardBuyer);
+    tBalTotalSup += (balInvSup + balYardSup);
     tSaleInv += saleInvTotal; tSaleYard += saleYardTotal;
     tPurInv += purInvTotal; tPurYard += purYardTotal;
     totalContainers += cCount;
@@ -225,10 +246,12 @@ function renderReport() {
       sale_yard_total: saleYardTotal,
       bal_inv_buyer: balInvBuyer,
       bal_yard_buyer: balYardBuyer,
+      bal_total_buyer: balInvBuyer + balYardBuyer,
       purchase_inv_total: purInvTotal,
       purchase_yard_total: purYardTotal,
       bal_inv_supplier: balInvSup,
       bal_yard_supplier: balYardSup,
+      bal_total_supplier: balInvSup + balYardSup,
       eta: d.eta,
       bl_no: d.bl_no,
       status: d.status,
@@ -267,8 +290,10 @@ function renderReport() {
             if (c === "sent_yard") return `<td>${fmtMoney(tSentYard)}</td>`;
             if (c === "bal_inv_buyer") return `<td>${fmtMoney(tBalInvBuyer)}</td>`;
             if (c === "bal_yard_buyer") return `<td>${fmtMoney(tBalYardBuyer)}</td>`;
+            if (c === "bal_total_buyer") return `<td>${fmtMoney(tBalTotalBuyer)}</td>`;
             if (c === "bal_inv_supplier") return `<td>${fmtMoney(tBalInvSup)}</td>`;
             if (c === "bal_yard_supplier") return `<td>${fmtMoney(tBalYardSup)}</td>`;
+            if (c === "bal_total_supplier") return `<td>${fmtMoney(tBalTotalSup)}</td>`;
             if (c === "sale_inv_total") return `<td>${fmtMoney(tSaleInv)}</td>`;
             if (c === "sale_yard_total") return `<td>${fmtMoney(tSaleYard)}</td>`;
             if (c === "purchase_inv_total") return `<td>${fmtMoney(tPurInv)}</td>`;
