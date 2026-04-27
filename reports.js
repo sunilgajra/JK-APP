@@ -19,20 +19,7 @@ export function reportsView() {
               <option value="supplier">Supplier Wise</option>
             </select>
           </div>
-          <div id="buyer-select-wrap" style="display:none">
-            <label class="form-label">Select Buyer</label>
-            <select name="buyer_id">
-              <option value="">All Buyers</option>
-              ${buyers.map(b => `<option value="${b.id}">${esc(b.name)}</option>`).join("")}
-            </select>
-          </div>
-          <div id="supplier-select-wrap" style="display:none">
-            <label class="form-label">Select Supplier</label>
-            <select name="supplier_id">
-              <option value="">All Suppliers</option>
-              ${suppliers.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join("")}
-            </select>
-          </div>
+        <div class="grid grid-2 gap-10">
           <div>
             <label class="form-label">Date From</label>
             <input type="date" name="date_from">
@@ -40,6 +27,28 @@ export function reportsView() {
           <div>
             <label class="form-label">Date To</label>
             <input type="date" name="date_to">
+          </div>
+        </div>
+
+        <div id="buyer-select-wrap" style="display:none" class="mt-10">
+          <label class="form-label">Select Buyers (Pick as many as you wish)</label>
+          <div class="flex gap-12 flex-wrap p-10" style="background:rgba(0,0,0,0.2); border-radius:4px; max-height:150px; overflow-y:auto">
+            ${buyers.map(b => `
+              <label class="flex flex-center gap-8 text-xs">
+                <input type="checkbox" name="buyer_ids" value="${b.id}"> ${esc(b.name)}
+              </label>
+            `).join("")}
+          </div>
+        </div>
+
+        <div id="supplier-select-wrap" style="display:none" class="mt-10">
+          <label class="form-label">Select Suppliers (Pick as many as you wish)</label>
+          <div class="flex gap-12 flex-wrap p-10" style="background:rgba(0,0,0,0.2); border-radius:4px; max-height:150px; overflow-y:auto">
+            ${suppliers.map(s => `
+              <label class="flex flex-center gap-8 text-xs">
+                <input type="checkbox" name="supplier_ids" value="${s.id}"> ${esc(s.name)}
+              </label>
+            `).join("")}
           </div>
         </div>
 
@@ -119,8 +128,8 @@ function renderReport() {
   const fd = new FormData(form);
   
   const type = fd.get("report_type");
-  const buyerId = fd.get("buyer_id");
-  const supplierId = fd.get("supplier_id");
+  const buyerIds = fd.getAll("buyer_ids");
+  const supplierIds = fd.getAll("supplier_ids");
   const dateFrom = fd.get("date_from");
   const dateTo = fd.get("date_to");
   const selectedCols = fd.getAll("cols");
@@ -128,11 +137,11 @@ function renderReport() {
   let deals = state.deals || [];
 
   // Filters
-  if (type === "buyer" && buyerId) {
-    deals = deals.filter(d => String(d.buyer_id) === String(buyerId));
+  if (type === "buyer" && buyerIds.length > 0) {
+    deals = deals.filter(d => buyerIds.includes(String(d.buyer_id)));
   }
-  if (type === "supplier" && supplierId) {
-    deals = deals.filter(d => String(d.supplier_id) === String(supplierId));
+  if (type === "supplier" && supplierIds.length > 0) {
+    deals = deals.filter(d => supplierIds.includes(String(d.supplier_id)));
   }
   if (dateFrom) {
     deals = deals.filter(d => (d.invoice_date || d.created_at) >= dateFrom);
