@@ -1,4 +1,4 @@
-import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildShippingInstruction, buildSupplierStatement, buildBuyerStatement } from "./documents.js";
+import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildShippingInstruction, buildSupplierStatement, buildBuyerStatement, buildSupplierMasterStatement, buildBuyerMasterStatement } from "./documents.js";
 import { supabase } from "./supabase.js";
 import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal, paymentSummary } from "./state.js";
 import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js";
@@ -303,6 +303,8 @@ function bindUI() {
   document.querySelectorAll("[data-print-coo]").forEach(btn => btn.addEventListener("click", () => printDoc("coo", btn.dataset.printCoo)));
   document.querySelectorAll("[data-print-supplier-statement]").forEach(btn => btn.addEventListener("click", () => printDoc("supplier-statement", btn.dataset.printSupplierStatement)));
   document.querySelectorAll("[data-print-buyer-statement]").forEach(btn => btn.addEventListener("click", () => printDoc("buyer-statement", btn.dataset.printBuyerStatement)));
+  document.querySelectorAll("[data-print-supplier-master]").forEach(btn => btn.addEventListener("click", () => printMasterStatement("supplier", btn.dataset.printSupplierMaster)));
+  document.querySelectorAll("[data-print-buyer-master]").forEach(btn => btn.addEventListener("click", () => printMasterStatement("buyer", btn.dataset.printBuyerMaster)));
 
   // Payments and Docs
   document.querySelectorAll("[data-show-payment-form]").forEach(btn => btn.addEventListener("click", () => showPaymentForm(btn.dataset.showPaymentForm)));
@@ -1611,6 +1613,29 @@ function printDoc(type, dealId) {
   if (type === "supplier-statement") html = buildSupplierStatement(deal, buyer, supplier, payments, companyForDoc);
   if (type === "buyer-statement") html = buildBuyerStatement(deal, buyer, supplier, payments, companyForDoc);
   
+  if (html) openPrintWindow(html);
+}
+
+function printMasterStatement(entityType, id) {
+  const company = state.company;
+  let html = "";
+  
+  if (entityType === "supplier") {
+    const supplier = state.suppliers.find(s => String(s.id) === String(id));
+    if (!supplier) return;
+    const deals = state.deals.filter(d => String(d.supplier_id) === String(id));
+    const dealIds = deals.map(d => String(d.id));
+    const allPayments = Object.values(state.paymentsByDeal).flat().filter(p => dealIds.includes(String(p.deal_id)));
+    html = buildSupplierMasterStatement(supplier, deals, allPayments, company);
+  } else {
+    const buyer = state.buyers.find(b => String(b.id) === String(id));
+    if (!buyer) return;
+    const deals = state.deals.filter(d => String(d.buyer_id) === String(id));
+    const dealIds = deals.map(d => String(d.id));
+    const allPayments = Object.values(state.paymentsByDeal).flat().filter(p => dealIds.includes(String(p.deal_id)));
+    html = buildBuyerMasterStatement(buyer, deals, allPayments, company);
+  }
+
   if (html) openPrintWindow(html);
 }
 

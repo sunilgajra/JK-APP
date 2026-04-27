@@ -1309,4 +1309,339 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
   </body>
   </html>`;
 }
+
+export function buildSupplierMasterStatement(supplier, deals, allPayments, company = {}) {
+  const date = new Date().toISOString();
+  
+  let totalDueAed = 0;
+  let totalDueUsd = 0;
+  let totalPaidAed = 0;
+  let totalPaidUsd = 0;
+  
+  const dealRows = deals.map(d => {
+    const qty = Number(d.quantity || 0);
+    const rate = Number(d.purchase_rate || 0);
+    const conv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.6725);
+    const amtUsd = qty * rate;
+    const amtAed = amtUsd * conv;
+    
+    totalDueUsd += amtUsd;
+    totalDueAed += amtAed;
+    
+    return { ...d, amtUsd, amtAed, conv };
+  });
+
+  const paymentRows = allPayments.filter(p => p.direction === "out").map(p => {
+    const amt = Number(p.amount || 0);
+    const conv = Number(p.conversion_rate || 3.6725);
+    let pUsd = 0, pAed = 0;
+    
+    if (p.currency === "AED") {
+      pAed = amt;
+      pUsd = amt / conv;
+    } else {
+      pUsd = amt;
+      pAed = amt * conv;
+    }
+    
+    totalPaidAed += pAed;
+    totalPaidUsd += pUsd;
+    
+    return { ...p, pAed, pUsd };
+  });
+
+  const balAed = totalDueAed - totalPaidAed;
+  const balUsd = totalDueUsd - totalPaidUsd;
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Master Settlement - ${esc(supplier.name)}</title>
+    <style>
+      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; color: #333; background: #f0f2f5; }
+      .doc { width: 210mm; margin: auto; background: white; padding: 15mm; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+      .statement-table th { background: #3b9da2; color: white; border: 1px solid #2a7a7d; font-size: 11px; padding: 8px; text-transform: uppercase; }
+      .statement-table td { border: 1px solid #ccc; padding: 8px; font-size: 12px; }
+      .summary-box { border: 2px solid #3b9da2; padding: 20px; margin-top: 30px; background:#f9fdfe; border-radius: 8px; }
+      .bal-to-pay { background: #ffff00; font-weight: 800; padding: 4px 8px; border: 1px solid #000; border-radius: 4px; }
+      .excel-header { background: #2a7a7d; color:white; font-weight: bold; text-align: center; padding: 10px; border: 1px solid #333; text-transform: uppercase; margin-top: 20px; border-radius: 4px 4px 0 0; }
+      .right { text-align: right; }
+      .center { text-align: center; }
+      .btn-print { background: #3b9da2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+      @media print { .btn-print { display: none; } body { background: white; padding: 0; } .doc { box-shadow: none; width: 100%; } }
+    </style>
+  </head>
+  <body>
+    <div class="doc">
+      <button class="btn-print" onclick="window.print()">Print Statement</button>
+      <div style="margin-bottom: 25px; font-size: 18px; font-weight: bold; border-bottom: 4px solid #3b9da2; padding-bottom: 10px; display:flex; justify-content:space-between; align-items: flex-end;">
+        <span style="color:#2a7a7d">MASTER SETTLEMENT REPORT</span>
+        <span style="font-size: 14px; color: #666;">SUPPLIER: ${esc(supplier.name)}</span>
+      </div>
+
+      <div class="excel-header">PURCHASE TRANSACTIONS (ALL DEALS)</div>
+      <table class="statement-table">
+        <thead>
+          <tr>
+            <th>DEAL NO</th>
+            <th>DATE</th>
+            <th>MATERIAL</th>
+            <th>QTY</th>
+            <th>RATE</th>
+            <th>AMOUNT USD</th>
+            <th>AMOUNT AED</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${dealRows.map(r => `
+            <tr>
+              <td class="center" style="font-weight:bold">${esc(r.deal_no)}</td>
+              <td class="center">${new Date(r.invoice_date || r.created_at).toLocaleDateString()}</td>
+              <td>${esc(r.product_name)}</td>
+              <td class="right">${Number(r.quantity).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(r.purchase_rate).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(r.amtUsd).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(r.amtAed).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+        <tfoot>
+          <tr style="background:#f2f2f2; font-weight:bold">
+            <td colspan="5" class="right">TOTAL PAYABLE</td>
+            <td class="right">${totalDueUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td class="right">${totalDueAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="excel-header">PAYMENTS SENT</div>
+      <table class="statement-table">
+        <thead>
+          <tr>
+            <th>DATE</th>
+            <th>DEAL REF</th>
+            <th>AED</th>
+            <th>USD</th>
+            <th>METHOD / NOTE</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${paymentRows.length ? paymentRows.map(p => `
+            <tr>
+              <td class="center">${new Date(p.payment_date).toLocaleDateString()}</td>
+              <td class="center">${esc(deals.find(d => String(d.id) === String(p.deal_id))?.deal_no || "—")}</td>
+              <td class="right">${Number(p.pAed).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(p.pUsd).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
+            </tr>
+          `).join("") : `<tr><td colspan="5" class="center">No payments recorded</td></tr>`}
+        </tbody>
+        <tfoot>
+          <tr style="background:#f2f2f2; font-weight:bold">
+            <td colspan="2" class="right">TOTAL PAID</td>
+            <td class="right">${totalPaidAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td class="right">${totalPaidUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="excel-header">CONSOLIDATED SUMMARY</div>
+      <div class="summary-box">
+        <table style="width:100%; border-collapse: collapse;">
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px; font-weight:bold">Total Invoice Amount (All Deals)</td>
+            <td style="padding: 10px;" class="right">AED ${totalDueAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td style="padding: 10px;" class="right">USD ${totalDueUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px; font-weight:bold">Total Payment Sent</td>
+            <td style="padding: 10px;" class="right">AED ${totalPaidAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td style="padding: 10px;" class="right">USD ${totalPaidUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+          </tr>
+          <tr>
+            <td style="padding: 15px 10px; font-weight:800; font-size:16px; color:#2a7a7d">NET OUTSTANDING TO PAY:</td>
+            <td style="padding: 15px 10px;" class="right"><span class="bal-to-pay">${balAed.toLocaleString(undefined, {minimumFractionDigits:2})}</span></td>
+            <td style="padding: 15px 10px;" class="right"><span class="bal-to-pay">${balUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</span></td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="margin-top: 50px; font-size: 11px; color: #999; text-align: right; border-top: 1px solid #eee; padding-top: 10px;">
+        Generated on ${new Date().toLocaleString()} · JK Trade Manager
+      </div>
+    </div>
+  </body>
+  </html>`;
+}
+
+export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {}) {
+  const date = new Date().toISOString();
+  
+  let totalDueAed = 0;
+  let totalDueUsd = 0;
+  let totalRecAed = 0;
+  let totalRecUsd = 0;
+  
+  const dealRows = deals.map(d => {
+    const qty = Number(d.quantity || 0);
+    const rate = Number(d.rate || 0);
+    const conv = Number(d.sale_conversion_rate || d.conversion_rate || 3.6725);
+    const amtUsd = qty * rate;
+    const amtAed = amtUsd * conv;
+    
+    totalDueUsd += amtUsd;
+    totalDueAed += amtAed;
+    
+    return { ...d, amtUsd, amtAed, conv };
+  });
+
+  const paymentRows = allPayments.filter(p => p.direction === "in").map(p => {
+    const amt = Number(p.amount || 0);
+    const conv = Number(p.conversion_rate || 3.6725);
+    let pUsd = 0, pAed = 0;
+    
+    if (p.currency === "AED") {
+      pAed = amt;
+      pUsd = amt / conv;
+    } else {
+      pUsd = amt;
+      pAed = amt * conv;
+    }
+    
+    totalRecAed += pAed;
+    totalRecUsd += pUsd;
+    
+    return { ...p, pAed, pUsd };
+  });
+
+  const balAed = totalDueAed - totalRecAed;
+  const balUsd = totalDueUsd - totalRecUsd;
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Master Statement - ${esc(buyer.name)}</title>
+    <style>
+      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; color: #333; background: #f0f2f5; }
+      .doc { width: 210mm; margin: auto; background: white; padding: 15mm; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+      .statement-table th { background: #3b9da2; color: white; border: 1px solid #2a7a7d; font-size: 11px; padding: 8px; text-transform: uppercase; }
+      .statement-table td { border: 1px solid #ccc; padding: 8px; font-size: 12px; }
+      .summary-box { border: 2px solid #3b9da2; padding: 20px; margin-top: 30px; background:#f9fdfe; border-radius: 8px; }
+      .bal-to-rec { background: #ffff00; font-weight: 800; padding: 4px 8px; border: 1px solid #000; border-radius: 4px; }
+      .excel-header { background: #2a7a7d; color:white; font-weight: bold; text-align: center; padding: 10px; border: 1px solid #333; text-transform: uppercase; margin-top: 20px; border-radius: 4px 4px 0 0; }
+      .right { text-align: right; }
+      .center { text-align: center; }
+      .btn-print { background: #3b9da2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+      @media print { .btn-print { display: none; } body { background: white; padding: 0; } .doc { box-shadow: none; width: 100%; } }
+    </style>
+  </head>
+  <body>
+    <div class="doc">
+      <button class="btn-print" onclick="window.print()">Print Statement</button>
+      <div style="margin-bottom: 25px; font-size: 18px; font-weight: bold; border-bottom: 4px solid #3b9da2; padding-bottom: 10px; display:flex; justify-content:space-between; align-items: flex-end;">
+        <span style="color:#2a7a7d">MASTER SETTLEMENT REPORT</span>
+        <span style="font-size: 14px; color: #666;">BUYER: ${esc(buyer.name)}</span>
+      </div>
+
+      <div class="excel-header">SALE TRANSACTIONS (ALL DEALS)</div>
+      <table class="statement-table">
+        <thead>
+          <tr>
+            <th>DEAL NO</th>
+            <th>DATE</th>
+            <th>MATERIAL</th>
+            <th>QTY</th>
+            <th>RATE</th>
+            <th>AMOUNT USD</th>
+            <th>AMOUNT AED</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${dealRows.map(r => `
+            <tr>
+              <td class="center" style="font-weight:bold">${esc(r.deal_no)}</td>
+              <td class="center">${new Date(r.invoice_date || r.created_at).toLocaleDateString()}</td>
+              <td>${esc(r.product_name)}</td>
+              <td class="right">${Number(r.quantity).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(r.rate).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(r.amtUsd).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(r.amtAed).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+        <tfoot>
+          <tr style="background:#f2f2f2; font-weight:bold">
+            <td colspan="5" class="right">TOTAL RECEIVABLE</td>
+            <td class="right">${totalDueUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td class="right">${totalDueAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="excel-header">PAYMENTS RECEIVED</div>
+      <table class="statement-table">
+        <thead>
+          <tr>
+            <th>DATE</th>
+            <th>DEAL REF</th>
+            <th>AED</th>
+            <th>USD</th>
+            <th>METHOD / NOTE</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${paymentRows.length ? paymentRows.map(p => `
+            <tr>
+              <td class="center">${new Date(p.payment_date).toLocaleDateString()}</td>
+              <td class="center">${esc(deals.find(d => String(d.id) === String(p.deal_id))?.deal_no || "—")}</td>
+              <td class="right">${Number(p.pAed).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(p.pUsd).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
+            </tr>
+          `).join("") : `<tr><td colspan="5" class="center">No payments received</td></tr>`}
+        </tbody>
+        <tfoot>
+          <tr style="background:#f2f2f2; font-weight:bold">
+            <td colspan="2" class="right">TOTAL RECEIVED</td>
+            <td class="right">${totalRecAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td class="right">${totalRecUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="excel-header">CONSOLIDATED SUMMARY</div>
+      <div class="summary-box">
+        <table style="width:100%; border-collapse: collapse;">
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px; font-weight:bold">Total Invoice Amount (All Deals)</td>
+            <td style="padding: 10px;" class="right">AED ${totalDueAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td style="padding: 10px;" class="right">USD ${totalDueUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px; font-weight:bold">Total Payment Received</td>
+            <td style="padding: 10px;" class="right">AED ${totalRecAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td style="padding: 10px;" class="right">USD ${totalRecUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+          </tr>
+          <tr>
+            <td style="padding: 15px 10px; font-weight:800; font-size:16px; color:#2a7a7d">NET OUTSTANDING TO RECEIVE:</td>
+            <td style="padding: 15px 10px;" class="right"><span class="bal-to-rec">${balAed.toLocaleString(undefined, {minimumFractionDigits:2})}</span></td>
+            <td style="padding: 15px 10px;" class="right"><span class="bal-to-rec">${balUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</span></td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="margin-top: 50px; font-size: 11px; color: #999; text-align: right; border-top: 1px solid #eee; padding-top: 10px;">
+        Generated on ${new Date().toLocaleString()} · JK Trade Manager
+      </div>
+    </div>
+  </body>
+  </html>`;
+}
+
 

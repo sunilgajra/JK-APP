@@ -49,6 +49,7 @@ export function suppliersView() {
               <button data-edit-supplier="${s.id}">Edit</button>
               <button data-delete-supplier="${s.id}">Delete</button>
               <button data-show-supplier-docs="${s.id}">Documents</button>
+              <button data-print-supplier-master="${s.id}" class="btn-info">Master Settlement</button>
             </div>
             <div id="supplier-edit-wrap-${s.id}" class="mt-10"></div>
             <div id="supplier-docs-wrap-${s.id}" class="mt-10" style="display:none; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px">

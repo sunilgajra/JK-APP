@@ -36,6 +36,7 @@ export function buyersView() {
             <div class="mt-8 flex gap-8">
               <button data-edit-buyer="${b.id}">Edit</button>
               <button data-delete-buyer="${b.id}">Delete</button>
+              <button data-print-buyer-master="${b.id}" class="btn-info">Master Settlement</button>
             </div>
             <div id="buyer-edit-wrap-${b.id}" class="mt-10"></div>
           </div>
