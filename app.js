@@ -287,6 +287,15 @@ function bindUI() {
   document.querySelectorAll("[data-edit-product]").forEach(btn => btn.addEventListener("click", () => showEditProductForm(btn.dataset.editProduct)));
   document.querySelectorAll("[data-delete-product]").forEach(btn => btn.addEventListener("click", () => deleteProduct(btn.dataset.deleteProduct)));
   
+  // Supplier Documents
+  document.querySelectorAll("[data-show-supplier-docs]").forEach(btn => btn.addEventListener("click", () => {
+    const id = btn.dataset.showSupplierDocs;
+    const wrap = document.getElementById(`supplier-docs-wrap-${id}`);
+    if (wrap) wrap.style.display = wrap.style.display === "none" ? "block" : "none";
+  }));
+  document.querySelectorAll("[data-delete-supplier-doc]").forEach(btn => btn.addEventListener("click", () => deleteSupplierDocument(btn.dataset.deleteSupplierDoc)));
+  document.querySelectorAll("[data-supplier-doc-upload]").forEach(form => form.addEventListener("submit", saveSupplierDocument));
+  
   // Print
   document.querySelectorAll("[data-print-pi]").forEach(btn => btn.addEventListener("click", () => printDoc("pi", btn.dataset.printPi)));
   document.querySelectorAll("[data-print-ci]").forEach(btn => btn.addEventListener("click", () => printDoc("ci", btn.dataset.printCi)));
