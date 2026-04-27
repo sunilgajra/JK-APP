@@ -1571,10 +1571,13 @@ async function runAiScan(dealId, docId) {
     - discharge_port: Port of discharge.
     - product_name: Description of goods/product.
     - quantity: Total quantity/weight of the main product (number only).
+    - hsn_code: HSN or HS Code if mentioned.
+    - unit: Unit of measurement (e.g. MTON, KGS).
     - gross_weight: Total Gross Weight (number only).
     - net_weight: Total Net Weight (number only).
     - container_numbers: A list/array of all container numbers mentioned (e.g. ["MSCU1234567", "MSCU7654321"]). Look in the 'Container No.' or 'Marks & Nos' section.
     - shipment_out_date: Date of shipment or 'Shipped on Board' date (YYYY-MM-DD).
+    - country_of_origin: Country of origin if mentioned.
     - eta: Estimated time of arrival if mentioned (YYYY-MM-DD).
     
     Return the data in strict JSON format. If a field is missing, use null. Only return the JSON object.`;
@@ -1617,8 +1620,10 @@ async function runAiScan(dealId, docId) {
       `BL No: ${data.bl_no || "—"}`,
       `Vessel/Voyage: ${data.vessel || "—"}${data.voyage_no ? ` / ${data.voyage_no}` : ""}`,
       `Port: ${data.loading_port || "—"} -> ${data.discharge_port || "—"}`,
+      `Origin: ${data.country_of_origin || "—"}`,
       `Product: ${data.product_name || "—"}`,
-      `Qty: ${data.quantity || "—"}`,
+      `Qty: ${data.quantity || "—"} ${data.unit || ""}`,
+      `HSN: ${data.hsn_code || "—"}`,
       `Weights: G:${data.gross_weight || "—"} / N:${data.net_weight || "—"}`,
       `Containers (${containerCount}): ${containerCount > 0 ? cleanContainers.slice(0, 3).join(", ") + (containerCount > 3 ? "..." : "") : "None found"}`
     ].join("\n");
@@ -1644,6 +1649,9 @@ async function runAiScan(dealId, docId) {
         );
       }
       if (data.shipment_out_date) updateData.shipment_out_date = data.shipment_out_date;
+      if (data.country_of_origin) updateData.country_of_origin = String(data.country_of_origin).trim().toUpperCase();
+      if (data.hsn_code) updateData.hsn_code = String(data.hsn_code).replace(/[^A-Z0-9]/gi, "").toUpperCase();
+      if (data.unit) updateData.unit = String(data.unit).trim().toUpperCase();
       if (data.eta) updateData.eta = data.eta;
 
       const { error } = await supabase.from("deals").update(updateData).eq("id", dealId);
