@@ -10,9 +10,9 @@ export function reportsView() {
       <div class="title mb-12">Business Intelligence Reports</div>
       
       <form id="report-config-form" class="flex flex-column gap-16 p-10" style="background:rgba(255,255,255,0.02); border-radius:8px">
-        <div class="grid grid-3 gap-10">
+        <div class="grid grid-3 gap-14">
           <div>
-            <label class="form-label">Report Type</label>
+            <label class="form-label">📊 Report Type</label>
             <select name="report_type" id="report-type-select">
               <option value="all">General (All Deals)</option>
               <option value="buyer">Buyer Wise</option>
@@ -20,80 +20,63 @@ export function reportsView() {
             </select>
           </div>
           <div>
-            <label class="form-label">Date From</label>
+            <label class="form-label">📅 Date From</label>
             <input type="date" name="date_from">
           </div>
           <div>
-            <label class="form-label">Date To</label>
+            <label class="form-label">📅 Date To</label>
             <input type="date" name="date_to">
           </div>
         </div>
 
-        <div id="buyer-select-wrap" style="display:none">
-          <label class="form-label">Select Buyers (Pick as many as you wish)</label>
-          <div class="flex gap-12 flex-wrap p-10" style="background:rgba(0,0,0,0.2); border-radius:4px; max-height:150px; overflow-y:auto">
+        <div id="buyer-select-wrap" style="display:none; background:rgba(0,0,0,0.2); padding:15px; border-radius:8px; border:1px solid var(--border)">
+          <label class="form-label" style="color:var(--accent-primary)">👥 Select Buyers (Pick as many as you wish)</label>
+          <div class="flex gap-12 flex-wrap mt-8" style="max-height:150px; overflow-y:auto">
             ${buyers.map(b => `
-              <label class="flex flex-center gap-8 text-xs" style="min-width:150px">
+              <label class="flex flex-center gap-8 text-xs p-8" style="min-width:180px; background:rgba(255,255,255,0.03); border-radius:4px; cursor:pointer">
                 <input type="checkbox" name="buyer_ids" value="${b.id}"> ${esc(b.name)}
               </label>
             `).join("")}
           </div>
         </div>
 
-        <div id="supplier-select-wrap" style="display:none">
-          <label class="form-label">Select Suppliers (Pick as many as you wish)</label>
-          <div class="flex gap-12 flex-wrap p-10" style="background:rgba(0,0,0,0.2); border-radius:4px; max-height:150px; overflow-y:auto">
+        <div id="supplier-select-wrap" style="display:none; background:rgba(0,0,0,0.2); padding:15px; border-radius:8px; border:1px solid var(--border)">
+          <label class="form-label" style="color:var(--accent-primary)">🏢 Select Suppliers (Pick as many as you wish)</label>
+          <div class="flex gap-12 flex-wrap mt-8" style="max-height:150px; overflow-y:auto">
             ${suppliers.map(s => `
-              <label class="flex flex-center gap-8 text-xs" style="min-width:150px">
+              <label class="flex flex-center gap-8 text-xs p-8" style="min-width:180px; background:rgba(255,255,255,0.03); border-radius:4px; cursor:pointer">
                 <input type="checkbox" name="supplier_ids" value="${s.id}"> ${esc(s.name)}
               </label>
             `).join("")}
           </div>
         </div>
 
-        <div>
-          <label class="form-label">Include Details (Columns)</label>
-          <div class="flex gap-12 flex-wrap" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:4px; max-height:200px; overflow-y:auto">
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="deal_no" checked> Deal No</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="type"> Type</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="date" checked> Date</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="product" checked> Product</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="hsn"> HSN Code</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="buyer" checked> Buyer</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="supplier" checked> Supplier</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="qty" checked> Qty</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="unit"> Unit</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="sale_rate"> Sale Rate</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="purchase_rate"> Purchase Rate</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="sale_total" checked> Sale Total</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="vessel"> Vessel</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="loading_port"> Loading Port</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="discharge_port"> Discharge Port</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="container_count"> Containers Count</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="received_bank"> Rec. Bank (Inv)</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="received_yard"> Rec. Yard/Token</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="sent_bank"> Paid Bank (Inv)</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="sent_yard"> Paid Yard/Token</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="sale_inv_total"> Sale Inv. Amt</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="sale_yard_total"> Sale Yard Amt</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="bal_inv_buyer"> Bal. Inv (Buyer)</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="bal_yard_buyer"> Bal. Yard (Buyer)</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="bal_total_buyer"> Total Bal (Buyer)</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="purchase_inv_total"> Pur. Inv. Amt</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="purchase_yard_total"> Pur. Yard Amt</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="bal_inv_supplier"> Bal. Inv (Sup)</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="bal_yard_supplier"> Bal. Yard (Sup)</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="bal_total_supplier"> Total Bal (Sup)</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="bl_no"> BL No</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="status"> Status</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="origin"> Origin</label>
-            <label class="flex flex-center gap-8 text-xs" style="min-width:140px"><input type="checkbox" name="cols" value="commission_total"> Commission</label>
+        <div style="background:rgba(0,0,0,0.1); padding:15px; border-radius:8px">
+          <label class="form-label">📋 Include Details (Columns)</label>
+          <div class="flex gap-8 flex-wrap mt-8" style="max-height:200px; overflow-y:auto">
+            ${[
+              {v:"deal_no", l:"Deal No", c:true}, {v:"type", l:"Type"}, {v:"date", l:"Date", c:true}, 
+              {v:"product", l:"Product", c:true}, {v:"hsn", l:"HSN Code"}, {v:"buyer", l:"Buyer", c:true}, 
+              {v:"supplier", l:"Supplier", c:true}, {v:"qty", l:"Qty", c:true}, {v:"unit", l:"Unit"}, 
+              {v:"sale_rate", l:"Sale Rate"}, {v:"purchase_rate", l:"Purchase Rate"}, {v:"sale_total", l:"Sale Total", c:true}, 
+              {v:"vessel", l:"Vessel"}, {v:"loading_port", l:"Loading Port"}, {v:"discharge_port", l:"Discharge Port"}, 
+              {v:"container_count", l:"Containers Count"}, {v:"received_bank", l:"Rec. Bank (Inv)"}, {v:"received_yard", l:"Rec. Yard/Token"}, 
+              {v:"sent_bank", l:"Paid Bank (Inv)"}, {v:"sent_yard", l:"Paid Yard/Token"}, {v:"sale_inv_total", l:"Sale Inv. Amt"}, 
+              {v:"sale_yard_total", l:"Sale Yard Amt"}, {v:"bal_inv_buyer", l:"Bal. Inv (Buyer)"}, {v:"bal_yard_buyer", l:"Bal. Yard (Buyer)"}, 
+              {v:"bal_total_buyer", l:"Total Bal (Buyer)"}, {v:"purchase_inv_total", l:"Pur. Inv. Amt"}, {v:"purchase_yard_total", l:"Pur. Yard Amt"}, 
+              {v:"bal_inv_supplier", l:"Bal. Inv (Sup)"}, {v:"bal_yard_supplier", l:"Bal. Yard (Sup)"}, {v:"bal_total_supplier", l:"Total Bal (Sup)"}, 
+              {v:"bl_no", l:"BL No"}, {v:"status", l:"Status"}, {v:"origin", l:"Origin"}, {v:"commission_total", l:"Commission"}
+            ].map(col => `
+              <label class="flex flex-center gap-8 text-xs p-6" style="min-width:145px; background:rgba(255,255,255,0.02); border-radius:4px; cursor:pointer">
+                <input type="checkbox" name="cols" value="${col.v}" ${col.c ? 'checked' : ''}> ${col.l}
+              </label>
+            `).join("")}
           </div>
         </div>
 
-        <div class="flex gap-10 mt-10">
-          <button type="submit" class="btn-primary" style="width: auto">Generate Report</button>
-          <button type="button" id="export-report-csv" class="btn-outline" style="width: auto">Export to CSV</button>
+        <div class="flex gap-12 mt-10">
+          <button type="submit" class="btn-primary" style="padding: 12px 24px; font-weight: 700">Generate Report</button>
+          <button type="button" id="export-report-csv" class="btn-outline" style="padding: 12px 24px">Export to CSV</button>
         </div>
       </form>
 
