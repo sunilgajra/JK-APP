@@ -45,18 +45,33 @@ export function reportsView() {
 
         <div class="mt-10">
           <label class="form-label">Include Details (Columns)</label>
-          <div class="flex gap-12 flex-wrap" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:4px">
+          <div class="flex gap-12 flex-wrap" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:4px; max-height:200px; overflow-y:auto">
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="deal_no" checked> Deal No</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="type"> Type</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="date" checked> Date</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="product" checked> Product</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="hsn"> HSN Code</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="buyer" checked> Buyer</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="supplier" checked> Supplier</label>
-            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="qty" checked> Quantity</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="qty" checked> Qty</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="unit"> Unit</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="sale_rate"> Sale Rate</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="purchase_rate"> Purchase Rate</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="sale_total" checked> Sale Total</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="purchase_total" checked> Purchase Total</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="profit" checked> Profit</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="margin" checked> Margin %</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="loading_port"> Loading Port</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="discharge_port"> Discharge Port</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="vessel"> Vessel</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="eta"> ETA</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="bl_no"> BL No</label>
             <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="status"> Status</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="shipment_status"> Ship Status</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="origin"> Origin</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="gross_weight"> Gross Wt</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="net_weight"> Net Wt</label>
+            <label class="flex flex-center gap-8 text-xs"><input type="checkbox" name="cols" value="commission_total"> Commission</label>
           </div>
         </div>
 
@@ -139,16 +154,31 @@ function renderReport() {
 
     return {
       deal_no: d.deal_no,
+      type: d.type,
       date: d.invoice_date || d.created_at?.split("T")[0],
       product: d.product_name,
+      hsn: d.hsn_code,
       buyer: buyerName(d.buyer_id),
       supplier: supplierName(d.supplier_id),
       qty: d.quantity,
+      unit: d.unit,
+      sale_rate: d.rate,
+      purchase_rate: d.purchase_rate,
       sale_total: s.sale,
       purchase_total: s.purchase,
       profit: profit,
       margin: margin.toFixed(2) + "%",
-      status: d.status
+      loading_port: d.loading_port,
+      discharge_port: d.discharge_port,
+      vessel: d.vessel_voyage || d.vessel,
+      eta: d.eta,
+      bl_no: d.bl_no,
+      status: d.status,
+      shipment_status: d.shipment_status,
+      origin: d.country_of_origin,
+      gross_weight: d.gross_weight,
+      net_weight: d.net_weight,
+      commission_total: d.commission_total
     };
   });
 
