@@ -1656,6 +1656,7 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
     </div>
   </body>
   </html>`;
+}
 
 export function buildAgentStatement(agent, deals, company = {}) {
   const date = new Date().toLocaleDateString();
