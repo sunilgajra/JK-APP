@@ -1,4 +1,4 @@
-import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildShippingInstruction, buildSupplierStatement, buildBuyerStatement, buildSupplierMasterStatement, buildBuyerMasterStatement } from "./documents.js";
+import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildShippingInstruction, buildSupplierStatement, buildBuyerStatement, buildSupplierMasterStatement, buildBuyerMasterStatement, buildAgentStatement } from "./documents.js";
 import { supabase } from "./supabase.js";
 import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal, paymentSummary } from "./state.js";
 import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js";
@@ -7,6 +7,7 @@ import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDoc
 import { dashboardView } from "./dashboard.js";
 import { buyersView, buyerFormHtml } from "./buyers.js";
 import { suppliersView, supplierFormHtml } from "./suppliers.js";
+import { agentsView, agentFormHtml } from "./agents.js";
 import { dealsView, dealFormHtml } from "./deals.js";
 import { dealDetailView } from "./dealDetail.js";
 import { settingsView } from "./settings.js";
@@ -35,6 +36,8 @@ function handleRoute() {
     state.page = "buyers";
   } else if (hash === "#/suppliers") {
     state.page = "suppliers";
+  } else if (hash === "#/agents") {
+    state.page = "agents";
   } else if (hash === "#/settings") {
     state.page = "settings";
   } else if (hash === "#/deals") {
@@ -91,9 +94,10 @@ async function loadSession() {
  */
 async function loadSupabaseData() {
   try {
-    const [buyersRes, suppliersRes, dealsRes, paymentsRes, documentsRes, auditRes] = await Promise.all([
+    const [buyersRes, suppliersRes, agentsRes, dealsRes, paymentsRes, documentsRes, auditRes] = await Promise.all([
       supabase.from("buyers").select("*").order("id", { ascending: false }),
       supabase.from("suppliers").select("*").order("id", { ascending: false }),
+      supabase.from("commission_agents").select("*").order("id", { ascending: false }),
       supabase.from("deals").select("*").order("id", { ascending: false }),
       supabase.from("payments").select("*").order("id", { ascending: false }),
       supabase.from("deal_documents").select("*").eq("is_deleted", false).order("created_at", { ascending: false }),
@@ -102,11 +106,14 @@ async function loadSupabaseData() {
 
     if (buyersRes.error) throw buyersRes.error;
     if (suppliersRes.error) throw suppliersRes.error;
+    if (agentsRes.error && agentsRes.error.code !== "PGRST116") {
+       console.warn("Agents table might not exist yet:", agentsRes.error);
+    }
     if (dealsRes.error) throw dealsRes.error;
 
     state.buyers = buyersRes.data || [];
-    console.log("FETCHED BUYERS COUNT:", state.buyers.length);
     state.suppliers = suppliersRes.data || [];
+    state.agents = agentsRes.data || [];
     state.deals = dealsRes.data || [];
 
     const groupedPayments = {};
@@ -205,6 +212,7 @@ function render() {
   if (state.page === "dashboard") content.innerHTML = dashboardView();
   else if (state.page === "buyers") content.innerHTML = buyersView();
   else if (state.page === "suppliers") content.innerHTML = suppliersView();
+  else if (state.page === "agents") content.innerHTML = agentsView();
   else if (state.page === "deals") content.innerHTML = dealsView();
   else if (state.page === "dealDetail") content.innerHTML = dealDetailView();
   else if (state.page === "shippingInstructions") content.innerHTML = shippingInstructionsView();
@@ -240,6 +248,21 @@ function bindUI() {
   document.getElementById("back-to-deals")?.addEventListener("click", () => navigate("#/deals"));
   document.getElementById("open-company-settings")?.addEventListener("click", () => navigate("#/settings"));
   document.getElementById("product-form")?.addEventListener("submit", saveProduct);
+
+  // Agents
+  document.getElementById("show-agent-form")?.addEventListener("click", showAgentForm);
+  document.getElementById("agent-search")?.addEventListener("input", (e) => {
+    state.agentSearch = e.target.value;
+    render();
+  });
+  document.getElementById("agent-form")?.addEventListener("submit", saveAgent);
+  document.getElementById("cancel-agent-form")?.addEventListener("click", () => {
+    document.getElementById("agent-form-wrap").innerHTML = "";
+  });
+  document.querySelectorAll("[data-edit-agent]").forEach(btn => btn.addEventListener("click", () => showEditAgentForm(btn.dataset.editAgent)));
+  document.querySelectorAll("[data-delete-agent]").forEach(btn => btn.addEventListener("click", () => deleteAgent(btn.dataset.deleteAgent)));
+  document.querySelectorAll("[data-agent-statement]").forEach(btn => btn.addEventListener("click", () => printAgentStatement(btn.dataset.agentStatement)));
+
   
   document.querySelectorAll("[data-ai-scan]").forEach(btn => btn.addEventListener("click", () => {
     const [dealId, docId] = btn.dataset.aiScan.split(":");
@@ -1818,6 +1841,71 @@ async function checkAiConnection() {
   } finally {
     btn.textContent = "Check AI Connection";
   }
+}
+
+/**
+ * AGENTS
+ */
+function showAgentForm() {
+  const wrap = document.getElementById("agent-form-wrap");
+  if (wrap) wrap.innerHTML = agentFormHtml();
+  bindUI();
+}
+
+function showEditAgentForm(id) {
+  const a = state.agents.find(x => String(x.id) === String(id));
+  const wrap = document.getElementById(`agent-edit-wrap-${id}`);
+  if (wrap) wrap.innerHTML = agentFormHtml(a, true, id);
+  
+  document.getElementById(`cancel-agent-edit-${id}`)?.addEventListener("click", () => {
+    wrap.innerHTML = "";
+  });
+  
+  document.getElementById(`agent-edit-form-${id}`)?.addEventListener("submit", (e) => saveAgent(e, id));
+}
+
+async function saveAgent(e, editId = null) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd);
+  
+  try {
+    if (editId) {
+      const { error } = await supabase.from("commission_agents").update(data).eq("id", editId);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from("commission_agents").insert([data]);
+      if (error) throw error;
+    }
+    await loadSupabaseData();
+  } catch (err) {
+    alert("Save Agent failed: " + err.message);
+  }
+}
+
+async function deleteAgent(id) {
+  if (!confirm("Are you sure you want to delete this agent?")) return;
+  try {
+    const { error } = await supabase.from("commission_agents").delete().eq("id", id);
+    if (error) throw error;
+    await loadSupabaseData();
+  } catch (err) {
+    alert("Delete Agent failed: " + err.message);
+  }
+}
+
+function printAgentStatement(agentId) {
+  const agent = state.agents.find(a => String(a.id) === String(agentId));
+  if (!agent) return alert("Agent not found.");
+  
+  const agentDeals = state.deals.filter(d => 
+    d.commission_name && d.commission_name.toLowerCase().includes(agent.name.toLowerCase())
+  );
+  
+  if (!agentDeals.length) return alert("No commission deals found for this agent.");
+  
+  const html = buildAgentStatement(agent, agentDeals, state.company);
+  openPrintWindow(html);
 }
 
 // Start

@@ -226,7 +226,10 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
           <div class="grid grid-3 gap-10 mt-10">
             <div>
               <label class="form-label">Commission Name</label>
-              <input name="commission_name" value="${esc(d.commission_name || "")}" placeholder="Agent / Name">
+              <input name="commission_name" list="agent-list" value="${esc(d.commission_name || "")}" placeholder="Select Agent">
+              <datalist id="agent-list">
+                ${state.agents.map(a => `<option value="${esc(a.name)}">`).join("")}
+              </datalist>
             </div>
             <div>
               <label class="form-label">Comm. Rate (per MT)</label>
