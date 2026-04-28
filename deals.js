@@ -48,11 +48,12 @@ export function dealsView() {
                 const profit = s.sale - s.purchase;
                 const margin = s.sale > 0 ? (profit / s.sale) * 100 : 0;
                 const profitAed = d.document_currency === "USD" ? profit * (d.conversion_rate || 3.6725) : profit;
+                const shipper = d.shipper_index !== null && d.shipper_index !== "" ? (state.company.shippers || [])[d.shipper_index] : state.company;
                 return `
             <div class="item relative">
               <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
-              <div class="item-sub">Buyer: ${esc(buyerName(d.buyer_id))} · Supplier: ${esc(supplierName(d.supplier_id))}</div>
+              <div class="item-sub">Supplier: ${esc(supplierName(d.supplier_id))} · Shipper: ${esc(shipper?.name || "Default Company")} · Buyer: ${esc(buyerName(d.buyer_id))}</div>
               
               <div class="grid grid-3 mt-8 p-10" style="background:rgba(255,255,255,0.03); border-radius:4px">
                 <div>
