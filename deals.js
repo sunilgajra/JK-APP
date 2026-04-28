@@ -50,11 +50,11 @@ export function dealsView() {
                 const profitAed = d.document_currency === "USD" ? profit * (d.conversion_rate || 3.6725) : profit;
                 return `
             <div class="item relative">
-              <div class="flex flex-between flex-center">
-                <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
-                <div class="item-sub" style="text-align: right">
-                  ${d.bl_no ? `<span style="color:var(--text); opacity:0.8">BL: ${esc(d.bl_no)}</span> · ` : ""}
-                  ${d.container_numbers && (Array.isArray(d.container_numbers) ? d.container_numbers.length : String(d.container_numbers).trim().length) ? `<span style="color:var(--text); opacity:0.8">CONT: ${esc(Array.isArray(d.container_numbers) ? d.container_numbers[0] : String(d.container_numbers).split(/[,\n]+/)[0])}${ (Array.isArray(d.container_numbers) ? d.container_numbers.length : 1) > 1 ? "..." : "" }</span> · ` : ""}
+              <div class="flex flex-between flex-center" style="width: 100%; gap: 10px; margin-bottom: 5px;">
+                <div class="item-title" style="flex: 1;">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
+                <div style="text-align: right; flex-shrink: 0; font-size: 0.8rem; opacity: 0.9;">
+                  ${d.bl_no ? `<span style="color:var(--text); opacity:0.7">BL: ${esc(d.bl_no)}</span> · ` : ""}
+                  ${d.container_numbers && (Array.isArray(d.container_numbers) ? d.container_numbers.length : String(d.container_numbers).trim().length) ? `<span style="color:var(--text); opacity:0.7">CONT: ${esc(Array.isArray(d.container_numbers) ? d.container_numbers[0] : String(d.container_numbers).split(/[,\n]+/)[0])}${ (Array.isArray(d.container_numbers) ? d.container_numbers.length : 1) > 1 ? "..." : "" }</span> · ` : ""}
                   <span style="color:var(--accent-primary); font-weight:700">${esc(d.quantity || "0")} ${esc(d.unit || "MT")}</span>
                 </div>
               </div>
