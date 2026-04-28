@@ -1,3 +1,5 @@
+import { state } from "./state.js";
+
 function esc(s) {
   return String(s || "")
     .replace(/&/g, "&amp;")
@@ -1310,7 +1312,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
   </html>`;
 }
 
-export function buildSupplierMasterStatement(supplier, deals, allPayments, company = {}, buyers = []) {
+export function buildSupplierMasterStatement(supplier, deals, allPayments, company = {}) {
   const date = new Date().toISOString();
   
   let totalDueAed = 0;
@@ -1404,7 +1406,7 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
               <td class="center" style="font-weight:bold">${esc(r.deal_no)}</td>
               <td class="center">${new Date(r.invoice_date || r.created_at).toLocaleDateString()}</td>
               <td class="center">${esc(r.bl_no || "—")}</td>
-              <td>${esc((buyers.find(b => String(b.id) === String(r.buyer_id)) || {}).name || "—")}</td>
+              <td>${esc((state.buyers.find(b => String(b.id) === String(r.buyer_id)) || {}).name || "—")}</td>
               <td>${esc(r.product_name)}</td>
               <td class="right">${Number(r.quantity).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
               <td class="right">${Number(r.purchase_rate).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
@@ -1483,7 +1485,7 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
   </html>`;
 }
 
-export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {}, suppliers = []) {
+export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {}) {
   const date = new Date().toISOString();
   
   let totalDueAed = 0;
@@ -1577,7 +1579,7 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
               <td class="center" style="font-weight:bold">${esc(r.deal_no)}</td>
               <td class="center">${new Date(r.invoice_date || r.created_at).toLocaleDateString()}</td>
               <td class="center">${esc(r.bl_no || "—")}</td>
-              <td>${esc((suppliers.find(s => String(s.id) === String(r.supplier_id)) || {}).name || "—")}</td>
+              <td>${esc((state.suppliers.find(s => String(s.id) === String(r.supplier_id)) || {}).name || "—")}</td>
               <td>${esc(r.product_name)}</td>
               <td class="right">${Number(r.quantity).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
               <td class="right">${Number(r.rate).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
