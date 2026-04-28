@@ -23,7 +23,7 @@ export function dealsView() {
 
   return `
     <div class="card">
-      <div class="flex flex-between flex-center mb-12" style="min-height: 48px; gap: 20px; flex-wrap: nowrap">
+      <div class="flex flex-between flex-center mb-12 flex-wrap" style="min-height: 48px; gap: 20px;">
         <div class="title mb-0" style="flex-shrink: 0">Deals</div>
         <div class="flex gap-12" style="flex-shrink: 0">
           <button id="export-deals-csv">Export CSV</button>
@@ -60,9 +60,9 @@ export function dealsView() {
             <div class="item relative">
               <div class="item-title">
                 ${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}
-                <span class="item-sub" style="font-weight:400; margin-left:8px; opacity:0.8">
-                  | BL: ${esc(d.bl_no || "—")} | ${esc(pkgDisplay)} | ${netWeight}
-                </span>
+              </div>
+              <div class="item-sub" style="font-weight:500; opacity:0.9; color:var(--accent-primary)">
+                BL: ${esc(d.bl_no || "—")} · ${esc(pkgDisplay)} · ${netWeight}
               </div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
               <div class="item-sub">Supplier: ${esc(supplierName(d.supplier_id))} · Shipper: ${esc(shipper?.name || "Default Company")} · Buyer: ${esc(buyerName(d.buyer_id))}</div>

@@ -446,14 +446,33 @@ form > div, form .grid, form .list { gap: 12px; }
 @media (max-width: 640px) {
   .hdr { padding: 1rem; }
   .hdr h1 { font-size: 1.1rem; }
-  .nav { top: 64px; padding: 0.75rem 1rem; }
-  #content { padding-top: 1rem; }
-  .card { padding: 1rem; }
+  .nav { top: 64px; padding: 0.5rem 1rem !important; gap: 8px !important; }
+  #content { padding: 0.75rem !important; padding-top: 0.5rem !important; }
+  .card { padding: 1rem !important; }
+  .item { padding: 1rem !important; }
   .stat-value { font-size: 1.5rem; }
+  
   .grid-2, .grid-3, .grid-4 { 
     grid-template-columns: 1fr !important; 
     display: flex !important;
     flex-direction: column !important;
+  }
+  
+  .item-title, .item-sub {
+    word-break: break-word !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .flex-between {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  
+  .btn-primary, .btn-secondary, button {
+    width: auto !important;
+    min-width: 80px;
   }
 }
 
