@@ -1,5 +1,5 @@
 import { state, buyerName, supplierName, paymentSummary, paymentsForDeal, documentsForDeal } from "./state.js";
-import { esc, nextDealNo, fmtMoney } from "./utils.js";
+import { esc, nextDealNo, fmtMoney, cleanContainerNumbers } from "./utils.js";
 
 export function dealsView() {
   const q = state.dealSearch.trim().toLowerCase();
@@ -422,15 +422,7 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
               name="container_numbers"
               style="min-height:110px"
               placeholder="Enter one container number per line&#10;Example:&#10;RLTU2087940&#10;RLTU2038966&#10;RLTU2106736"
-            >${esc(
-              Array.isArray(d.container_numbers)
-                ? d.container_numbers.join("\n")
-                : String(d.container_numbers || "")
-                    .split(/[,\n]+/)
-                    .map((x) => x.trim())
-                    .filter(Boolean)
-                    .join("\n")
-            )}</textarea>
+            >${esc(cleanContainerNumbers(d.container_numbers).join("\n"))}</textarea>
           </div>
         </div>
 

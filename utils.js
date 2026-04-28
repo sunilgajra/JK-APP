@@ -101,3 +101,21 @@ export function nextDealNo() {
   const next = (nums.length ? Math.max(...nums) : 0) + 1;
   return `JKP-${String(next).padStart(3, "0")}`;
 }
+
+export function cleanContainerNumbers(val) {
+  if (!val) return [];
+  let text = "";
+  if (Array.isArray(val)) {
+    text = val.map(v => (typeof v === "string" ? v : JSON.stringify(v))).join(" ");
+  } else {
+    text = String(val);
+  }
+  
+  // Aggressive match: Looking for alphanumeric sequences that are typically container numbers
+  const matches = text.match(/[A-Z0-9]{5,15}/gi) || [];
+  
+  const cleaned = matches.map(m => m.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+                         .filter(m => m.length >= 5); // Containers are usually 11 chars, 5 is safe
+                         
+  return [...new Set(cleaned)];
+}

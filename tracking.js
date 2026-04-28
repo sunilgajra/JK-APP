@@ -1,5 +1,5 @@
 import { state } from "./state.js";
-import { esc } from "./utils.js";
+import { esc, cleanContainerNumbers } from "./utils.js";
 
 export function trackingView() {
   const deals = state.deals || [];
@@ -54,25 +54,7 @@ export function trackingView() {
       <div class="title mb-10" style="font-size:16px">Trackable Shipments (Active Deals)</div>
       <div class="list">
         ${trackableDeals.length ? trackableDeals.map(d => {
-          let containerList = [];
-          try {
-            let raw = d.container_numbers;
-            if (Array.isArray(raw)) {
-              containerList = raw;
-            } else if (typeof raw === "string") {
-              // Try to find all alphanumeric strings that look like container numbers
-              // Usually 4 letters + 7 digits, but let's be flexible
-              containerList = raw.match(/[A-Z0-9]{5,15}/gi) || [];
-            }
-            
-            // Final aggressive clean
-            containerList = containerList.map(c => c.replace(/[^A-Z0-9]/gi, "").trim())
-                                        .filter(c => c.length >= 4); // Containers are usually 11 chars, but let's allow 4+
-            
-            // Remove duplicates
-            containerList = [...new Set(containerList)];
-          } catch(e) { containerList = []; }
-          
+          const containerList = cleanContainerNumbers(d.container_numbers);
           const containerStr = containerList.join(", ");
 
           return `
