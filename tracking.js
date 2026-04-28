@@ -60,34 +60,31 @@ export function trackingView() {
             if (Array.isArray(raw)) {
               containerList = raw;
             } else if (typeof raw === "string") {
-              raw = raw.trim();
-              if (raw.startsWith("[")) {
-                containerList = JSON.parse(raw);
-              } else {
-                containerList = raw.split(",").map(s => s.trim());
-              }
+              // Try to find all alphanumeric strings that look like container numbers
+              // Usually 4 letters + 7 digits, but let's be flexible
+              containerList = raw.match(/[A-Z0-9]{5,15}/gi) || [];
             }
-            // Deep clean each container number
-            containerList = containerList.map(c => {
-               if (typeof c !== "string") return String(c);
-               return c.replace(/\\"/g, '').replace(/[\[\]"']/g, '').trim();
-            }).filter(Boolean);
-          } catch(e) { 
-            containerList = String(d.container_numbers || "").replace(/[\[\]"']/g, '').split(",").map(s => s.trim()).filter(Boolean); 
-          }
+            
+            // Final aggressive clean
+            containerList = containerList.map(c => c.replace(/[^A-Z0-9]/gi, "").trim())
+                                        .filter(c => c.length >= 4); // Containers are usually 11 chars, but let's allow 4+
+            
+            // Remove duplicates
+            containerList = [...new Set(containerList)];
+          } catch(e) { containerList = []; }
           
-          const containerStr = containerList.join(" · ");
+          const containerStr = containerList.join(", ");
 
           return `
-            <div class="item">
+            <div class="item" style="overflow: hidden; max-width: 100%;">
               <div class="flex flex-between flex-top flex-wrap gap-12">
-                <div style="flex:1; width:100%; min-width:0">
+                <div style="flex: 1; min-width: 0; width: 100%;">
                   <div class="item-title" style="font-size:15px">${esc(d.deal_no)} · ${esc(d.product_name)}</div>
                   <div class="item-sub" style="margin-top:6px">
                     ${d.bl_no ? `<span class="badge" style="background:rgba(59,130,246,0.2); color:#60a5fa">BL: ${esc(d.bl_no)}</span>` : ""}
                     ${d.vessel_name ? `<span class="badge" style="background:rgba(16,185,129,0.2); color:#34d399; margin-left:5px">Vessel: ${esc(d.vessel_name)}</span>` : ""}
                   </div>
-                  ${containerStr ? `<div class="item-sub mt-6" style="font-size:11px; opacity:0.8; word-break: break-all; white-space: normal; line-height: 1.6; max-width: 100%;"><strong>Containers:</strong> ${esc(containerStr)}</div>` : ""}
+                  ${containerStr ? `<div class="item-sub mt-8" style="font-size:11px; opacity:0.8; overflow-wrap: anywhere; word-break: break-all; white-space: normal; line-height: 1.6; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;"><strong>Containers:</strong> ${esc(containerStr)}</div>` : ""}
                 </div>
                 <div class="flex gap-8 flex-wrap" style="align-items:flex-start">
                    <button class="btn-xs btn-info" data-track-deal-bl="${d.id}">Track</button>
