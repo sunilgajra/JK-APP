@@ -50,14 +50,16 @@ export function dealsView() {
                 const profitAed = d.document_currency === "USD" ? profit * (d.conversion_rate || 3.6725) : profit;
                 return `
             <div class="item relative">
-              <div class="flex flex-between flex-center" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 10px;">
-                <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
-                <div class="flex flex-center" style="gap: 8px;">
-                  ${d.bl_no ? `<span class="item-sub" style="margin:0">BL: ${esc(d.bl_no)}</span>` : ""}
-                  ${d.container_numbers ? `<span class="item-sub" style="margin:0">CONT: ${esc(Array.isArray(d.container_numbers) ? d.container_numbers[0] : String(d.container_numbers).split(/[,\n]+/)[0])}</span>` : ""}
-                  <span style="color:var(--accent-primary); font-weight:800; font-size: 0.8rem; border: 1px solid var(--accent-primary); padding: 2px 8px; border-radius: 4px;">${esc(d.quantity || "0")} ${esc(d.unit || "MT")}</span>
-                </div>
-              </div>
+              <table style="width: 100%; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; border-collapse: collapse;">
+                <tr>
+                  <td class="item-title" style="padding: 0 0 8px 0; vertical-align: middle;">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</td>
+                  <td style="text-align: right; padding: 0 0 8px 0; vertical-align: middle; font-size: 0.8rem; color: var(--text-dim); white-space: nowrap;">
+                    ${d.bl_no ? `<span>BL: ${esc(d.bl_no)}</span> · ` : ""}
+                    ${d.container_numbers ? `<span>CONT: ${esc(Array.isArray(d.container_numbers) ? d.container_numbers[0] : String(d.container_numbers).split(/[,\n]+/)[0])}</span> · ` : ""}
+                    <span style="color:var(--accent-primary); font-weight:800; border: 1px solid var(--accent-primary); padding: 1px 6px; border-radius: 3px;">${esc(d.quantity || "0")} ${esc(d.unit || "MT")}</span>
+                  </td>
+                </tr>
+              </table>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
               <div class="item-sub">
                 Supplier: <span style="color:var(--text)">${esc(supplierName(d.supplier_id))}</span> · 

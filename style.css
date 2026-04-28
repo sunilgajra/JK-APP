@@ -451,8 +451,8 @@ form > div, form .grid, form .list { gap: 12px; }
   .hdr { padding: 1rem; }
   .hdr h1 { font-size: 1.1rem; }
   .nav { top: 64px; padding: 0.75rem 1rem; }
-  #content { padding-top: 1rem; padding-left: 10px; padding-right: 10px; }
-  .card { padding: 1rem; }
+  #content { padding-top: 1rem; padding-left: 8px; padding-right: 8px; }
+  .card, .item { padding: 1rem !important; }
   .stat-value { font-size: 1.5rem; }
   .grid-2, .grid-3, .grid-4 { 
     grid-template-columns: 1fr !important; 
