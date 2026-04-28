@@ -50,11 +50,11 @@ export function dealsView() {
                 const profitAed = d.document_currency === "USD" ? profit * (d.conversion_rate || 3.6725) : profit;
                 return `
             <div class="item relative">
-              <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 15px; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">
-                <div style="font-weight: 700; font-size: 0.95rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-bottom: 10px;">
+                <div style="font-weight: 700; font-size: 0.95rem; color: var(--text); flex: 1; min-width: 150px;">
                   ${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}
                 </div>
-                <div style="display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: var(--text-dim);">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-dim); flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end;">
                   ${d.bl_no ? `<span style="opacity: 0.8;">BL: ${esc(d.bl_no)}</span>` : ""}
                   ${d.container_numbers ? `<span style="opacity: 0.8;">CONT: ${esc(Array.isArray(d.container_numbers) ? d.container_numbers[0] : String(d.container_numbers).split(/[,\n]+/)[0])}</span>` : ""}
                   <span style="background: var(--accent-primary); color: #000; font-weight: 800; padding: 4px 10px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); white-space: nowrap;">
