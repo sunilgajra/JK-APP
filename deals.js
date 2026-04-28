@@ -50,12 +50,12 @@ export function dealsView() {
                 const profitAed = d.document_currency === "USD" ? profit * (d.conversion_rate || 3.6725) : profit;
                 return `
             <div class="item relative">
-              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <div class="item-title" style="margin: 0;">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
-                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-dim);">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap;">
+                <div class="item-title" style="margin: 0; flex: 1; min-width: 200px;">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-dim); flex-shrink: 0;">
                   ${d.bl_no ? `<span style="opacity: 0.8;">BL: ${esc(d.bl_no)}</span>` : ""}
                   ${d.container_numbers && (Array.isArray(d.container_numbers) ? d.container_numbers.length : String(d.container_numbers).trim().length) ? `<span style="opacity: 0.8;">CONT: ${esc(Array.isArray(d.container_numbers) ? d.container_numbers[0] : String(d.container_numbers).split(/[,\n]+/)[0])}${(Array.isArray(d.container_numbers) ? d.container_numbers.length : 1) > 1 ? "..." : ""}</span>` : ""}
-                  <span style="color:var(--accent-primary); font-weight:800; background:rgba(212,175,55,0.1); padding:3px 8px; border-radius:4px; border: 1px solid rgba(212,175,55,0.2);">${esc(d.quantity || "0")} ${esc(d.unit || "MT")}</span>
+                  <span style="color:var(--accent-primary); font-weight:800; background:rgba(212,175,55,0.1); padding:3px 8px; border-radius:4px; border: 1px solid rgba(212,175,55,0.2); white-space: nowrap;">${esc(d.quantity || "0")} ${esc(d.unit || "MT")}</span>
                 </div>
               </div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
