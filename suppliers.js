@@ -53,17 +53,32 @@ export function suppliersView() {
             </div>
             <div id="supplier-master-deals-wrap-${s.id}" class="mt-10" style="display:none; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; border:1px solid rgba(59,157,162,0.3)">
               <div class="item-title mb-8" style="font-size:14px; color:var(--accent-primary)">Select Deals for Master Settlement</div>
-              <div class="list" style="max-height:200px; overflow-y:auto">
-                ${state.deals.filter(d => String(d.supplier_id) === String(s.id)).map(d => `
-                  <label class="flex flex-center gap-10 p-6 hover-bg" style="cursor:pointer; border-radius:4px">
-                    <input type="checkbox" name="master_deal_ids_${s.id}" value="${d.id}" checked>
-                    <div class="text-xs">
-                      <span class="font-bold">${esc(d.deal_no)}</span> · 
-                      <span>${esc(d.product_name)}</span> · 
-                      <span class="opacity-60">${new Date(d.invoice_date || d.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </label>
-                `).join("")}
+              <div class="table-responsive" style="max-height:200px; overflow-y:auto; border: 1px solid var(--border); border-radius: 6px; background: rgba(0,0,0,0.2);">
+                <table class="report-table" style="margin-top:0; width:100%; font-size: 12px;">
+                  <thead style="position: sticky; top: 0; z-index: 10; background: rgba(15, 23, 42, 0.95);">
+                    <tr>
+                      <th style="width: 40px; text-align: center; padding: 8px;">
+                        <input type="checkbox" checked onclick="document.querySelectorAll('input[name=\\'master_deal_ids_${s.id}\\']').forEach(cb => cb.checked = this.checked)">
+                      </th>
+                      <th style="padding: 8px;">Deal No</th>
+                      <th style="padding: 8px;">Product</th>
+                      <th style="padding: 8px;">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${state.deals.filter(d => String(d.supplier_id) === String(s.id)).map(d => `
+                      <tr>
+                        <td style="text-align: center; padding: 8px;">
+                          <input type="checkbox" name="master_deal_ids_${s.id}" value="${d.id}" checked>
+                        </td>
+                        <td class="font-bold" style="padding: 8px; color: var(--text);">${esc(d.deal_no)}</td>
+                        <td style="padding: 8px;">${esc(d.product_name)}</td>
+                        <td class="opacity-60" style="padding: 8px;">${new Date(d.invoice_date || d.created_at).toLocaleDateString()}</td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+                ${state.deals.filter(d => String(d.supplier_id) === String(s.id)).length === 0 ? '<div style="padding:10px; text-align:center; opacity:0.5; font-size:12px;">No deals found.</div>' : ''}
               </div>
               <div class="mt-8 flex gap-8">
                 <button data-print-supplier-master-selected="${s.id}" class="btn-primary btn-xs">Generate Settlement</button>

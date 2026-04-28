@@ -245,7 +245,7 @@ input, textarea, select, button{
   font-family:inherit;
 }
 
-input, textarea, select {
+input:not([type="checkbox"]):not([type="radio"]), textarea, select {
   width: 100%;
   padding: 0.75rem 1rem;
   border-radius: var(--radius-sm);
@@ -258,12 +258,20 @@ input, textarea, select {
   backdrop-filter: blur(4px);
 }
 
+input[type="checkbox"], input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent-primary);
+  margin: 0;
+}
+
 textarea {
   resize: vertical;
   min-height: 100px;
 }
 
-input:focus, textarea:focus, select:focus {
+input:not([type="checkbox"]):not([type="radio"]):focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--accent-primary);
   background: rgba(0, 0, 0, 0.3);
