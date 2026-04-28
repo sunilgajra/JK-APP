@@ -1310,7 +1310,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
   </html>`;
 }
 
-export function buildSupplierMasterStatement(supplier, deals, allPayments, company = {}) {
+export function buildSupplierMasterStatement(supplier, deals, allPayments, company = {}, buyers = []) {
   const date = new Date().toISOString();
   
   let totalDueAed = 0;
@@ -1389,6 +1389,8 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
           <tr>
             <th>DEAL NO</th>
             <th>DATE</th>
+            <th>BL NO</th>
+            <th>BUYER</th>
             <th>MATERIAL</th>
             <th>QTY</th>
             <th>RATE</th>
@@ -1401,6 +1403,8 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
             <tr>
               <td class="center" style="font-weight:bold">${esc(r.deal_no)}</td>
               <td class="center">${new Date(r.invoice_date || r.created_at).toLocaleDateString()}</td>
+              <td class="center">${esc(r.bl_no || "—")}</td>
+              <td>${esc((buyers.find(b => String(b.id) === String(r.buyer_id)) || {}).name || "—")}</td>
               <td>${esc(r.product_name)}</td>
               <td class="right">${Number(r.quantity).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
               <td class="right">${Number(r.purchase_rate).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
@@ -1411,7 +1415,7 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
         </tbody>
         <tfoot>
           <tr style="background:#f2f2f2; font-weight:bold">
-            <td colspan="5" class="right">TOTAL PAYABLE</td>
+            <td colspan="7" class="right">TOTAL PAYABLE</td>
             <td class="right">${totalDueUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
             <td class="right">${totalDueAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
           </tr>
@@ -1479,7 +1483,7 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
   </html>`;
 }
 
-export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {}) {
+export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {}, suppliers = []) {
   const date = new Date().toISOString();
   
   let totalDueAed = 0;
@@ -1558,6 +1562,8 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
           <tr>
             <th>DEAL NO</th>
             <th>DATE</th>
+            <th>BL NO</th>
+            <th>SUPPLIER</th>
             <th>MATERIAL</th>
             <th>QTY</th>
             <th>RATE</th>
@@ -1570,6 +1576,8 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
             <tr>
               <td class="center" style="font-weight:bold">${esc(r.deal_no)}</td>
               <td class="center">${new Date(r.invoice_date || r.created_at).toLocaleDateString()}</td>
+              <td class="center">${esc(r.bl_no || "—")}</td>
+              <td>${esc((suppliers.find(s => String(s.id) === String(r.supplier_id)) || {}).name || "—")}</td>
               <td>${esc(r.product_name)}</td>
               <td class="right">${Number(r.quantity).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
               <td class="right">${Number(r.rate).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
@@ -1580,7 +1588,7 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
         </tbody>
         <tfoot>
           <tr style="background:#f2f2f2; font-weight:bold">
-            <td colspan="5" class="right">TOTAL RECEIVABLE</td>
+            <td colspan="7" class="right">TOTAL RECEIVABLE</td>
             <td class="right">${totalDueUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
             <td class="right">${totalDueAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
           </tr>

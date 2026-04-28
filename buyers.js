@@ -48,6 +48,8 @@ export function buyersView() {
                         <input type="checkbox" checked onclick="document.querySelectorAll('input[name=\\'master_deal_ids_${b.id}\\']').forEach(cb => cb.checked = this.checked)">
                       </th>
                       <th style="padding: 8px;">Deal No</th>
+                      <th style="padding: 8px;">BL No</th>
+                      <th style="padding: 8px;">Supplier</th>
                       <th style="padding: 8px;">Product</th>
                       <th style="padding: 8px;">Date</th>
                     </tr>
@@ -59,6 +61,8 @@ export function buyersView() {
                           <input type="checkbox" name="master_deal_ids_${b.id}" value="${d.id}" checked>
                         </td>
                         <td class="font-bold" style="padding: 8px; color: var(--text);">${esc(d.deal_no)}</td>
+                        <td style="padding: 8px;">${esc(d.bl_no || "—")}</td>
+                        <td style="padding: 8px;">${esc((state.suppliers.find(s => String(s.id) === String(d.supplier_id)) || {}).name || "—")}</td>
                         <td style="padding: 8px;">${esc(d.product_name)}</td>
                         <td class="opacity-60" style="padding: 8px;">${new Date(d.invoice_date || d.created_at).toLocaleDateString()}</td>
                       </tr>
