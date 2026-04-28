@@ -14,6 +14,7 @@ import { settingsView } from "./settings.js";
 import { shippingInstructionsView } from "./shipping.js";
 import { productsView, productEditFormHtml } from "./products.js";
 import { reportsView, bindReportsUI } from "./reports.js";
+import { trackingView, performQuickTrack } from "./tracking.js";
 
 console.log("APP STARTING - VERSION 12");
 
@@ -225,6 +226,7 @@ function render() {
   else if (state.page === "deals") content.innerHTML = dealsView();
   else if (state.page === "dealDetail") content.innerHTML = dealDetailView();
   else if (state.page === "shippingInstructions") content.innerHTML = shippingInstructionsView();
+  else if (state.page === "tracking") content.innerHTML = trackingView();
   else if (state.page === "products") content.innerHTML = productsView();
   else if (state.page === "reports") content.innerHTML = reportsView();
   else if (state.page === "settings") content.innerHTML = settingsView();
@@ -300,6 +302,16 @@ function bindUI() {
     showEditAgentPaymentForm(agentId, paymentId);
   }));
   document.querySelectorAll("[data-delete-agent-payment]").forEach(btn => btn.addEventListener("click", () => deleteAgentPayment(btn.dataset.deleteAgentPayment)));
+
+  // Tracking
+  document.getElementById("btn-quick-track")?.addEventListener("click", performQuickTrack);
+  document.querySelectorAll("[data-track-deal-bl]").forEach(btn => btn.addEventListener("click", () => trackDeal(btn.dataset.trackDealBl)));
+  document.querySelectorAll("[data-update-tracking]").forEach(btn => btn.addEventListener("click", () => {
+    const id = btn.dataset.updateTracking;
+    const wrap = document.getElementById(`update-tracking-wrap-${id}`);
+    if (wrap) wrap.style.display = wrap.style.display === "none" ? "block" : "none";
+  }));
+  document.querySelectorAll("[data-save-tracking]").forEach(btn => btn.addEventListener("click", () => saveTrackingLog(btn.dataset.saveTracking)));
 
 
   
@@ -2004,6 +2016,34 @@ async function deleteAgentPayment(id) {
     await loadSupabaseData();
   } catch (err) {
     alert("Delete Agent Payment failed: " + err.message);
+  }
+}
+
+/**
+ * TRACKING
+ */
+function trackDeal(id) {
+  const d = state.deals.find(x => String(x.id) === String(id));
+  if (!d) return;
+  const num = d.bl_no || (d.container_numbers && d.container_numbers[0]);
+  if (!num) return alert("No BL or Container number found for this deal.");
+  
+  // Default to Google search for the number
+  const url = `https://www.google.com/search?q=track+shipment+${num}`;
+  window.open(url, "_blank");
+}
+
+async function saveTrackingLog(id) {
+  const val = document.getElementById(`tracking-input-${id}`)?.value;
+  try {
+    const { error } = await supabase.from("deals").update({
+      tracking_status: val,
+      tracking_updated_at: new Date().toISOString()
+    }).eq("id", id);
+    if (error) throw error;
+    await loadSupabaseData();
+  } catch (err) {
+    alert("Save Tracking Log failed: " + err.message);
   }
 }
 
