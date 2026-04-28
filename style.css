@@ -300,21 +300,7 @@ button:active {
   opacity: 0.8;
 }
 
-@media (max-width: 900px) {
-  .grid-2 { grid-template-columns: 1fr; }
-  #content { padding: 1rem; }
-  .grid-3 { grid-template-columns: repeat(2, 1fr); }
-}
 
-@media (max-width: 640px) {
-  .hdr { padding: 1rem; }
-  .hdr h1 { font-size: 1.1rem; }
-  .nav { top: 64px; padding: 0.75rem 1rem; }
-  #content { padding-top: 1rem; }
-  .card { padding: 1rem; }
-  .stat-value { font-size: 1.5rem; }
-  .grid-3, .grid-4 { grid-template-columns: 1fr; }
-}
 
 /* --- FORMS & BUTTONS --- */
 form.item { padding: 1.5rem; }
@@ -448,6 +434,28 @@ form > div, form .grid, form .list { gap: 12px; }
 .report-table td { padding: 10px; border: 1px solid var(--border); color: var(--text-dim); }
 .report-table tr:hover { background: rgba(255,255,255,0.03); }
 .report-table tfoot td { font-weight: 700; color: var(--text); border-top: 2px solid var(--accent-primary); }
+
+
+/* --- RESPONSIVE --- */
+@media (max-width: 900px) {
+  .grid-2 { grid-template-columns: 1fr !important; }
+  .grid-3 { grid-template-columns: repeat(2, 1fr) !important; }
+  #content { padding: 1rem; }
+}
+
+@media (max-width: 640px) {
+  .hdr { padding: 1rem; }
+  .hdr h1 { font-size: 1.1rem; }
+  .nav { top: 64px; padding: 0.75rem 1rem; }
+  #content { padding-top: 1rem; }
+  .card { padding: 1rem; }
+  .stat-value { font-size: 1.5rem; }
+  .grid-2, .grid-3, .grid-4 { 
+    grid-template-columns: 1fr !important; 
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
