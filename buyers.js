@@ -40,7 +40,7 @@ export function buyersView() {
             </div>
             <div id="buyer-master-deals-wrap-${b.id}" class="mt-10" style="display:none; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; border:1px solid rgba(59,157,162,0.3)">
               <div class="item-title mb-8" style="font-size:14px; color:var(--accent-primary)">Select Deals for Master Settlement</div>
-              <div class="table-responsive" style="max-height:200px; overflow-y:auto; border: 1px solid var(--border); border-radius: 6px; background: rgba(0,0,0,0.2);">
+              <div class="table-responsive" style="max-height:250px; overflow:auto; border: 1px solid var(--border); border-radius: 6px; background: rgba(0,0,0,0.2);">
                 <table class="report-table" style="margin-top:0; width:100%; font-size: 12px;">
                   <thead style="position: sticky; top: 0; z-index: 10; background: rgba(15, 23, 42, 0.95);">
                     <tr>

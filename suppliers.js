@@ -53,7 +53,7 @@ export function suppliersView() {
             </div>
             <div id="supplier-master-deals-wrap-${s.id}" class="mt-10" style="display:none; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; border:1px solid rgba(59,157,162,0.3)">
               <div class="item-title mb-8" style="font-size:14px; color:var(--accent-primary)">Select Deals for Master Settlement</div>
-              <div class="table-responsive" style="max-height:200px; overflow-y:auto; border: 1px solid var(--border); border-radius: 6px; background: rgba(0,0,0,0.2);">
+              <div class="table-responsive" style="max-height:250px; overflow:auto; border: 1px solid var(--border); border-radius: 6px; background: rgba(0,0,0,0.2);">
                 <table class="report-table" style="margin-top:0; width:100%; font-size: 12px;">
                   <thead style="position: sticky; top: 0; z-index: 10; background: rgba(15, 23, 42, 0.95);">
                     <tr>
@@ -90,14 +90,14 @@ export function suppliersView() {
               </div>
             </div>
             <div id="supplier-edit-wrap-${s.id}" class="mt-10"></div>
-            <div id="supplier-docs-wrap-${s.id}" class="mt-10" style="display:none; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px">
-              <div class="item-title mb-8">Supplier Documents</div>
-              <form data-supplier-doc-upload="${s.id}" class="grid gap-10">
-                <input type="text" name="docType" placeholder="Document Type (e.g. Master PI, Agreement)" required>
-                <input type="file" name="file" required>
-                <button type="submit" class="btn-primary btn-xs">Upload</button>
-              </form>
-              <div class="list mt-10">
+              <div id="supplier-docs-wrap-${s.id}" class="mt-10" style="display:none; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px">
+                <div class="item-title mb-8">Supplier Documents</div>
+                <form data-supplier-doc-upload="${s.id}" class="grid gap-10">
+                  <input type="text" name="docType" placeholder="Document Type (e.g. Master PI, Agreement)" required>
+                  <input type="file" name="file" required>
+                  <button type="submit" class="btn-primary btn-xs">Upload</button>
+                </form>
+                <div class="list mt-10" style="max-height:250px; overflow:auto">
                 ${(state.documentsBySupplier[s.id] || []).length 
                   ? state.documentsBySupplier[s.id].map(doc => `
                     <div class="item" style="padding:6px; background:rgba(0,0,0,0.2)">

@@ -435,6 +435,14 @@ form > div, form .grid, form .list { gap: 12px; }
 .report-table tr:hover { background: rgba(255,255,255,0.03); }
 .report-table tfoot td { font-weight: 700; color: var(--text); border-top: 2px solid var(--accent-primary); }
 
+.table-responsive {
+  width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+}
+
+
 
 /* --- RESPONSIVE --- */
 @media (max-width: 900px) {

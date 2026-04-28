@@ -39,7 +39,7 @@ export function agentsView() {
             
             <div id="agent-statement-deals-wrap-${a.id}" class="mt-12" style="display:none; background:rgba(255,255,255,0.01); border:1px solid var(--border); border-radius:8px; padding:12px">
                <div class="item-title mb-8" style="font-size:14px">Select Deals for Statement</div>
-               <div class="table-responsive">
+               <div class="table-responsive" style="max-height:250px; overflow:auto">
                  <table class="report-table" style="font-size:11px">
                    <thead>
                      <tr>
@@ -75,7 +75,7 @@ export function agentsView() {
                  <button data-add-agent-payment="${a.id}" class="btn-primary btn-xs">+ Add Payment</button>
                </div>
                <div id="agent-payment-form-inner-${a.id}"></div>
-               <div class="table-responsive mt-8">
+               <div class="table-responsive mt-8" style="max-height:250px; overflow:auto">
                  <table class="report-table" style="font-size:11px">
                    <thead>
                      <tr>
