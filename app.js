@@ -49,6 +49,8 @@ function handleRoute() {
     state.page = "products";
   } else if (hash === "#/reports") {
     state.page = "reports";
+  } else if (hash === "#/tracking") {
+    state.page = "tracking";
   } else {
     state.page = "dashboard";
   }
