@@ -54,7 +54,21 @@ export function trackingView() {
       <div class="title mb-10" style="font-size:16px">Trackable Shipments (Active Deals)</div>
       <div class="list">
         ${trackableDeals.length ? trackableDeals.map(d => {
-          const containerStr = Array.isArray(d.container_numbers) ? d.container_numbers.join(", ") : (d.container_numbers || "");
+          let containerList = [];
+          try {
+            if (Array.isArray(d.container_numbers)) {
+              containerList = d.container_numbers;
+            } else if (typeof d.container_numbers === "string") {
+              if (d.container_numbers.startsWith("[")) {
+                containerList = JSON.parse(d.container_numbers);
+              } else {
+                containerList = d.container_numbers.split(",").map(s => s.trim());
+              }
+            }
+          } catch(e) { containerList = [d.container_numbers]; }
+          
+          const containerStr = containerList.filter(Boolean).join(" · ");
+
           return `
             <div class="item">
               <div class="flex flex-between flex-top flex-wrap gap-12">
@@ -64,7 +78,7 @@ export function trackingView() {
                     ${d.bl_no ? `<span class="badge" style="background:rgba(59,130,246,0.2); color:#60a5fa">BL: ${esc(d.bl_no)}</span>` : ""}
                     ${d.vessel_name ? `<span class="badge" style="background:rgba(16,185,129,0.2); color:#34d399; margin-left:5px">Vessel: ${esc(d.vessel_name)}</span>` : ""}
                   </div>
-                  ${containerStr ? `<div class="item-sub mt-6" style="font-size:11px; opacity:0.7">Containers: ${esc(containerStr)}</div>` : ""}
+                  ${containerStr ? `<div class="item-sub mt-6" style="font-size:11px; opacity:0.8; word-break: break-all; white-space: normal; line-height: 1.6;"><strong>Containers:</strong> ${esc(containerStr)}</div>` : ""}
                 </div>
                 <div class="flex gap-8 flex-wrap" style="align-items:flex-start">
                    <button class="btn-xs btn-info" data-track-deal-bl="${d.id}">Track</button>
