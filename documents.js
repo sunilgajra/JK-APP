@@ -1332,8 +1332,10 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
   });
 
   const paymentRows = allPayments.filter(p => p.direction === "out").map(p => {
+    const deal = deals.find(d => String(d.id) === String(p.deal_id)) || {};
+    const dealConv = Number(deal.purchase_conversion_rate || deal.conversion_rate || 3.6725);
+    const conv = (Number(p.conversion_rate) && Number(p.conversion_rate) !== 1) ? Number(p.conversion_rate) : dealConv;
     const amt = Number(p.amount || 0);
-    const conv = Number(p.conversion_rate || 3.6725);
     let pUsd = 0, pAed = 0;
     
     if (p.currency === "AED") {
@@ -1499,8 +1501,10 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
   });
 
   const paymentRows = allPayments.filter(p => p.direction === "in").map(p => {
+    const deal = deals.find(d => String(d.id) === String(p.deal_id)) || {};
+    const dealConv = Number(deal.sale_conversion_rate || deal.conversion_rate || 3.6725);
+    const conv = (Number(p.conversion_rate) && Number(p.conversion_rate) !== 1) ? Number(p.conversion_rate) : dealConv;
     const amt = Number(p.amount || 0);
-    const conv = Number(p.conversion_rate || 3.6725);
     let pUsd = 0, pAed = 0;
     
     if (p.currency === "AED") {
