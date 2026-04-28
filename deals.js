@@ -49,15 +49,24 @@ export function dealsView() {
                 const margin = s.sale > 0 ? (profit / s.sale) * 100 : 0;
                 const profitAed = d.document_currency === "USD" ? profit * (d.conversion_rate || 3.6725) : profit;
                 const shipper = d.shipper_index !== null && d.shipper_index !== "" ? (state.company.shippers || [])[d.shipper_index] : state.company;
-                const ctrCount = Array.isArray(d.container_numbers) ? d.container_numbers.length : 0;
-                const netWeight = d.net_weight ? `${Number(d.net_weight).toFixed(2)} MT` : "—";
+                
+                let ctrCount = Array.isArray(d.container_numbers) && d.container_numbers.length > 0 
+                  ? d.container_numbers.length 
+                  : 0;
+                
+                if (ctrCount === 0 && d.package_details) {
+                  const match = d.package_details.match(/(\d+)\s*(?:CONTAINER|CTNR|CTRS|TANK|ISO|UNIT|PKG)/i);
+                  if (match) ctrCount = match[1];
+                }
+
+                const netWeight = d.quantity ? `${Number(d.quantity).toFixed(3)} MT` : "—";
                 
                 return `
             <div class="item relative">
               <div class="item-title">
                 ${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}
                 <span class="item-sub" style="font-weight:400; margin-left:8px; opacity:0.8">
-                  | BL: ${esc(d.bl_no || "—")} | ${ctrCount} CTRS | ${netWeight}
+                  | BL: ${esc(d.bl_no || "—")} | ${ctrCount || "—"} PKG | ${netWeight}
                 </span>
               </div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
