@@ -33,7 +33,7 @@ export function buyersView() {
             <div class="item-sub">GST: ${esc(b.gst || "—")} · IEC: ${esc(b.iec || "—")}</div>
             <div class="item-sub">Customer ID: ${esc(b.customer_id || "—")} · Email: ${esc(b.email || "—")}</div>
             <div class="item-sub">Phone: ${esc(b.phone || "—")}</div>
-            <div class="mt-8 flex gap-8">
+            <div class="mt-8 flex gap-8 flex-wrap">
               <button data-edit-buyer="${b.id}">Edit</button>
               <button data-delete-buyer="${b.id}">Delete</button>
               <button data-show-buyer-master-deals="${b.id}" class="btn-info">Master Settlement</button>
@@ -71,7 +71,7 @@ export function buyersView() {
                 </table>
                 ${state.deals.filter(d => String(d.buyer_id) === String(b.id)).length === 0 ? '<div style="padding:10px; text-align:center; opacity:0.5; font-size:12px;">No deals found.</div>' : ''}
               </div>
-              <div class="mt-8 flex gap-8">
+              <div class="mt-8 flex gap-8 flex-wrap">
                 <button data-print-buyer-master-selected="${b.id}" class="btn-primary btn-xs">Generate Settlement</button>
                 <button onclick="document.getElementById('buyer-master-deals-wrap-${b.id}').style.display='none'" class="btn-xs">Cancel</button>
               </div>

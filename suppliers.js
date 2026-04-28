@@ -45,7 +45,7 @@ export function suppliersView() {
             <div class="item-sub">Bank: ${esc(s.bank_name || "—")} · A/C: ${esc(s.bank_account || "—")}</div>
             <div class="item-sub">IBAN: ${esc(s.bank_iban || "—")} · SWIFT: ${esc(s.bank_swift || "—")}</div>
 
-            <div class="mt-8 flex gap-8">
+            <div class="mt-8 flex gap-8 flex-wrap">
               <button data-edit-supplier="${s.id}">Edit</button>
               <button data-delete-supplier="${s.id}">Delete</button>
               <button data-show-supplier-docs="${s.id}">Documents</button>
@@ -84,7 +84,7 @@ export function suppliersView() {
                 </table>
                 ${state.deals.filter(d => String(d.supplier_id) === String(s.id)).length === 0 ? '<div style="padding:10px; text-align:center; opacity:0.5; font-size:12px;">No deals found.</div>' : ''}
               </div>
-              <div class="mt-8 flex gap-8">
+              <div class="mt-8 flex gap-8 flex-wrap">
                 <button data-print-supplier-master-selected="${s.id}" class="btn-primary btn-xs">Generate Settlement</button>
                 <button onclick="document.getElementById('supplier-master-deals-wrap-${s.id}').style.display='none'" class="btn-xs">Cancel</button>
               </div>

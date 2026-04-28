@@ -30,7 +30,7 @@ export function agentsView() {
             <div class="item-title">${esc(a.name || "—")}</div>
             <div class="item-sub">Country: ${esc(a.country || "—")} · Phone: ${esc(a.phone || "—")}</div>
             <div class="item-sub" style="white-space: pre-wrap; font-size: 12px; opacity: 0.8;">Bank Details:\n${esc(a.bank_details || "—")}</div>
-            <div class="mt-12 flex gap-8">
+            <div class="mt-12 flex gap-8 flex-wrap">
               <button data-edit-agent="${a.id}">Edit</button>
               <button data-delete-agent="${a.id}">Delete</button>
               <button data-show-agent-payments="${a.id}" class="btn-outline">Payments</button>
