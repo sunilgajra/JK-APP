@@ -270,7 +270,23 @@ function bindUI() {
   });
   document.querySelectorAll("[data-edit-agent]").forEach(btn => btn.addEventListener("click", () => showEditAgentForm(btn.dataset.editAgent)));
   document.querySelectorAll("[data-delete-agent]").forEach(btn => btn.addEventListener("click", () => deleteAgent(btn.dataset.deleteAgent)));
-  document.querySelectorAll("[data-agent-statement]").forEach(btn => btn.addEventListener("click", () => printAgentStatement(btn.dataset.agentStatement)));
+  
+  // Agent Statement Selection
+  document.querySelectorAll("[data-show-agent-statement-deals]").forEach(btn => btn.addEventListener("click", () => {
+    const id = btn.dataset.showAgentStatementDeals;
+    const wrap = document.getElementById(`agent-statement-deals-wrap-${id}`);
+    if (wrap) wrap.style.display = wrap.style.display === "none" ? "block" : "none";
+  }));
+  document.querySelectorAll("[data-select-all-agent-deals]").forEach(cb => cb.addEventListener("change", (e) => {
+    const id = cb.dataset.selectAllAgentDeals;
+    document.querySelectorAll(`input[name="agent_deal_ids_${id}"]`).forEach(box => box.checked = e.target.checked);
+  }));
+  document.querySelectorAll("[data-print-agent-statement-selected]").forEach(btn => btn.addEventListener("click", () => {
+    const agentId = btn.dataset.printAgentStatementSelected;
+    const selectedIds = Array.from(document.querySelectorAll(`input[name="agent_deal_ids_${agentId}"]:checked`)).map(cb => cb.value);
+    if (!selectedIds.length) return alert("Please select at least one deal.");
+    printAgentStatement(agentId, selectedIds);
+  }));
 
   // Agent Payments
   document.querySelectorAll("[data-show-agent-payments]").forEach(btn => btn.addEventListener("click", () => {
@@ -1917,13 +1933,17 @@ async function deleteAgent(id) {
   }
 }
 
-function printAgentStatement(agentId) {
+function printAgentStatement(agentId, selectedIds = null) {
   const agent = state.agents.find(a => String(a.id) === String(agentId));
   if (!agent) return alert("Agent not found.");
   
-  const agentDeals = state.deals.filter(d => 
+  let agentDeals = state.deals.filter(d => 
     d.commission_name && d.commission_name.toLowerCase().includes(agent.name.toLowerCase())
   );
+  
+  if (selectedIds) {
+    agentDeals = agentDeals.filter(d => selectedIds.includes(String(d.id)));
+  }
   
   if (!agentDeals.length && !(state.agentPaymentsByAgent[agentId] || []).length) return alert("No commission deals or payments found for this agent.");
   

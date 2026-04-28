@@ -34,7 +34,39 @@ export function agentsView() {
               <button data-edit-agent="${a.id}">Edit</button>
               <button data-delete-agent="${a.id}">Delete</button>
               <button data-show-agent-payments="${a.id}" class="btn-outline">Payments</button>
-              <button data-agent-statement="${a.id}" class="btn-info">Account Statement</button>
+              <button data-show-agent-statement-deals="${a.id}" class="btn-info">Account Statement</button>
+            </div>
+            
+            <div id="agent-statement-deals-wrap-${a.id}" class="mt-12" style="display:none; background:rgba(255,255,255,0.01); border:1px solid var(--border); border-radius:8px; padding:12px">
+               <div class="item-title mb-8" style="font-size:14px">Select Deals for Statement</div>
+               <div class="table-responsive">
+                 <table class="report-table" style="font-size:11px">
+                   <thead>
+                     <tr>
+                       <th width="30"><input type="checkbox" data-select-all-agent-deals="${a.id}" checked></th>
+                       <th>Deal No</th>
+                       <th>Buyer</th>
+                       <th>Product</th>
+                       <th class="right">Commission</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     ${state.deals.filter(d => d.commission_name && d.commission_name.toLowerCase().includes(a.name.toLowerCase())).map(d => `
+                       <tr>
+                         <td><input type="checkbox" name="agent_deal_ids_${a.id}" value="${d.id}" checked></td>
+                         <td style="font-weight:700">${esc(d.deal_no)}</td>
+                         <td>${esc((state.buyers.find(b => String(b.id) === String(d.buyer_id)) || {}).name || "—")}</td>
+                         <td>${esc(d.product_name)}</td>
+                         <td class="right">${esc(d.commission_currency)} ${Number(d.commission_total).toLocaleString()}</td>
+                       </tr>
+                     `).join("")}
+                   </tbody>
+                 </table>
+               </div>
+               <div class="mt-10 flex flex-between flex-center flex-wrap gap-8">
+                  <div class="opacity-50" style="font-size:10px">Note: All recorded payments will be included.</div>
+                  <button data-print-agent-statement-selected="${a.id}" class="btn-info btn-xs">Generate Statement</button>
+               </div>
             </div>
             
             <div id="agent-payments-wrap-${a.id}" class="mt-12" style="display:none; background:rgba(255,255,255,0.01); border:1px solid var(--border); border-radius:8px; padding:12px">
