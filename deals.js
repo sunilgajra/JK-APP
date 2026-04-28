@@ -50,22 +50,9 @@ export function dealsView() {
                 const profitAed = d.document_currency === "USD" ? profit * (d.conversion_rate || 3.6725) : profit;
                 return `
             <div class="item relative">
-              <table style="width: 100%; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; border-collapse: collapse;">
-                <tr>
-                  <td class="item-title" style="padding: 0 0 8px 0; vertical-align: middle;">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</td>
-                  <td style="text-align: right; padding: 0 0 8px 0; vertical-align: middle; font-size: 0.8rem; color: var(--text-dim); white-space: nowrap;">
-                    ${d.bl_no ? `<span>BL: ${esc(d.bl_no)}</span> · ` : ""}
-                    ${d.container_numbers ? `<span>CONT: ${esc(Array.isArray(d.container_numbers) ? d.container_numbers[0] : String(d.container_numbers).split(/[,\n]+/)[0])}</span> · ` : ""}
-                    <span style="color:var(--accent-primary); font-weight:800; border: 1px solid var(--accent-primary); padding: 1px 6px; border-radius: 3px;">${esc(d.quantity || "0")} ${esc(d.unit || "MT")}</span>
-                  </td>
-                </tr>
-              </table>
+              <div class="item-title">${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}</div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
-              <div class="item-sub">
-                Supplier: <span style="color:var(--text)">${esc(supplierName(d.supplier_id))}</span> · 
-                Shipper: <span style="color:var(--text)">${esc(state.company.shippers?.[d.shipper_index]?.name || state.company.name)}</span> · 
-                Buyer: <span style="color:var(--text)">${esc(buyerName(d.buyer_id))}</span>
-              </div>
+              <div class="item-sub">Buyer: ${esc(buyerName(d.buyer_id))} · Supplier: ${esc(supplierName(d.supplier_id))}</div>
               
               <div class="grid grid-3 mt-8 p-10" style="background:rgba(255,255,255,0.03); border-radius:4px">
                 <div>
@@ -159,7 +146,7 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
     <form id="${edit ? `deal-edit-form-${id}` : "deal-form"}" class="item mb-12">
       <div class="form-header">${edit ? "Edit Deal" : "New Deal"}</div>
 
-      <div class="flex flex-column" style="gap: 15px;">
+      <div class="grid gap-12">
 
         <div class="grid grid-2 gap-10">
           <div>
