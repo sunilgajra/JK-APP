@@ -188,6 +188,8 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
               placeholder="HSN Code"
             >
           </div>
+        </div>
+
         <div class="grid grid-2 gap-10">
           <div>
             <label class="form-label">Unit</label>
