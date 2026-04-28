@@ -1813,8 +1813,7 @@ async function runAiScan(dealId, docId) {
     const data = JSON.parse(jsonStr);
 
     // 3. Confirm and Update
-    const rawContainers = Array.isArray(data.container_numbers) ? data.container_numbers : [];
-    const cleanContainers = rawContainers.map(c => String(c).replace(/[^A-Z0-9]/gi, "").toUpperCase());
+    const cleanContainers = cleanContainerNumbers(data.container_numbers);
     const containerCount = cleanContainers.length;
     
     const summary = [
