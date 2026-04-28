@@ -15,6 +15,7 @@ export const state = {
   paymentsByDeal: {},
   documentsByDeal: {},
   documentsBySupplier: {},
+  agentPaymentsByAgent: {},
   auditLogsByEntity: {},
   selectedDealId: null,
   company: {

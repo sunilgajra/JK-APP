@@ -33,8 +33,48 @@ export function agentsView() {
             <div class="mt-12 flex gap-8">
               <button data-edit-agent="${a.id}">Edit</button>
               <button data-delete-agent="${a.id}">Delete</button>
+              <button data-show-agent-payments="${a.id}" class="btn-outline">Payments</button>
               <button data-agent-statement="${a.id}" class="btn-info">Account Statement</button>
             </div>
+            
+            <div id="agent-payments-wrap-${a.id}" class="mt-12" style="display:none; background:rgba(255,255,255,0.01); border:1px solid var(--border); border-radius:8px; padding:12px">
+               <div class="flex flex-between flex-center mb-8">
+                 <div class="item-title" style="font-size:14px">Payments history</div>
+                 <button data-add-agent-payment="${a.id}" class="btn-primary btn-xs">+ Add Payment</button>
+               </div>
+               <div id="agent-payment-form-inner-${a.id}"></div>
+               <div class="table-responsive mt-8">
+                 <table class="report-table" style="font-size:11px">
+                   <thead>
+                     <tr>
+                       <th>Date</th>
+                       <th>Type</th>
+                       <th>Amt</th>
+                       <th>Mode</th>
+                       <th>Ref</th>
+                       <th></th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     ${(state.agentPaymentsByAgent[a.id] || []).map(p => `
+                       <tr>
+                         <td>${new Date(p.payment_date).toLocaleDateString()}</td>
+                         <td style="color:${p.type === "out" ? "var(--danger)" : "var(--success)"}">${p.type.toUpperCase()}</td>
+                         <td>${p.currency} ${Number(p.amount).toLocaleString()}</td>
+                         <td>${p.mode}</td>
+                         <td>${esc(p.ref || "—")}</td>
+                         <td class="right">
+                           <button data-edit-agent-payment="${a.id}:${p.id}" class="btn-xs">Edit</button>
+                           <button data-delete-agent-payment="${p.id}" class="btn-xs" style="color:var(--danger)">×</button>
+                         </td>
+                       </tr>
+                     `).join("")}
+                     ${!(state.agentPaymentsByAgent[a.id] || []).length ? "<tr><td colspan='6' class='center opacity-50'>No payments yet</td></tr>" : ""}
+                   </tbody>
+                 </table>
+               </div>
+            </div>
+
             <div id="agent-edit-wrap-${a.id}" class="mt-10"></div>
           </div>
         `).join("")
@@ -42,6 +82,58 @@ export function agentsView() {
         }
       </div>
     </div>
+  `;
+}
+
+export function agentPaymentFormHtml(agentId, p = {}, edit = false, id = "") {
+  return `
+    <form id="${edit ? `agent-payment-edit-form-${id}` : "agent-payment-form"}" class="mt-10 p-10" style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px">
+      <div class="item-title mb-8" style="font-size:14px; color:var(--accent-primary)">${edit ? "Edit Payment" : "New Payment"}</div>
+      <input type="hidden" name="agent_id" value="${agentId}">
+      <div class="grid grid-3 gap-8">
+        <div>
+          <label class="form-label">Amount</label>
+          <input name="amount" type="number" step="0.01" value="${esc(p.amount || "")}" required>
+        </div>
+        <div>
+          <label class="form-label">Currency</label>
+          <select name="currency">
+            <option value="USD" ${p.currency === "USD" ? "selected" : ""}>USD</option>
+            <option value="AED" ${(p.currency || "AED") === "AED" ? "selected" : ""}>AED</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Date</label>
+          <input name="payment_date" type="date" value="${p.payment_date || new Date().toISOString().split("T")[0]}" required>
+        </div>
+      </div>
+      <div class="grid grid-2 gap-8 mt-8">
+        <div>
+          <label class="form-label">Transaction Type</label>
+          <select name="type">
+            <option value="out" ${(p.type || "out") === "out" ? "selected" : ""}>OUT (We Pay Agent)</option>
+            <option value="in" ${p.type === "in" ? "selected" : ""}>IN (Refund/Other)</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Mode</label>
+          <select name="mode">
+            <option value="BANK" ${p.mode === "BANK" ? "selected" : ""}>BANK</option>
+            <option value="TOKEN" ${p.mode === "TOKEN" ? "selected" : ""}>TOKEN</option>
+            <option value="CASH" ${p.mode === "CASH" ? "selected" : ""}>CASH</option>
+            <option value="OTHERS" ${p.mode === "OTHERS" ? "selected" : ""}>OTHERS</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-8">
+        <label class="form-label">Reference / Note</label>
+        <input name="ref" value="${esc(p.ref || "")}" placeholder="Cheque No, Transfer Ref, etc.">
+      </div>
+      <div class="mt-10 flex gap-8">
+        <button type="submit" class="btn-primary btn-xs">${edit ? "Update" : "Save Payment"}</button>
+        <button type="button" class="btn-xs" id="${edit ? `cancel-agent-payment-edit-${id}` : "cancel-agent-payment-form"}">Cancel</button>
+      </div>
+    </form>
   `;
 }
 

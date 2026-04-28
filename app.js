@@ -7,7 +7,7 @@ import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDoc
 import { dashboardView } from "./dashboard.js";
 import { buyersView, buyerFormHtml } from "./buyers.js";
 import { suppliersView, supplierFormHtml } from "./suppliers.js";
-import { agentsView, agentFormHtml } from "./agents.js";
+import { agentsView, agentFormHtml, agentPaymentFormHtml } from "./agents.js";
 import { dealsView, dealFormHtml } from "./deals.js";
 import { dealDetailView } from "./dealDetail.js";
 import { settingsView } from "./settings.js";
@@ -94,12 +94,13 @@ async function loadSession() {
  */
 async function loadSupabaseData() {
   try {
-    const [buyersRes, suppliersRes, agentsRes, dealsRes, paymentsRes, documentsRes, auditRes] = await Promise.all([
+    const [buyersRes, suppliersRes, agentsRes, dealsRes, paymentsRes, agentPaymentsRes, documentsRes, auditRes] = await Promise.all([
       supabase.from("buyers").select("*").order("id", { ascending: false }),
       supabase.from("suppliers").select("*").order("id", { ascending: false }),
       supabase.from("commission_agents").select("*").order("id", { ascending: false }),
       supabase.from("deals").select("*").order("id", { ascending: false }),
       supabase.from("payments").select("*").order("id", { ascending: false }),
+      supabase.from("agent_payments").select("*").order("payment_date", { ascending: false }),
       supabase.from("deal_documents").select("*").eq("is_deleted", false).order("created_at", { ascending: false }),
       supabase.from("audit_logs").select("*").order("created_at", { ascending: false })
     ]);
@@ -123,6 +124,14 @@ async function loadSupabaseData() {
       groupedPayments[k].push(p);
     });
     state.paymentsByDeal = groupedPayments;
+
+    const groupedAgentPayments = {};
+    (agentPaymentsRes.data || []).forEach(p => {
+      const k = String(p.agent_id);
+      if (!groupedAgentPayments[k]) groupedAgentPayments[k] = [];
+      groupedAgentPayments[k].push(p);
+    });
+    state.agentPaymentsByAgent = groupedAgentPayments;
 
     const groupedDocs = {};
     const groupedSupplierDocs = {};
@@ -262,6 +271,20 @@ function bindUI() {
   document.querySelectorAll("[data-edit-agent]").forEach(btn => btn.addEventListener("click", () => showEditAgentForm(btn.dataset.editAgent)));
   document.querySelectorAll("[data-delete-agent]").forEach(btn => btn.addEventListener("click", () => deleteAgent(btn.dataset.deleteAgent)));
   document.querySelectorAll("[data-agent-statement]").forEach(btn => btn.addEventListener("click", () => printAgentStatement(btn.dataset.agentStatement)));
+
+  // Agent Payments
+  document.querySelectorAll("[data-show-agent-payments]").forEach(btn => btn.addEventListener("click", () => {
+    const id = btn.dataset.showAgentPayments;
+    const wrap = document.getElementById(`agent-payments-wrap-${id}`);
+    if (wrap) wrap.style.display = wrap.style.display === "none" ? "block" : "none";
+  }));
+  document.querySelectorAll("[data-add-agent-payment]").forEach(btn => btn.addEventListener("click", () => showAgentPaymentForm(btn.dataset.addAgentPayment)));
+  document.querySelectorAll("[data-edit-agent-payment]").forEach(btn => btn.addEventListener("click", () => {
+    const [agentId, paymentId] = btn.dataset.editAgentPayment.split(":");
+    showEditAgentPaymentForm(agentId, paymentId);
+  }));
+  document.querySelectorAll("[data-delete-agent-payment]").forEach(btn => btn.addEventListener("click", () => deleteAgentPayment(btn.dataset.deleteAgentPayment)));
+
 
   
   document.querySelectorAll("[data-ai-scan]").forEach(btn => btn.addEventListener("click", () => {
@@ -1902,10 +1925,66 @@ function printAgentStatement(agentId) {
     d.commission_name && d.commission_name.toLowerCase().includes(agent.name.toLowerCase())
   );
   
-  if (!agentDeals.length) return alert("No commission deals found for this agent.");
+  if (!agentDeals.length && !(state.agentPaymentsByAgent[agentId] || []).length) return alert("No commission deals or payments found for this agent.");
   
-  const html = buildAgentStatement(agent, agentDeals, state.company);
+  const html = buildAgentStatement(agent, agentDeals, state.company, state.agentPaymentsByAgent[agentId] || []);
   openPrintWindow(html);
+}
+
+/**
+ * AGENT PAYMENTS
+ */
+function showAgentPaymentForm(agentId) {
+  const wrap = document.getElementById(`agent-payment-form-inner-${agentId}`);
+  if (wrap) wrap.innerHTML = agentPaymentFormHtml(agentId);
+  
+  document.getElementById("cancel-agent-payment-form")?.addEventListener("click", () => {
+    wrap.innerHTML = "";
+  });
+  
+  document.getElementById("agent-payment-form")?.addEventListener("submit", (e) => saveAgentPayment(e));
+}
+
+function showEditAgentPaymentForm(agentId, paymentId) {
+  const p = (state.agentPaymentsByAgent[agentId] || []).find(x => String(x.id) === String(paymentId));
+  const wrap = document.getElementById(`agent-payment-form-inner-${agentId}`);
+  if (wrap) wrap.innerHTML = agentPaymentFormHtml(agentId, p, true, paymentId);
+  
+  document.getElementById(`cancel-agent-payment-edit-${paymentId}`)?.addEventListener("click", () => {
+    wrap.innerHTML = "";
+  });
+  
+  document.getElementById(`agent-payment-edit-form-${paymentId}`)?.addEventListener("submit", (e) => saveAgentPayment(e, paymentId));
+}
+
+async function saveAgentPayment(e, editId = null) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = Object.fromEntries(fd);
+  
+  try {
+    if (editId) {
+      const { error } = await supabase.from("agent_payments").update(data).eq("id", editId);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from("agent_payments").insert([data]);
+      if (error) throw error;
+    }
+    await loadSupabaseData();
+  } catch (err) {
+    alert("Save Agent Payment failed: " + err.message);
+  }
+}
+
+async function deleteAgentPayment(id) {
+  if (!confirm("Are you sure?")) return;
+  try {
+    const { error } = await supabase.from("agent_payments").delete().eq("id", id);
+    if (error) throw error;
+    await loadSupabaseData();
+  } catch (err) {
+    alert("Delete Agent Payment failed: " + err.message);
+  }
 }
 
 // Start

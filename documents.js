@@ -1658,7 +1658,7 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
   </html>`;
 }
 
-export function buildAgentStatement(agent, deals, company = {}) {
+export function buildAgentStatement(agent, deals, company = {}, payments = []) {
   const date = new Date().toLocaleDateString();
   let totalCommUsd = 0;
   let totalCommAed = 0;
@@ -1667,21 +1667,31 @@ export function buildAgentStatement(agent, deals, company = {}) {
     const amt = Number(d.commission_total || 0);
     const curr = d.commission_currency || "USD";
     const conv = Number(d.conversion_rate || 3.6725);
-    
     let aUsd = 0, aAed = 0;
-    if (curr === "AED") {
-      aAed = amt;
-      aUsd = amt / conv;
-    } else {
-      aUsd = amt;
-      aAed = amt * conv;
-    }
-
+    if (curr === "AED") { aAed = amt; aUsd = amt / conv; } 
+    else { aUsd = amt; aAed = amt * conv; }
     totalCommUsd += aUsd;
     totalCommAed += aAed;
-
     return { ...d, aUsd, aAed, curr };
   });
+
+  let totalPaidUsd = 0;
+  let totalPaidAed = 0;
+  const pRows = payments.map(p => {
+    const amt = Number(p.amount || 0);
+    const curr = p.currency || "AED";
+    const conv = 3.6725; // Default for agent payments
+    let pUsd = 0, pAed = 0;
+    if (curr === "AED") { pAed = amt; pUsd = amt / conv; } 
+    else { pUsd = amt; pAed = amt * conv; }
+    
+    if (p.type === "out") { totalPaidUsd += pUsd; totalPaidAed += pAed; } 
+    else { totalPaidUsd -= pUsd; totalPaidAed -= pAed; }
+    return { ...p, pUsd, pAed };
+  });
+
+  const balUsd = totalCommUsd - totalPaidUsd;
+  const balAed = totalCommAed - totalPaidAed;
 
   return `
   <!DOCTYPE html>
@@ -1689,46 +1699,44 @@ export function buildAgentStatement(agent, deals, company = {}) {
   <head>
     <title>Agent Statement - ${esc(agent.name)}</title>
     <style>
-      body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; color: #333; }
-      .doc { width: 210mm; margin: auto; border: 1px solid #eee; padding: 20mm; }
-      .header { display: flex; justify-content: space-between; border-bottom: 2px solid #d4af37; padding-bottom: 15px; margin-bottom: 20px; }
-      .company-name { font-size: 20px; font-weight: 800; color: #d4af37; }
-      .title { font-size: 24px; font-weight: 800; text-align: center; margin: 20px 0; color: #222; text-transform: uppercase; letter-spacing: 2px; }
-      .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-      .table th { background: #f8f8f8; border: 1px solid #ddd; padding: 10px; font-size: 11px; text-transform: uppercase; text-align: left; }
-      .table td { border: 1px solid #ddd; padding: 10px; font-size: 12px; }
-      .total-row { font-weight: 800; background: #fffcf0; }
-      .bank-box { margin-top: 30px; padding: 15px; border: 1px solid #d4af37; background: #fffdf5; border-radius: 4px; }
+      body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; color: #333; line-height: 1.4; }
+      .doc { width: 210mm; margin: auto; border: 1px solid #eee; padding: 15mm; }
+      .header { display: flex; justify-content: space-between; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 15px; }
+      .company-name { font-size: 18px; font-weight: 800; color: #d4af37; }
+      .title { font-size: 20px; font-weight: 800; text-align: center; margin: 15px 0; color: #222; text-transform: uppercase; }
+      .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+      .table th { background: #f8f8f8; border: 1px solid #ddd; padding: 8px; font-size: 10px; text-transform: uppercase; text-align: left; }
+      .table td { border: 1px solid #ddd; padding: 8px; font-size: 11px; }
+      .total-row { font-weight: 800; background: #f9f9f9; }
+      .bal-box { background: #ffff00; font-weight: 800; padding: 5px 10px; border: 1px solid #000; display: inline-block; }
       .right { text-align: right; }
+      .section-title { font-weight: 800; font-size: 12px; margin-top: 20px; margin-bottom: 5px; color: #d4af37; border-bottom: 1px solid #eee; padding-bottom: 3px; }
       @media print { .no-print { display: none; } }
     </style>
   </head>
   <body>
     <div class="doc">
-      <button class="no-print" onclick="window.print()" style="margin-bottom:20px; padding:8px 16px; background:#d4af37; color:white; border:none; border-radius:4px; cursor:pointer;">Print Statement</button>
+      <button class="no-print" onclick="window.print()" style="margin-bottom:15px; padding:6px 12px; background:#d4af37; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Print Report</button>
       
       <div class="header">
         <div>
           <div class="company-name">${esc(company.name)}</div>
-          <div style="font-size:12px; margin-top:5px; white-space:pre-wrap;">${esc(company.address)}</div>
+          <div style="font-size:11px; margin-top:3px; white-space:pre-wrap;">${esc(company.address)}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-weight:700">DATE: ${date}</div>
-          <div style="font-size:12px">AGENT ACCOUNT STATEMENT</div>
+          <div style="font-weight:700; font-size:12px">DATE: ${date}</div>
+          <div style="font-size:11px">COMMISSION ACCOUNT STATEMENT</div>
         </div>
       </div>
 
-      <div class="title">Commission Account Statement</div>
+      <div class="title">Agent Account Statement</div>
 
-      <div style="margin-bottom:20px">
-        <div style="font-weight:700; font-size:14px">AGENT DETAILS:</div>
-        <div style="font-size:14px; margin-top:5px;">
-          <strong>${esc(agent.name)}</strong><br>
-          Country: ${esc(agent.country || "—")}<br>
-          Phone: ${esc(agent.phone || "—")}
-        </div>
+      <div style="margin-bottom:15px">
+        <div style="font-weight:700; font-size:12px">AGENT: ${esc(agent.name)}</div>
+        <div style="font-size:11px; color:#666">${esc(agent.country || "—")} | ${esc(agent.phone || "—")}</div>
       </div>
 
+      <div class="section-title">COMMISSION TRANSACTIONS (FROM DEALS)</div>
       <table class="table">
         <thead>
           <tr>
@@ -1736,9 +1744,9 @@ export function buildAgentStatement(agent, deals, company = {}) {
             <th>Deal No</th>
             <th>Material</th>
             <th>Qty</th>
-            <th>Comm Rate</th>
-            <th class="right">Amt (USD)</th>
-            <th class="right">Amt (AED)</th>
+            <th>Rate</th>
+            <th class="right">USD</th>
+            <th class="right">AED</th>
           </tr>
         </thead>
         <tbody>
@@ -1748,7 +1756,7 @@ export function buildAgentStatement(agent, deals, company = {}) {
               <td style="font-weight:700">${esc(r.deal_no)}</td>
               <td>${esc(r.product_name)}</td>
               <td>${Number(r.quantity || 0).toLocaleString()} ${esc(r.unit || "MT")}</td>
-              <td>${Number(r.commission_rate || 0).toFixed(2)} / ${esc(r.unit || "MT")}</td>
+              <td>${Number(r.commission_rate || 0).toFixed(2)}</td>
               <td class="right">${Number(r.aUsd).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
               <td class="right">${Number(r.aAed).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
             </tr>
@@ -1756,21 +1764,66 @@ export function buildAgentStatement(agent, deals, company = {}) {
         </tbody>
         <tfoot>
           <tr class="total-row">
-            <td colspan="5" class="right">TOTAL COMMISSION DUE</td>
+            <td colspan="5" class="right">GROSS COMMISSION EARNED</td>
             <td class="right">${totalCommUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
             <td class="right">${totalCommAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
           </tr>
         </tfoot>
       </table>
 
-      <div class="bank-box">
-        <div style="font-weight:700; margin-bottom:8px; color:#d4af37">AGENT BANK DETAILS</div>
-        <div style="font-size:12px; white-space:pre-wrap;">${esc(agent.bank_details || "No bank details provided.")}</div>
+      <div class="section-title">PAYMENTS MADE TO AGENT</div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Mode</th>
+            <th>Ref / Note</th>
+            <th>Type</th>
+            <th class="right">USD</th>
+            <th class="right">AED</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${pRows.map(p => `
+            <tr>
+              <td>${new Date(p.payment_date).toLocaleDateString()}</td>
+              <td>${esc(p.mode)}</td>
+              <td>${esc(p.ref || "—")}</td>
+              <td style="color:${p.type === "out" ? "inherit" : "var(--success)"}">${p.type.toUpperCase()}</td>
+              <td class="right">${p.type === "out" ? "" : "+"}${Number(p.pUsd).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${p.type === "out" ? "" : "+"}${Number(p.pAed).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            </tr>
+          `).join("")}
+          ${!pRows.length ? '<tr><td colspan="6" style="text-align:center; opacity:0.5">No payment history found.</td></tr>' : ''}
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="4" class="right">TOTAL PAYMENTS SENT</td>
+            <td class="right">${totalPaidUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td class="right">${totalPaidAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div style="margin-top:25px; border:2px solid #000; padding:15px; display:flex; justify-content:space-between; align-items:center; background:#fcfcfc">
+        <div>
+           <div style="font-weight:800; font-size:14px; text-transform:uppercase">Net Outstanding Balance:</div>
+           <div style="font-size:11px; color:#666">Remaining commission amount to be paid to agent.</div>
+        </div>
+        <div style="text-align:right">
+           <div class="bal-box" style="font-size:18px">USD ${balUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</div><br>
+           <div class="bal-box" style="margin-top:5px">AED ${balAed.toLocaleString(undefined, {minimumFractionDigits:2})}</div>
+        </div>
       </div>
 
-      <div style="margin-top:50px; display:flex; justify-content:space-between">
-        <div style="text-align:center; width:200px; border-top:1px solid #333; padding-top:5px; font-size:12px">Authorized Signatory<br>${esc(company.name)}</div>
-        <div style="text-align:center; width:200px; border-top:1px solid #333; padding-top:5px; font-size:12px">Agent Acceptance<br>${esc(agent.name)}</div>
+      <div style="margin-top:20px; border: 1px solid #ddd; padding:10px; font-size:11px; background:#fffdf5">
+        <strong>AGENT BANK DETAILS:</strong><br>
+        <div style="margin-top:5px; white-space:pre-wrap;">${esc(agent.bank_details || "Not Provided")}</div>
+      </div>
+
+      <div style="margin-top:40px; display:flex; justify-content:space-between">
+        <div style="text-align:center; width:200px; border-top:1px solid #333; padding-top:5px; font-size:10px">For ${esc(company.name)}<br>(Authorized Signatory)</div>
+        <div style="text-align:center; width:200px; border-top:1px solid #333; padding-top:5px; font-size:10px">Agent Acceptance<br>(${esc(agent.name)})</div>
       </div>
     </div>
   </body>
