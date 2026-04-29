@@ -1,7 +1,7 @@
 import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildShippingInstruction, buildSupplierStatement, buildBuyerStatement, buildSupplierMasterStatement, buildBuyerMasterStatement, buildAgentStatement } from "./documents.js";
 import { supabase } from "./supabase.js";
 import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal, paymentSummary } from "./state.js";
-import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers } from "./utils.js";
+import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers, cleanContainerNumbers } from "./utils.js";
 
 // Import Views (Flat Structure)
 import { dashboardView } from "./dashboard.js";
