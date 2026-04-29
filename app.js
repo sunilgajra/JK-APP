@@ -1606,7 +1606,8 @@ function exportDealsCsv() {
     "Buyer", "Sale Rate", "Sale Total USD", "Sale Total AED", "Received (Buyer)", "Receivable (Buyer Bal)",
     "Product", "HSN", "Quantity", "Unit", 
     "Base Currency", "Doc Currency", "Conv Rate", 
-    "Loading Port", "Discharge Port", "Vessel", "ETA", "Shipment Out", "Payment Terms"
+    "Loading Port", "Discharge Port", "Vessel", "ETA", "Shipment Out", "Payment Terms",
+    "BL No", "No of Containers", "Invoice Date"
   ];
 
   const rows = state.deals.map(d => {
@@ -1619,6 +1620,8 @@ function exportDealsCsv() {
       isUsd ? d.total_amount_usd : d.total_amount_aed,
       isUsd ? d.purchase_total_usd : d.purchase_total_aed
     );
+
+    const containerCount = Array.isArray(d.container_numbers) ? d.container_numbers.length : 0;
     
     const data = [
       d.deal_no, d.type, d.status, d.approval_status,
@@ -1626,7 +1629,8 @@ function exportDealsCsv() {
       buyer, d.rate, d.total_amount_usd, d.total_amount_aed, s.received, s.receivable,
       d.product_name, d.hsn_code, d.quantity, d.unit,
       d.base_currency, d.document_currency, d.conversion_rate,
-      d.loading_port, d.discharge_port, d.vessel_voyage || d.vessel, d.eta, d.shipment_out_date, d.payment_terms
+      d.loading_port, d.discharge_port, d.vessel_voyage || d.vessel, d.eta, d.shipment_out_date, d.payment_terms,
+      d.bl_no || "—", containerCount, d.invoice_date || "—"
     ];
 
     return data.map(val => `"${String(val ?? "").replace(/"/g, '""')}"`).join(",");
