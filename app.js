@@ -1738,28 +1738,33 @@ function printDoc(type, dealId) {
 }
 
 function showDocumentPicker(docs, callback) {
+  // Remove any existing picker first
+  const existing = document.querySelector(".modal-overlay.doc-picker");
+  if (existing) document.body.removeChild(existing);
+
   const overlay = document.createElement("div");
-  overlay.className = "modal-overlay";
-  overlay.style.display = "flex";
+  overlay.className = "modal-overlay doc-picker";
   
   const content = `
-    <div class="modal-content" style="max-width:500px">
-      <h3>Include Uploaded Files?</h3>
-      <p>Select which uploaded documents to include in the Document Set:</p>
-      <div style="max-height:300px; overflow-y:auto; margin:15px 0; border:1px solid #ddd; padding:10px; border-radius:8px;">
+    <div class="modal-content">
+      <div class="form-header">Include Uploaded Files?</div>
+      <p class="text-muted text-xs mb-12">Select which uploaded documents to include in the combined PDF package:</p>
+      
+      <div class="list" style="max-height:350px; overflow-y:auto; margin-bottom:24px; padding:4px;">
         ${docs.map(d => `
-          <label style="display:flex; align-items:center; gap:10px; padding:8px; border-bottom:1px solid #eee; cursor:pointer">
+          <label class="item flex flex-center gap-12" style="cursor:pointer; padding:12px;">
             <input type="checkbox" class="doc-pick-check" value="${esc(d.file_url)}">
             <div style="flex:1">
-              <div style="font-weight:700">${esc(d.doc_type)}</div>
-              <div style="font-size:11px; opacity:0.7">${new Date(d.created_at).toLocaleDateString()}</div>
+              <div class="item-title" style="font-size:0.85rem">${esc(d.doc_type)}</div>
+              <div class="item-sub" style="margin-top:2px">${new Date(d.created_at).toLocaleDateString()}</div>
             </div>
           </label>
         `).join("")}
       </div>
-      <div style="display:flex; justify-content:flex-end; gap:10px">
-        <button id="cancel-doc-pick" class="btn-secondary">Skip / No Files</button>
-        <button id="confirm-doc-pick" class="btn-primary">Generate with Selected</button>
+      
+      <div class="flex gap-12">
+        <button id="cancel-doc-pick" class="btn-outline" style="flex:1">Skip / No Files</button>
+        <button id="confirm-doc-pick" class="btn-primary" style="flex:2">Generate Document Set</button>
       </div>
     </div>
   `;
@@ -1767,15 +1772,29 @@ function showDocumentPicker(docs, callback) {
   overlay.innerHTML = content;
   document.body.appendChild(overlay);
   
+  const close = () => {
+    if (document.body.contains(overlay)) {
+      document.body.removeChild(overlay);
+    }
+  };
+
   document.getElementById("cancel-doc-pick").addEventListener("click", () => {
-    document.body.removeChild(overlay);
+    close();
     callback([]);
   });
   
   document.getElementById("confirm-doc-pick").addEventListener("click", () => {
     const selected = Array.from(overlay.querySelectorAll(".doc-pick-check:checked")).map(cb => cb.value);
-    document.body.removeChild(overlay);
+    close();
     callback(selected);
+  });
+
+  // Close on click outside
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      close();
+      callback([]);
+    }
   });
 }
 
