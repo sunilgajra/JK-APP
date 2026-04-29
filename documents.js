@@ -834,17 +834,11 @@ export function buildPI(deal, buyer, supplier, company = {}) {
   </html>`;
 }
 
-export function buildCI(deal, buyer, supplier, company = {}) {
-  const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
-  const total = Number(deal.totalAmount || 0);
-  const roundedTotal = Math.round(total);
-  const roundOff = roundedTotal - total;
-  const currency = docCurrency(deal);
-  const filename = suggestFilename("CI", deal, buyer, company);
+function innerCI(deal, buyer, supplier, company, date, currency) {
+  const roundedTotal = Math.round(deal.totalAmount || 0);
+  const roundOff = roundedTotal - (deal.totalAmount || 0);
 
   return `
-  <!DOCTYPE html><html><head><title>${esc(filename)}</title>${commonStyle()}${previewScript()}</head><body>
-    ${previewActions()}
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
@@ -874,7 +868,7 @@ export function buildCI(deal, buyer, supplier, company = {}) {
               HS CODE : : ${esc(deal.hsn_code || "—")}
             </div>
             <div style="margin-top:auto">
-              ${esc(currency)} : ${esc(amountWords(total))} ONLY
+              ${esc(currency)} : ${esc(amountWords(deal.totalAmount))} ONLY
             </div>
           </div>
         </td>
@@ -882,7 +876,7 @@ export function buildCI(deal, buyer, supplier, company = {}) {
         <td class="center">${esc(deal.quantity || "")}</td>
         <td class="center">${fmt(deal.docRate || deal.rate || 0)}</td>
         <td class="center">-</td>
-        <td class="right">${fmt(total)}</td>
+        <td class="right">${fmt(deal.totalAmount)}</td>
       </tr>
     </table>
 
@@ -911,7 +905,7 @@ export function buildCI(deal, buyer, supplier, company = {}) {
       ${containerBlock(deal)}
 
       <table class="thin" style="font-size:10px;">
-        <tr><td>Subtotal</td><td class="right">${fmt(total)}</td></tr>
+        <tr><td>Subtotal</td><td class="right">${fmt(deal.totalAmount)}</td></tr>
         <tr><td>Taxable</td><td class="right">-</td></tr>
         <tr><td>Tax rate</td><td class="right">-</td></tr>
         <tr><td>Tax</td><td class="right">-</td></tr>
@@ -927,25 +921,23 @@ export function buildCI(deal, buyer, supplier, company = {}) {
 
     ${additionalDetailsBlock(deal, supplier, "", "", false)}
 
-    ${footer(company, date)}
+    ${footer(company, date)}`;
+}
+
+export function buildCI(deal, buyer, supplier, company = {}) {
+  const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
+  const currency = docCurrency(deal);
+  const filename = suggestFilename("CI", deal, buyer, company);
+
+  return `
+  <!DOCTYPE html><html><head><title>${esc(filename)}</title>${commonStyle()}${previewScript()}</head><body>
+    ${previewActions()}
+    <div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div>
   </body></html>`;
 }
 
-export function buildPL(deal, buyer, supplier, company = {}) {
-  const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
-  const filename = suggestFilename("PL", deal, buyer, company);
-
+function innerPL(deal, buyer, supplier, company, date) {
   return `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <title>${esc(filename)}</title>
-    ${commonStyle()}
-    ${previewScript()}
-  </head>
-  <body>
-    ${previewActions()}
-
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
@@ -984,14 +976,12 @@ export function buildPL(deal, buyer, supplier, company = {}) {
 
     ${additionalDetailsBlock(deal, supplier, "", "", false)}
 
-    ${footer(company, date, false)}
-  </body>
-  </html>`;
+    ${footer(company, date, false)}`;
 }
 
-export function buildCOO(deal, buyer, supplier, company = {}) {
+export function buildPL(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
-  const filename = suggestFilename("COO", deal, buyer, company);
+  const filename = suggestFilename("PL", deal, buyer, company);
 
   return `
   <!DOCTYPE html>
@@ -1003,7 +993,13 @@ export function buildCOO(deal, buyer, supplier, company = {}) {
   </head>
   <body>
     ${previewActions()}
+    <div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div>
+  </body>
+  </html>`;
+}
 
+function innerCOO(deal, buyer, supplier, company, date) {
+  return `
     <div class="top">
       ${shipperBlock(company)}
       ${logoBlock()}
@@ -1040,10 +1036,57 @@ export function buildCOO(deal, buyer, supplier, company = {}) {
         </div>
     `, false)}
 
-    ${footer(company, date, false)}
+    ${footer(company, date, false)}`;
+}
+
+export function buildCOO(deal, buyer, supplier, company = {}) {
+  const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
+  const filename = suggestFilename("COO", deal, buyer, company);
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(filename)}</title>
+    ${commonStyle()}
+    ${previewScript()}
+  </head>
+  <body>
+    ${previewActions()}
+    <div class="doc">${innerCOO(deal, buyer, supplier, company, date)}</div>
   </body>
   </html>`;
 }
+
+export function buildDocumentSet(deal, buyer, supplier, company = {}) {
+  const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
+  const currency = docCurrency(deal);
+  const blNo = (deal.bl_no || "NOBL").replace(/[^A-Z0-9]/gi, "");
+  const filename = `SET-${blNo}-${deal.dealNo || "DEAL"}`;
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(filename)}</title>
+    ${commonStyle()}
+    ${previewScript()}
+    <style>
+      @media print {
+        .doc { page-break-after: always !important; }
+        .doc:last-child { page-break-after: auto !important; }
+      }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+    <div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div>
+    <div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div>
+    <div class="doc">${innerCOO(deal, buyer, supplier, company, date)}</div>
+  </body>
+  </html>`;
+}
+
 
 export function buildSupplierStatement(deal, buyer, supplier, payments, company = {}) {
   const date = new Date().toISOString();

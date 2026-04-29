@@ -377,6 +377,7 @@ function bindUI() {
   document.querySelectorAll("[data-print-ci]").forEach(btn => btn.addEventListener("click", () => printDoc("ci", btn.dataset.printCi)));
   document.querySelectorAll("[data-print-pl]").forEach(btn => btn.addEventListener("click", () => printDoc("pl", btn.dataset.printPl)));
   document.querySelectorAll("[data-print-coo]").forEach(btn => btn.addEventListener("click", () => printDoc("coo", btn.dataset.printCoo)));
+  document.querySelectorAll("[data-print-set]").forEach(btn => btn.addEventListener("click", () => printDoc("set", btn.dataset.printSet)));
   document.querySelectorAll("[data-print-supplier-statement]").forEach(btn => btn.addEventListener("click", () => printDoc("supplier-statement", btn.dataset.printSupplierStatement)));
   document.querySelectorAll("[data-print-buyer-statement]").forEach(btn => btn.addEventListener("click", () => printDoc("buyer-statement", btn.dataset.printBuyerStatement)));
   
@@ -1716,6 +1717,7 @@ function printDoc(type, dealId) {
   if (type === "ci") html = buildCI(dealDoc, buyer, supplier, companyForDoc);
   if (type === "pl") html = buildPL(dealDoc, buyer, supplier, companyForDoc);
   if (type === "coo") html = buildCOO(dealDoc, buyer, supplier, companyForDoc);
+  if (type === "set") html = buildDocumentSet(dealDoc, buyer, supplier, companyForDoc);
   if (type === "supplier-statement") html = buildSupplierStatement(deal, buyer, supplier, payments, companyForDoc);
   if (type === "buyer-statement") html = buildBuyerStatement(deal, buyer, supplier, payments, companyForDoc);
   
