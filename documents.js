@@ -176,7 +176,7 @@ function previewScript() {
         const actions = document.querySelector(".previewActions");
         if (actions) actions.style.display = "none";
 
-        const element = document.querySelector(".doc");
+        const element = document.body;
         const title = document.title || "document";
 
         await waitForImages(element);
@@ -1072,10 +1072,8 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
     ${commonStyle()}
     ${previewScript()}
     <style>
-      @media print {
-        .doc { page-break-after: always !important; }
-        .doc:last-child { page-break-after: auto !important; }
-      }
+      .doc { page-break-after: always !important; }
+      .doc:last-child { page-break-after: auto !important; }
     </style>
   </head>
   <body>
