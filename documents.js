@@ -646,7 +646,13 @@ function suggestFilename(type, deal, buyer, company) {
   return `${docType}-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}-${count}`;
 }
 
-function additionalDetailsBlock(deal, supplier, docLabel = "Packing list No. Date:", extraHtml = "") {
+function additionalDetailsBlock(deal, supplier, docLabel = "Packing list No. Date:", extraHtml = "", showDocNo = true) {
+  const docNoRow = showDocNo ? `
+          <tr>
+            <td>${docLabel}</td>
+            <td>${esc(String(deal.pl_no || deal.ci_no || deal.pi_no || deal.dealNo || "—").replace(/\s+/g, ""))}</td>
+          </tr>` : "";
+
   return `
     <div class="box" style="margin-top:0;">
       <div class="boxHead">Additional Details</div>
@@ -656,10 +662,7 @@ function additionalDetailsBlock(deal, supplier, docLabel = "Packing list No. Dat
             <td style="width:140px;">Country of Origin</td>
             <td>${esc(deal.country_of_origin || supplier?.country || "UAE")}</td>
           </tr>
-          <tr>
-            <td>${docLabel}</td>
-            <td>${esc(String(deal.pl_no || deal.ci_no || deal.pi_no || deal.dealNo || "—").replace(/\s+/g, ""))}</td>
-          </tr>
+          ${docNoRow}
           <tr>
             <td>Port of Loading</td>
             <td>${esc(deal.loading_port || "—")}</td>
@@ -922,7 +925,7 @@ export function buildCI(deal, buyer, supplier, company = {}) {
       </table>
     </div>
 
-    ${additionalDetailsBlock(deal, supplier, "Packing list No. Date:")}
+    ${additionalDetailsBlock(deal, supplier, "", "", false)}
 
     ${footer(company, date)}
   </body></html>`;
@@ -979,7 +982,7 @@ export function buildPL(deal, buyer, supplier, company = {}) {
       </div>
     </div>
 
-    ${additionalDetailsBlock(deal, supplier, "Packing list No. Date:")}
+    ${additionalDetailsBlock(deal, supplier, "", "", false)}
 
     ${footer(company, date, false)}
   </body>
@@ -1031,11 +1034,11 @@ export function buildCOO(deal, buyer, supplier, company = {}) {
       </div>
     </div>
 
-    ${additionalDetailsBlock(deal, supplier, "Invoice No. Date:", `
+    ${additionalDetailsBlock(deal, supplier, "", `
         <div style="margin-top:14px">
           <b>DECLARATION:</b> GOODS PACKED IN EXPORT SEAWORTHY ${esc(deal.loaded_on || "ISO TANKS")}
         </div>
-    `)}
+    `, false)}
 
     ${footer(company, date, false)}
   </body>
