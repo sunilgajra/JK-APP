@@ -1717,11 +1717,66 @@ function printDoc(type, dealId) {
   if (type === "ci") html = buildCI(dealDoc, buyer, supplier, companyForDoc);
   if (type === "pl") html = buildPL(dealDoc, buyer, supplier, companyForDoc);
   if (type === "coo") html = buildCOO(dealDoc, buyer, supplier, companyForDoc);
-  if (type === "set") html = buildDocumentSet(dealDoc, buyer, supplier, companyForDoc);
+
+  if (type === "set") {
+    const dealDocs = state.documentsByDeal[dealId] || [];
+    if (dealDocs.length > 0) {
+      showDocumentPicker(dealDocs, (selectedUrls) => {
+        const setHtml = buildDocumentSet(dealDoc, buyer, supplier, companyForDoc, selectedUrls);
+        openPrintWindow(setHtml);
+      });
+      return; // Stop here, modal will handle the rest
+    } else {
+      html = buildDocumentSet(dealDoc, buyer, supplier, companyForDoc);
+    }
+  }
+
   if (type === "supplier-statement") html = buildSupplierStatement(deal, buyer, supplier, payments, companyForDoc);
   if (type === "buyer-statement") html = buildBuyerStatement(deal, buyer, supplier, payments, companyForDoc);
   
   if (html) openPrintWindow(html);
+}
+
+function showDocumentPicker(docs, callback) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.style.display = "flex";
+  
+  const content = `
+    <div class="modal-content" style="max-width:500px">
+      <h3>Include Uploaded Files?</h3>
+      <p>Select which uploaded documents to include in the Document Set:</p>
+      <div style="max-height:300px; overflow-y:auto; margin:15px 0; border:1px solid #ddd; padding:10px; border-radius:8px;">
+        ${docs.map(d => `
+          <label style="display:flex; align-items:center; gap:10px; padding:8px; border-bottom:1px solid #eee; cursor:pointer">
+            <input type="checkbox" class="doc-pick-check" value="${esc(d.file_url)}">
+            <div style="flex:1">
+              <div style="font-weight:700">${esc(d.doc_type)}</div>
+              <div style="font-size:11px; opacity:0.7">${new Date(d.created_at).toLocaleDateString()}</div>
+            </div>
+          </label>
+        `).join("")}
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px">
+        <button id="cancel-doc-pick" class="btn-secondary">Skip / No Files</button>
+        <button id="confirm-doc-pick" class="btn-primary">Generate with Selected</button>
+      </div>
+    </div>
+  `;
+  
+  overlay.innerHTML = content;
+  document.body.appendChild(overlay);
+  
+  document.getElementById("cancel-doc-pick").addEventListener("click", () => {
+    document.body.removeChild(overlay);
+    callback([]);
+  });
+  
+  document.getElementById("confirm-doc-pick").addEventListener("click", () => {
+    const selected = Array.from(overlay.querySelectorAll(".doc-pick-check:checked")).map(cb => cb.value);
+    document.body.removeChild(overlay);
+    callback(selected);
+  });
 }
 
 function printMasterStatement(entityType, id, selectedDealIds = []) {

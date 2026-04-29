@@ -1058,7 +1058,7 @@ export function buildCOO(deal, buyer, supplier, company = {}) {
   </html>`;
 }
 
-export function buildDocumentSet(deal, buyer, supplier, company = {}) {
+export function buildDocumentSet(deal, buyer, supplier, company = {}, extraDocumentUrls = []) {
   const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
   const currency = docCurrency(deal);
   const blNo = (deal.bl_no || deal.blNo || "NOBL").replace(/[^A-Z0-9]/gi, "");
@@ -1083,6 +1083,17 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
     <style>
       .doc { page-break-after: always !important; }
       .doc:last-child { page-break-after: auto !important; }
+      .uploaded-doc-container {
+        width: 100%;
+        text-align: center;
+        padding: 0;
+        margin: 0;
+      }
+      .uploaded-doc-img {
+        max-width: 100%;
+        max-height: 280mm; /* A4 height approx */
+        object-fit: contain;
+      }
     </style>
   </head>
   <body>
@@ -1090,6 +1101,14 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
     <div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div>
     <div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div>
     <div class="doc">${innerCOO(deal, buyer, supplier, company, date)}</div>
+    
+    ${extraDocumentUrls.map(url => `
+      <div class="doc">
+        <div class="uploaded-doc-container">
+          <img src="${url}" class="uploaded-doc-img" />
+        </div>
+      </div>
+    `).join("")}
   </body>
   </html>`;
 }
