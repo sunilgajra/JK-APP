@@ -27,19 +27,24 @@ const LOGO_URL = assetUrl("logo.PNG");
 const STAMP_URL = assetUrl("stamp.png");
 
 export function openPrintWindow(html) {
-  const w = window.open("", "_blank", "width=1000,height=900");
+  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    const newDoc = document.open("text/html", "replace");
+    newDoc.write(html);
+    newDoc.close();
+    return true;
+  }
+
+  const w = window.open("", "_blank", "width=1100,height=900");
   if (!w) {
     alert("Pop-up blocked! Please allow pop-ups for this site.");
     return false;
   }
 
-  // Use Blob to avoid document.write script blocking warnings
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  w.location.href = url;
-
-  // Cleanup the URL after some time
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
   return true;
 }
 
@@ -1075,53 +1080,71 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}, extraDocum
 
   return `
   <!DOCTYPE html>
-  <html lang="en">
+  <html>
   <head>
     <meta charset="UTF-8">
     <title>${esc(filename)}</title>
     ${commonStyle()}
     <style>
-      body { background: #525659 !important; padding: 20px 0 !important; }
-      .doc { 
+      body { background: #f0f0f0 !important; color: #000 !important; margin: 0; padding: 0; }
+      .doc-page { 
         background: #fff !important; 
-        margin: 0 auto 20px auto !important; 
-        padding: 10mm !important;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        width: 210mm;
+        margin: 20px auto;
+        padding: 0;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
         page-break-after: always !important;
-        min-height: 280mm;
-        width: 190mm;
+        position: relative;
+        overflow: hidden;
       }
-      .doc:last-child { page-break-after: auto !important; margin-bottom: 0 !important; }
-      .uploaded-doc-container { width: 100%; text-align: center; }
-      .uploaded-doc-img { max-width: 100%; max-height: 270mm; object-fit: contain; }
+      .doc-page:last-child { page-break-after: auto !important; }
+      .previewActions {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        background: white;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        display: flex;
+        gap: 10px;
+      }
       @media print {
-        body { background: #fff !important; padding: 0 !important; }
-        .doc { margin: 0 !important; box-shadow: none !important; border: none !important; }
+        body { background: #fff !important; }
+        .previewActions { display: none !important; }
+        .doc-page { margin: 0 !important; box-shadow: none !important; width: 100% !important; }
       }
+      .uploaded-doc-container { width: 100%; text-align: center; }
+      .uploaded-doc-img { max-width: 100%; max-height: 297mm; object-fit: contain; }
     </style>
   </head>
   <body>
-    ${previewActions()}
-    
-    <div class="doc" id="page-ci">
-      ${innerCI(deal, buyer, supplier, company, date, currency)}
+    <div class="previewActions">
+      <button onclick="downloadExactPdf()" style="background:#d4af37; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:bold;">Download PDF</button>
+      <button onclick="window.print()" style="background:#3b82f6; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:bold;">Print / Save PDF</button>
+      <button onclick="window.close()" style="background:#64748b; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:bold;">Close</button>
     </div>
     
-    <div class="doc" id="page-pl">
-      ${innerPL(deal, buyer, supplier, company, date)}
+    <div class="doc-page">
+      <div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div>
     </div>
     
-    <div class="doc" id="page-coo">
-      ${innerCOO(deal, buyer, supplier, company, date)}
+    <div class="doc-page">
+      <div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div>
     </div>
     
-    ${(extraDocumentUrls || []).map((url, i) => {
+    <div class="doc-page">
+      <div class="doc">${innerCOO(deal, buyer, supplier, company, date)}</div>
+    </div>
+    
+    ${(extraDocumentUrls || []).map((url) => {
       const isPdf = String(url).toLowerCase().split("?")[0].endsWith(".pdf");
       return `
-        <div class="doc" id="page-extra-${i}">
+        <div class="doc-page">
           <div class="uploaded-doc-container">
             ${isPdf 
-              ? `<embed src="${url}" type="application/pdf" style="width:100%; height:280mm;" />`
+              ? `<embed src="${url}" type="application/pdf" style="width:100%; height:297mm;" />`
               : `<img src="${url}" class="uploaded-doc-img" crossorigin="anonymous" />`
             }
           </div>
