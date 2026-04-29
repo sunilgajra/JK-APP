@@ -1102,13 +1102,19 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}, extraDocum
     <div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div>
     <div class="doc">${innerCOO(deal, buyer, supplier, company, date)}</div>
     
-    ${extraDocumentUrls.map(url => `
-      <div class="doc">
-        <div class="uploaded-doc-container">
-          <img src="${url}" class="uploaded-doc-img" />
+    ${extraDocumentUrls.map(url => {
+      const isPdf = String(url).toLowerCase().split("?")[0].endsWith(".pdf");
+      return `
+        <div class="doc">
+          <div class="uploaded-doc-container">
+            ${isPdf 
+              ? `<embed src="${url}" type="application/pdf" style="width:100%; height:287mm;" />`
+              : `<img src="${url}" class="uploaded-doc-img" crossorigin="anonymous" />`
+            }
+          </div>
         </div>
-      </div>
-    `).join("")}
+      `;
+    }).join("")}
   </body>
   </html>`;
 }

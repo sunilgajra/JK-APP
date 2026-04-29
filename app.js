@@ -1749,6 +1749,9 @@ function showDocumentPicker(docs, callback) {
     <div class="modal-content">
       <div class="form-header">Include Uploaded Files?</div>
       <p class="text-muted text-xs mb-12">Select which uploaded documents to include in the combined PDF package:</p>
+      <div style="background:rgba(212, 175, 55, 0.1); border:1px solid var(--accent-primary); border-radius:8px; padding:10px; margin-bottom:15px; font-size:11px; color:var(--accent-primary)">
+        <strong>Note:</strong> Attached PDF files are best saved using the <strong>"Print / Save PDF"</strong> button in the next window. The "Download PDF" button works best for images.
+      </div>
       
       <div class="list" style="max-height:350px; overflow-y:auto; margin-bottom:24px; padding:4px;">
         ${docs.map(d => `
