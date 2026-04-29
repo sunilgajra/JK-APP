@@ -483,8 +483,8 @@ function rightHeader(title, docNo, customerId, date) {
     title === "PRO FORMA INVOICE"
       ? "Proforma Invoice #"
       : title === "PACKING LIST"
-      ? "P.L.Invoice #"
-      : "Invoice #";
+        ? "P.L.Invoice #"
+        : "Invoice #";
 
   return `
     <div>
@@ -551,9 +551,9 @@ function containerBlock(deal = {}) {
   const list = Array.isArray(deal.container_numbers)
     ? deal.container_numbers
     : String(deal.container_numbers || "")
-        .split(/[,\n]+/)
-        .map((x) => x.trim())
-        .filter(Boolean);
+      .split(/[,\n]+/)
+      .map((x) => x.trim())
+      .filter(Boolean);
 
   const cleanList = list.map(x => String(x).replace(/[^A-Z0-9]/gi, "").toUpperCase());
   const minItems = 20;
@@ -622,27 +622,27 @@ function suggestFilename(type, deal, buyer, company) {
   const docType = type.toUpperCase();
   const blNo = (deal.bl_no || deal.blNo || "NOBL").replace(/[^A-Z0-9]/gi, "");
   const shipper = (company.name || "JK").split(/\s+/)[0].toUpperCase();
-  
+
   const product = (deal.product_name || deal.productName || "PRODUCT").toUpperCase();
   let productShort = product.split(/\s+/).filter(w => w.length > 0).map(w => w[0]).join("");
   if (product.includes("LUBRICATING OIL")) productShort = "LO";
   else if (product.includes("BASE OIL")) productShort = "BO";
   else if (product.includes("BITUMEN")) productShort = "BT";
-  
+
   const consignee = (buyer?.name || "BUYER").split(/\s+/).filter(Boolean).slice(0, 2).join(" ").toUpperCase();
-  
+
   // Prioritize the number based on the document type
   let dNo = "";
   if (docType === "CI") dNo = deal.ci_no;
   else if (docType === "PI") dNo = deal.pi_no;
   else if (docType === "PL") dNo = deal.pl_no;
   else if (docType === "COO") dNo = deal.coo_no || deal.ci_no;
-  
+
   // Fallback if the specific type number is missing
   const docNo = String(dNo || deal.ci_no || deal.pi_no || deal.pl_no || deal.dealNo || deal.deal_no || "000").replace(/[^A-Z0-9]/gi, "");
-  
+
   const count = deal.dealCount || 1;
-  
+
   return `${docType}-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}-${count}`;
 }
 
@@ -1061,8 +1061,17 @@ export function buildCOO(deal, buyer, supplier, company = {}) {
 export function buildDocumentSet(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
   const currency = docCurrency(deal);
-  const blNo = (deal.bl_no || "NOBL").replace(/[^A-Z0-9]/gi, "");
-  const filename = `SET-${blNo}-${deal.dealNo || "DEAL"}`;
+  const blNo = (deal.bl_no || deal.blNo || "NOBL").replace(/[^A-Z0-9]/gi, "");
+  const shipper = (company.name || "JK").split(/\s+/)[0].toUpperCase();
+  const product = (deal.product_name || deal.productName || "PRODUCT").toUpperCase();
+  let productShort = product.split(/\s+/).filter(w => w.length > 0).map(w => w[0]).join("");
+  if (product.includes("LUBRICATING OIL")) productShort = "LO";
+  else if (product.includes("BASE OIL")) productShort = "BO";
+  else if (product.includes("BITUMEN")) productShort = "BT";
+  const consignee = (buyer?.name || "BUYER").split(/\s+/).filter(Boolean).slice(0, 2).join(" ").toUpperCase();
+  const docNo = String(deal.ci_no || deal.dealNo || deal.deal_no || "000").replace(/[^A-Z0-9\-\/]/gi, "");
+  
+  const filename = `SET-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}`;
 
   return `
   <!DOCTYPE html>
@@ -1170,16 +1179,16 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
         <th style="width:30%">METHOD / REF</th>
       </tr>
       ${outPayments.length ? outPayments.map(p => {
-        const pUsd = p.currency === "USD" ? p.amount : p.amount / conv;
-        const pAed = p.currency === "AED" ? p.amount : p.amount * conv;
-        return `
+    const pUsd = p.currency === "USD" ? p.amount : p.amount / conv;
+    const pAed = p.currency === "AED" ? p.amount : p.amount * conv;
+    return `
         <tr>
           <td class="center">${fmtDate(p.payment_date)}</td>
           <td class="right">${fmt(pAed)}</td>
           <td class="right">${fmt(pUsd)}</td>
           <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
         </tr>`;
-      }).join("") : `<tr><td colspan="4" class="center">No payments recorded</td></tr>`}
+  }).join("") : `<tr><td colspan="4" class="center">No payments recorded</td></tr>`}
       <tr style="background:#f2f2f2; font-weight:bold">
         <td class="right">TOTAL PAID</td>
         <td class="right">${fmt(paidAed)}</td>
@@ -1305,16 +1314,16 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
         <th style="width:30%">METHOD / REF</th>
       </tr>
       ${inPayments.length ? inPayments.map(p => {
-        const pUsd = p.currency === "USD" ? p.amount : p.amount / conv;
-        const pAed = p.currency === "AED" ? p.amount : p.amount * conv;
-        return `
+    const pUsd = p.currency === "USD" ? p.amount : p.amount / conv;
+    const pAed = p.currency === "AED" ? p.amount : p.amount * conv;
+    return `
         <tr>
           <td class="center">${fmtDate(p.payment_date)}</td>
           <td class="right">${fmt(pAed)}</td>
           <td class="right">${fmt(pUsd)}</td>
           <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
         </tr>`;
-      }).join("") : `<tr><td colspan="4" class="center">No payments recorded</td></tr>`}
+  }).join("") : `<tr><td colspan="4" class="center">No payments recorded</td></tr>`}
       <tr style="background:#f2f2f2; font-weight:bold">
         <td class="right">TOTAL RECEIVED</td>
         <td class="right">${fmt(recAed)}</td>
@@ -1358,22 +1367,22 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
 
 export function buildSupplierMasterStatement(supplier, deals, allPayments, company = {}) {
   const date = new Date().toISOString();
-  
+
   let totalDueAed = 0;
   let totalDueUsd = 0;
   let totalPaidAed = 0;
   let totalPaidUsd = 0;
-  
+
   const dealRows = deals.map(d => {
     const qty = Number(d.quantity || 0);
     const rate = Number(d.purchase_rate || 0);
     const conv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.6725);
     const amtUsd = qty * rate;
     const amtAed = amtUsd * conv;
-    
+
     totalDueUsd += amtUsd;
     totalDueAed += amtAed;
-    
+
     return { ...d, amtUsd, amtAed, conv };
   });
 
@@ -1383,7 +1392,7 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
     const conv = (Number(p.conversion_rate) && Number(p.conversion_rate) !== 1) ? Number(p.conversion_rate) : dealConv;
     const amt = Number(p.amount || 0);
     let pUsd = 0, pAed = 0;
-    
+
     if (p.currency === "AED") {
       pAed = amt;
       pUsd = amt / conv;
@@ -1391,10 +1400,10 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
       pUsd = amt;
       pAed = amt * conv;
     }
-    
+
     totalPaidAed += pAed;
     totalPaidUsd += pUsd;
-    
+
     return { ...p, pAed, pUsd };
   });
 
@@ -1458,18 +1467,18 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
               <td class="center">${esc(r.bl_no || "—")}</td>
               <td>${esc((state.buyers.find(b => String(b.id) === String(r.buyer_id)) || {}).name || "—")}</td>
               <td>${esc(r.product_name)}</td>
-              <td class="right">${Number(r.quantity).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-              <td class="right">${Number(r.purchase_rate).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-              <td class="right">${Number(r.amtUsd).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-              <td class="right">${Number(r.amtAed).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(r.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.purchase_rate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.amtUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.amtAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
             </tr>
           `).join("")}
         </tbody>
         <tfoot>
           <tr style="background:#f2f2f2; font-weight:bold">
             <td colspan="7" class="right">TOTAL PAYABLE</td>
-            <td class="right">${totalDueUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-            <td class="right">${totalDueAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td class="right">${totalDueUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="right">${totalDueAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
         </tfoot>
       </table>
@@ -1490,8 +1499,8 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
             <tr>
               <td class="center">${new Date(p.payment_date).toLocaleDateString()}</td>
               <td class="center">${esc(deals.find(d => String(d.id) === String(p.deal_id))?.deal_no || "—")}</td>
-              <td class="right">${Number(p.pAed).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-              <td class="right">${Number(p.pUsd).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(p.pAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(p.pUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
               <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
             </tr>
           `).join("") : `<tr><td colspan="5" class="center">No payments recorded</td></tr>`}
@@ -1499,8 +1508,8 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
         <tfoot>
           <tr style="background:#f2f2f2; font-weight:bold">
             <td colspan="2" class="right">TOTAL PAID</td>
-            <td class="right">${totalPaidAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-            <td class="right">${totalPaidUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td class="right">${totalPaidAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="right">${totalPaidUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
             <td></td>
           </tr>
         </tfoot>
@@ -1511,18 +1520,18 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
         <table style="width:100%; border-collapse: collapse;">
           <tr style="border-bottom: 1px solid #ddd;">
             <td style="padding: 10px; font-weight:bold">Total Invoice Amount (All Deals)</td>
-            <td style="padding: 10px;" class="right">AED ${totalDueAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-            <td style="padding: 10px;" class="right">USD ${totalDueUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td style="padding: 10px;" class="right">AED ${totalDueAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 10px;" class="right">USD ${totalDueUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
           <tr style="border-bottom: 1px solid #ddd;">
             <td style="padding: 10px; font-weight:bold">Total Payment Sent</td>
-            <td style="padding: 10px;" class="right">AED ${totalPaidAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-            <td style="padding: 10px;" class="right">USD ${totalPaidUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td style="padding: 10px;" class="right">AED ${totalPaidAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 10px;" class="right">USD ${totalPaidUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
           <tr>
             <td style="padding: 15px 10px; font-weight:800; font-size:16px; color:#2a7a7d">NET OUTSTANDING TO PAY:</td>
-            <td style="padding: 15px 10px;" class="right"><span class="bal-to-pay">${balAed.toLocaleString(undefined, {minimumFractionDigits:2})}</span></td>
-            <td style="padding: 15px 10px;" class="right"><span class="bal-to-pay">${balUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</span></td>
+            <td style="padding: 15px 10px;" class="right"><span class="bal-to-pay">${balAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></td>
+            <td style="padding: 15px 10px;" class="right"><span class="bal-to-pay">${balUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></td>
           </tr>
         </table>
       </div>
@@ -1537,22 +1546,22 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
 
 export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {}) {
   const date = new Date().toISOString();
-  
+
   let totalDueAed = 0;
   let totalDueUsd = 0;
   let totalRecAed = 0;
   let totalRecUsd = 0;
-  
+
   const dealRows = deals.map(d => {
     const qty = Number(d.quantity || 0);
     const rate = Number(d.rate || 0);
     const conv = Number(d.sale_conversion_rate || d.conversion_rate || 3.6725);
     const amtUsd = qty * rate;
     const amtAed = amtUsd * conv;
-    
+
     totalDueUsd += amtUsd;
     totalDueAed += amtAed;
-    
+
     return { ...d, amtUsd, amtAed, conv };
   });
 
@@ -1562,7 +1571,7 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
     const conv = (Number(p.conversion_rate) && Number(p.conversion_rate) !== 1) ? Number(p.conversion_rate) : dealConv;
     const amt = Number(p.amount || 0);
     let pUsd = 0, pAed = 0;
-    
+
     if (p.currency === "AED") {
       pAed = amt;
       pUsd = amt / conv;
@@ -1570,10 +1579,10 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
       pUsd = amt;
       pAed = amt * conv;
     }
-    
+
     totalRecAed += pAed;
     totalRecUsd += pUsd;
-    
+
     return { ...p, pAed, pUsd };
   });
 
@@ -1637,18 +1646,18 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
               <td class="center">${esc(r.bl_no || "—")}</td>
               <td>${esc((state.suppliers.find(s => String(s.id) === String(r.supplier_id)) || {}).name || "—")}</td>
               <td>${esc(r.product_name)}</td>
-              <td class="right">${Number(r.quantity).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-              <td class="right">${Number(r.rate).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-              <td class="right">${Number(r.amtUsd).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-              <td class="right">${Number(r.amtAed).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(r.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.rate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.amtUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.amtAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
             </tr>
           `).join("")}
         </tbody>
         <tfoot>
           <tr style="background:#f2f2f2; font-weight:bold">
             <td colspan="7" class="right">TOTAL RECEIVABLE</td>
-            <td class="right">${totalDueUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-            <td class="right">${totalDueAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td class="right">${totalDueUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="right">${totalDueAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
         </tfoot>
       </table>
@@ -1669,8 +1678,8 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
             <tr>
               <td class="center">${new Date(p.payment_date).toLocaleDateString()}</td>
               <td class="center">${esc(deals.find(d => String(d.id) === String(p.deal_id))?.deal_no || "—")}</td>
-              <td class="right">${Number(p.pAed).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-              <td class="right">${Number(p.pUsd).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(p.pAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(p.pUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
               <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
             </tr>
           `).join("") : `<tr><td colspan="5" class="center">No payments received</td></tr>`}
@@ -1678,8 +1687,8 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
         <tfoot>
           <tr style="background:#f2f2f2; font-weight:bold">
             <td colspan="2" class="right">TOTAL RECEIVED</td>
-            <td class="right">${totalRecAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-            <td class="right">${totalRecUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td class="right">${totalRecAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="right">${totalRecUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
             <td></td>
           </tr>
         </tfoot>
@@ -1690,18 +1699,18 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
         <table style="width:100%; border-collapse: collapse;">
           <tr style="border-bottom: 1px solid #ddd;">
             <td style="padding: 10px; font-weight:bold">Total Invoice Amount (All Deals)</td>
-            <td style="padding: 10px;" class="right">AED ${totalDueAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-            <td style="padding: 10px;" class="right">USD ${totalDueUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td style="padding: 10px;" class="right">AED ${totalDueAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 10px;" class="right">USD ${totalDueUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
           <tr style="border-bottom: 1px solid #ddd;">
             <td style="padding: 10px; font-weight:bold">Total Payment Received</td>
-            <td style="padding: 10px;" class="right">AED ${totalRecAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-            <td style="padding: 10px;" class="right">USD ${totalRecUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td style="padding: 10px;" class="right">AED ${totalRecAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 10px;" class="right">USD ${totalRecUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
           <tr>
             <td style="padding: 15px 10px; font-weight:800; font-size:16px; color:#2a7a7d">NET OUTSTANDING TO RECEIVE:</td>
-            <td style="padding: 15px 10px;" class="right"><span class="bal-to-rec">${balAed.toLocaleString(undefined, {minimumFractionDigits:2})}</span></td>
-            <td style="padding: 15px 10px;" class="right"><span class="bal-to-rec">${balUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</span></td>
+            <td style="padding: 15px 10px;" class="right"><span class="bal-to-rec">${balAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></td>
+            <td style="padding: 15px 10px;" class="right"><span class="bal-to-rec">${balUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></td>
           </tr>
         </table>
       </div>
@@ -1724,7 +1733,7 @@ export function buildAgentStatement(agent, deals, company = {}, payments = []) {
     const curr = d.commission_currency || "USD";
     const conv = Number(d.conversion_rate || 3.6725);
     let aUsd = 0, aAed = 0;
-    if (curr === "AED") { aAed = amt; aUsd = amt / conv; } 
+    if (curr === "AED") { aAed = amt; aUsd = amt / conv; }
     else { aUsd = amt; aAed = amt * conv; }
     totalCommUsd += aUsd;
     totalCommAed += aAed;
@@ -1738,10 +1747,10 @@ export function buildAgentStatement(agent, deals, company = {}, payments = []) {
     const curr = p.currency || "AED";
     const conv = 3.6725; // Default for agent payments
     let pUsd = 0, pAed = 0;
-    if (curr === "AED") { pAed = amt; pUsd = amt / conv; } 
+    if (curr === "AED") { pAed = amt; pUsd = amt / conv; }
     else { pUsd = amt; pAed = amt * conv; }
-    
-    if (p.type === "out") { totalPaidUsd += pUsd; totalPaidAed += pAed; } 
+
+    if (p.type === "out") { totalPaidUsd += pUsd; totalPaidAed += pAed; }
     else { totalPaidUsd -= pUsd; totalPaidAed -= pAed; }
     return { ...p, pUsd, pAed };
   });
@@ -1813,16 +1822,16 @@ export function buildAgentStatement(agent, deals, company = {}, payments = []) {
               <td>${esc(r.product_name)}</td>
               <td>${Number(r.quantity || 0).toLocaleString()} ${esc(r.unit || "MT")}</td>
               <td>${Number(r.commission_rate || 0).toFixed(2)}</td>
-              <td class="right">${Number(r.aUsd).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-              <td class="right">${Number(r.aAed).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${Number(r.aUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.aAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
             </tr>
           `).join("")}
         </tbody>
         <tfoot>
           <tr class="total-row">
             <td colspan="5" class="right">GROSS COMMISSION EARNED</td>
-            <td class="right">${totalCommUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-            <td class="right">${totalCommAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td class="right">${totalCommUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="right">${totalCommAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
         </tfoot>
       </table>
@@ -1846,8 +1855,8 @@ export function buildAgentStatement(agent, deals, company = {}, payments = []) {
               <td>${esc(p.mode)}</td>
               <td>${esc(p.ref || "—")}</td>
               <td style="color:${p.type === "out" ? "inherit" : "var(--success)"}">${p.type.toUpperCase()}</td>
-              <td class="right">${p.type === "out" ? "" : "+"}${Number(p.pUsd).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-              <td class="right">${p.type === "out" ? "" : "+"}${Number(p.pAed).toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+              <td class="right">${p.type === "out" ? "" : "+"}${Number(p.pUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${p.type === "out" ? "" : "+"}${Number(p.pAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
             </tr>
           `).join("")}
           ${!pRows.length ? '<tr><td colspan="6" style="text-align:center; opacity:0.5">No payment history found.</td></tr>' : ''}
@@ -1855,8 +1864,8 @@ export function buildAgentStatement(agent, deals, company = {}, payments = []) {
         <tfoot>
           <tr class="total-row">
             <td colspan="4" class="right">TOTAL PAYMENTS SENT</td>
-            <td class="right">${totalPaidUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-            <td class="right">${totalPaidAed.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+            <td class="right">${totalPaidUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="right">${totalPaidAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
         </tfoot>
       </table>
@@ -1867,8 +1876,8 @@ export function buildAgentStatement(agent, deals, company = {}, payments = []) {
            <div style="font-size:11px; color:#666">Remaining commission amount to be paid to agent.</div>
         </div>
         <div style="text-align:right">
-           <div class="bal-box" style="font-size:18px">USD ${balUsd.toLocaleString(undefined, {minimumFractionDigits:2})}</div><br>
-           <div class="bal-box" style="margin-top:5px">AED ${balAed.toLocaleString(undefined, {minimumFractionDigits:2})}</div>
+           <div class="bal-box" style="font-size:18px">USD ${balUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div><br>
+           <div class="bal-box" style="margin-top:5px">AED ${balAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
         </div>
       </div>
 
@@ -1887,4 +1896,4 @@ export function buildAgentStatement(agent, deals, company = {}, payments = []) {
 }
 
 
-
+
