@@ -27,21 +27,19 @@ const LOGO_URL = assetUrl("logo.PNG");
 const STAMP_URL = assetUrl("stamp.png");
 
 export function openPrintWindow(html) {
-  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-
-  if (isMobile) {
-    const newDoc = document.open("text/html", "replace");
-    newDoc.write(html);
-    newDoc.close();
-    return true;
+  const w = window.open("", "_blank", "width=1000,height=900");
+  if (!w) {
+    alert("Pop-up blocked! Please allow pop-ups for this site.");
+    return false;
   }
 
-  const w = window.open("", "_blank");
-  if (!w) return false;
+  // Use Blob to avoid document.write script blocking warnings
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  w.location.href = url;
 
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
+  // Cleanup the URL after some time
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
   return true;
 }
 
@@ -1077,46 +1075,61 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}, extraDocum
 
   return `
   <!DOCTYPE html>
-  <html>
+  <html lang="en">
   <head>
+    <meta charset="UTF-8">
     <title>${esc(filename)}</title>
     ${commonStyle()}
-    ${previewScript()}
     <style>
-      .doc { page-break-after: always !important; }
-      .doc:last-child { page-break-after: auto !important; }
-      .uploaded-doc-container {
-        width: 100%;
-        text-align: center;
-        padding: 0;
-        margin: 0;
+      body { background: #525659 !important; padding: 20px 0 !important; }
+      .doc { 
+        background: #fff !important; 
+        margin: 0 auto 20px auto !important; 
+        padding: 10mm !important;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        page-break-after: always !important;
+        min-height: 280mm;
+        width: 190mm;
       }
-      .uploaded-doc-img {
-        max-width: 100%;
-        max-height: 280mm; /* A4 height approx */
-        object-fit: contain;
+      .doc:last-child { page-break-after: auto !important; margin-bottom: 0 !important; }
+      .uploaded-doc-container { width: 100%; text-align: center; }
+      .uploaded-doc-img { max-width: 100%; max-height: 270mm; object-fit: contain; }
+      @media print {
+        body { background: #fff !important; padding: 0 !important; }
+        .doc { margin: 0 !important; box-shadow: none !important; border: none !important; }
       }
     </style>
   </head>
   <body>
     ${previewActions()}
-    <div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div>
-    <div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div>
-    <div class="doc">${innerCOO(deal, buyer, supplier, company, date)}</div>
     
-    ${extraDocumentUrls.map(url => {
+    <div class="doc" id="page-ci">
+      ${innerCI(deal, buyer, supplier, company, date, currency)}
+    </div>
+    
+    <div class="doc" id="page-pl">
+      ${innerPL(deal, buyer, supplier, company, date)}
+    </div>
+    
+    <div class="doc" id="page-coo">
+      ${innerCOO(deal, buyer, supplier, company, date)}
+    </div>
+    
+    ${(extraDocumentUrls || []).map((url, i) => {
       const isPdf = String(url).toLowerCase().split("?")[0].endsWith(".pdf");
       return `
-        <div class="doc">
+        <div class="doc" id="page-extra-${i}">
           <div class="uploaded-doc-container">
             ${isPdf 
-              ? `<embed src="${url}" type="application/pdf" style="width:100%; height:287mm;" />`
+              ? `<embed src="${url}" type="application/pdf" style="width:100%; height:280mm;" />`
               : `<img src="${url}" class="uploaded-doc-img" crossorigin="anonymous" />`
             }
           </div>
         </div>
       `;
     }).join("")}
+
+    ${previewScript()}
   </body>
   </html>`;
 }
