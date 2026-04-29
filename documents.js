@@ -36,11 +36,8 @@ export function openPrintWindow(html) {
     return true;
   }
 
-  const w = window.open("", "_blank", "width=1100,height=900");
-  if (!w) {
-    alert("Pop-up blocked! Please allow pop-ups for this site.");
-    return false;
-  }
+  const w = window.open("", "_blank");
+  if (!w) return false;
 
   w.document.open();
   w.document.write(html);
@@ -96,7 +93,6 @@ export function buildShippingInstruction(si, buyer, supplier, deal, company = {}
   </head>
   <body>
     ${previewActions()}
-    <div class="doc">
     <div class="top">
       <div class="panel">
         <div class="bar">Shipper</div>
@@ -148,7 +144,6 @@ export function buildShippingInstruction(si, buyer, supplier, deal, company = {}
     </div>
 
     ${footer(company, date)}
-    </div>
   </body>
   </html>`;
 }
@@ -453,6 +448,7 @@ function commonStyle() {
       }
     }
   </style>
+  <div class="doc">
   `;
 }
 
@@ -712,6 +708,7 @@ function footer(company = {}, date = "", showSignatory = false) {
       </div>
     </div>
     <div class="note">This is computer generated Document, No signature required</div>
+  </div>
   `;
 }
 
@@ -733,7 +730,6 @@ export function buildPI(deal, buyer, supplier, company = {}) {
   </head>
   <body>
     ${previewActions()}
-    <div class="doc">
 
     <div class="top">
       ${shipperBlock(company)}
@@ -834,7 +830,6 @@ export function buildPI(deal, buyer, supplier, company = {}) {
     </div>
 
     ${footer(company, date, true)}
-    </div>
   </body>
   </html>`;
 }
@@ -1063,7 +1058,7 @@ export function buildCOO(deal, buyer, supplier, company = {}) {
   </html>`;
 }
 
-export function buildDocumentSet(deal, buyer, supplier, company = {}, extraDocumentUrls = []) {
+export function buildDocumentSet(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
   const currency = docCurrency(deal);
   const blNo = (deal.bl_no || deal.blNo || "NOBL").replace(/[^A-Z0-9]/gi, "");
@@ -1078,150 +1073,25 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}, extraDocum
   
   const filename = `SET-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}`;
 
-  const ciHtml = innerCI(deal, buyer, supplier, company, date, currency);
-  const plHtml = innerPL(deal, buyer, supplier, company, date);
-  const cooHtml = innerCOO(deal, buyer, supplier, company, date);
-
-  const extraPages = (extraDocumentUrls || []).map((url) => {
-    const isPdf = String(url).toLowerCase().split("?")[0].endsWith(".pdf");
-    if (isPdf) {
-      return `<div class="set-page"><embed src="${url}" type="application/pdf" style="width:100%;height:287mm;" /></div>`;
-    }
-    return `<div class="set-page"><img src="${url}" style="max-width:100%;max-height:287mm;object-fit:contain;display:block;margin:auto;" crossorigin="anonymous" /></div>`;
-  }).join("");
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>${esc(filename)}</title>
-<style>
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: #e8e8e8; font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #111; }
-  #toolbar {
-    position: fixed; top: 0; left: 0; right: 0; height: 50px;
-    background: #1e293b; display: flex; align-items: center; gap: 10px;
-    padding: 0 20px; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  }
-  #toolbar span { color: #94a3b8; font-size: 12px; flex: 1; }
-  #toolbar button {
-    padding: 8px 18px; border: none; border-radius: 5px;
-    font-size: 13px; font-weight: 700; cursor: pointer;
-  }
-  #btn-download { background: #d4af37; color: #fff; }
-  #btn-print    { background: #3b82f6; color: #fff; }
-  #btn-close    { background: #64748b; color: #fff; }
-  #pages { padding: 60px 0 30px 0; }
-  .set-page {
-    background: #fff;
-    width: 210mm;
-    margin: 0 auto 16px auto;
-    padding: 8mm;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-  }
-  @media print {
-    html, body { background: #fff; }
-    #toolbar { display: none !important; }
-    #pages { padding: 0; }
-    .set-page {
-      width: 100%; margin: 0; padding: 0;
-      box-shadow: none;
-      page-break-after: always;
-    }
-    .set-page:last-child { page-break-after: auto; }
-  }
-
-  /* ---- Document inner styles (subset of commonStyle) ---- */
-  @page { size: A4; margin: 8mm; }
-  .top { display: grid; grid-template-columns: 1fr 0.62fr 1fr; gap: 8px; align-items: start; margin-bottom: 10px; }
-  .logoBox { text-align: center; padding-top: 10px; }
-  .logoBox img { width: 100px; max-width: 100px; object-fit: contain; }
-  .docTitle { color: #3b9da2; font-size: 22px; font-weight: 800; text-align: right; line-height: 1; margin: 0 0 8px 0; }
-  .docTitle span { display: block; font-size: 11px; font-weight: 500; color: #555; margin-top: 4px; }
-  .panel { border: 1px solid #999; }
-  .bar { background: #2f9aa0; color: #fff; font-weight: 700; font-size: 10px; padding: 3px 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-  .panelBody { padding: 6px; }
-  .panelBody.tight { padding: 4px 6px; font-size: 10px; line-height: 1.5; }
-  .triple { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; margin-bottom: 0; }
-  .triple > * { border-right: none; }
-  .triple > *:first-child { border-left: 1px solid #999; }
-  table { border-collapse: collapse; width: 100%; }
-  .descTable { width: 100%; border-collapse: collapse; margin-top: 0; font-size: 10.5px; }
-  .descTable th { background: #2f9aa0; color: #fff; padding: 4px 5px; text-align: center; border: 1px solid #999; font-size: 10px; }
-  .descTable td { padding: 4px 5px; border: 1px solid #ccc; }
-  .descTable .center { text-align: center; }
-  .descTable .right { text-align: right; }
-  .plainTable td { padding: 1px 4px; font-size: 10px; vertical-align: top; }
-  .box { border: 1px solid #999; margin-top: 0; }
-  .boxHead { background: #2f9aa0; color: #fff; font-weight: 700; font-size: 10px; padding: 3px 6px; text-transform: uppercase; }
-  .boxBody { padding: 6px; font-size: 10px; line-height: 1.5; }
-  .boxBody.tight { padding: 4px 6px; }
-  .boxBody.center { text-align: center; }
-  .footer { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px solid #999; font-size: 10px; }
-  .red { color: #c00; font-size: 10px; }
-  .note { text-align: center; font-size: 9px; color: #666; margin-top: 6px; }
-  .center { text-align: center; }
-  .right { text-align: right; }
-  .thin td, .thin th { padding: 2px 4px; }
-  .statement-table { width: 100%; border-collapse: collapse; }
-  .statement-table th { background: #dce6f1; color: #333; border: 1px solid #999; font-size: 10px; padding: 3px 5px; }
-  .statement-table td { border: 1px solid #ccc; padding: 3px 5px; font-size: 10px; }
-</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
-<script>
-  async function downloadSetPdf() {
-    const btn = document.getElementById("btn-download");
-    btn.disabled = true;
-    btn.textContent = "Generating...";
-    const toolbar = document.getElementById("toolbar");
-    toolbar.style.display = "none";
-
-    const pages = document.querySelectorAll(".set-page");
-    const title = document.title || "document";
-    
-    // Build a temporary wrapper for html2pdf
-    const wrapper = document.createElement("div");
-    pages.forEach(p => {
-      const clone = p.cloneNode(true);
-      clone.style.pageBreakAfter = "always";
-      wrapper.appendChild(clone);
-    });
-
-    const imgs = Array.from(wrapper.querySelectorAll("img"));
-    await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; })));
-    await new Promise(r => setTimeout(r, 400));
-
-    await html2pdf().set({
-      margin: 0,
-      filename: title + ".pdf",
-      image: { type: "jpeg", quality: 0.97 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: "#fff", logging: false, scrollX: 0, scrollY: 0 },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["css", "legacy"] }
-    }).from(wrapper).save();
-
-    toolbar.style.display = "flex";
-    btn.disabled = false;
-    btn.textContent = "Download PDF";
-  }
-<\/script>
-</head>
-<body>
-<div id="toolbar">
-  <span>${esc(filename)}</span>
-  <button id="btn-download" onclick="downloadSetPdf()">Download PDF</button>
-  <button id="btn-print" onclick="window.print()">Print / Save PDF</button>
-  <button id="btn-close" onclick="window.close()">Close</button>
-</div>
-
-<div id="pages">
-  <div class="set-page">${ciHtml}</div>
-  <div class="set-page">${plHtml}</div>
-  <div class="set-page">${cooHtml}</div>
-  ${extraPages}
-</div>
-</body>
-</html>`;
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(filename)}</title>
+    ${commonStyle()}
+    ${previewScript()}
+    <style>
+      .doc { page-break-after: always !important; }
+      .doc:last-child { page-break-after: auto !important; }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+    <div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div>
+    <div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div>
+    <div class="doc">${innerCOO(deal, buyer, supplier, company, date)}</div>
+  </body>
+  </html>`;
 }
 
 
@@ -1355,7 +1225,6 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
 
     <div style="margin-top: 30px; font-size: 10px; color: #666; text-align: right;">
       Generated on ${fmtDate(new Date())} · BL No: ${esc(deal.bl_no || "PENDING")}
-    </div>
     </div>
   </body>
   </html>`;
@@ -1491,7 +1360,6 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
 
     <div style="margin-top: 30px; font-size: 10px; color: #666; text-align: right;">
       Generated on ${fmtDate(new Date())} · BL No: ${esc(deal.bl_no || "—")}
-    </div>
     </div>
   </body>
   </html>`;

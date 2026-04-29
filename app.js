@@ -1717,88 +1717,11 @@ function printDoc(type, dealId) {
   if (type === "ci") html = buildCI(dealDoc, buyer, supplier, companyForDoc);
   if (type === "pl") html = buildPL(dealDoc, buyer, supplier, companyForDoc);
   if (type === "coo") html = buildCOO(dealDoc, buyer, supplier, companyForDoc);
-
-  if (type === "set") {
-    const dealDocs = state.documentsByDeal[dealId] || [];
-    if (dealDocs.length > 0) {
-      showDocumentPicker(dealDocs, (selectedUrls) => {
-        const setHtml = buildDocumentSet(dealDoc, buyer, supplier, companyForDoc, selectedUrls);
-        openPrintWindow(setHtml);
-      });
-      return; // Stop here, modal will handle the rest
-    } else {
-      html = buildDocumentSet(dealDoc, buyer, supplier, companyForDoc);
-    }
-  }
-
+  if (type === "set") html = buildDocumentSet(dealDoc, buyer, supplier, companyForDoc);
   if (type === "supplier-statement") html = buildSupplierStatement(deal, buyer, supplier, payments, companyForDoc);
   if (type === "buyer-statement") html = buildBuyerStatement(deal, buyer, supplier, payments, companyForDoc);
   
   if (html) openPrintWindow(html);
-}
-
-function showDocumentPicker(docs, callback) {
-  // Remove any existing picker first
-  const existing = document.querySelector(".modal-overlay.doc-picker");
-  if (existing) document.body.removeChild(existing);
-
-  const overlay = document.createElement("div");
-  overlay.className = "modal-overlay doc-picker";
-  
-  const content = `
-    <div class="modal-content">
-      <div class="form-header">Include Uploaded Files?</div>
-      <p class="text-muted text-xs mb-12">Select which uploaded documents to include in the combined PDF package:</p>
-      <div style="background:rgba(212, 175, 55, 0.1); border:1px solid var(--accent-primary); border-radius:8px; padding:10px; margin-bottom:15px; font-size:11px; color:var(--accent-primary)">
-        <strong>Note:</strong> Attached PDF files are best saved using the <strong>"Print / Save PDF"</strong> button in the next window. The "Download PDF" button works best for images.
-      </div>
-      
-      <div class="list" style="max-height:350px; overflow-y:auto; margin-bottom:24px; padding:4px;">
-        ${docs.map(d => `
-          <label class="item flex flex-center gap-12" style="cursor:pointer; padding:12px;">
-            <input type="checkbox" class="doc-pick-check" value="${esc(d.file_url)}">
-            <div style="flex:1">
-              <div class="item-title" style="font-size:0.85rem">${esc(d.doc_type)}</div>
-              <div class="item-sub" style="margin-top:2px">${new Date(d.created_at).toLocaleDateString()}</div>
-            </div>
-          </label>
-        `).join("")}
-      </div>
-      
-      <div class="flex gap-12">
-        <button id="cancel-doc-pick" class="btn-outline" style="flex:1">Skip / No Files</button>
-        <button id="confirm-doc-pick" class="btn-primary" style="flex:2">Generate Document Set</button>
-      </div>
-    </div>
-  `;
-  
-  overlay.innerHTML = content;
-  document.body.appendChild(overlay);
-  
-  const close = () => {
-    if (document.body.contains(overlay)) {
-      document.body.removeChild(overlay);
-    }
-  };
-
-  document.getElementById("cancel-doc-pick").addEventListener("click", () => {
-    close();
-    callback([]);
-  });
-  
-  document.getElementById("confirm-doc-pick").addEventListener("click", () => {
-    const selected = Array.from(overlay.querySelectorAll(".doc-pick-check:checked")).map(cb => cb.value);
-    close();
-    callback(selected);
-  });
-
-  // Close on click outside
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) {
-      close();
-      callback([]);
-    }
-  });
 }
 
 function printMasterStatement(entityType, id, selectedDealIds = []) {
