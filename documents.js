@@ -93,6 +93,7 @@ export function buildShippingInstruction(si, buyer, supplier, deal, company = {}
   </head>
   <body>
     ${previewActions()}
+    <div class="doc">
     <div class="top">
       <div class="panel">
         <div class="bar">Shipper</div>
@@ -144,6 +145,7 @@ export function buildShippingInstruction(si, buyer, supplier, deal, company = {}
     </div>
 
     ${footer(company, date)}
+    </div>
   </body>
   </html>`;
 }
@@ -448,7 +450,6 @@ function commonStyle() {
       }
     }
   </style>
-  <div class="doc">
   `;
 }
 
@@ -708,7 +709,6 @@ function footer(company = {}, date = "", showSignatory = false) {
       </div>
     </div>
     <div class="note">This is computer generated Document, No signature required</div>
-  </div>
   `;
 }
 
@@ -730,6 +730,7 @@ export function buildPI(deal, buyer, supplier, company = {}) {
   </head>
   <body>
     ${previewActions()}
+    <div class="doc">
 
     <div class="top">
       ${shipperBlock(company)}
@@ -830,6 +831,7 @@ export function buildPI(deal, buyer, supplier, company = {}) {
     </div>
 
     ${footer(company, date, true)}
+    </div>
   </body>
   </html>`;
 }
@@ -1251,6 +1253,7 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
     <div style="margin-top: 30px; font-size: 10px; color: #666; text-align: right;">
       Generated on ${fmtDate(new Date())} · BL No: ${esc(deal.bl_no || "PENDING")}
     </div>
+    </div>
   </body>
   </html>`;
 }
@@ -1385,6 +1388,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
 
     <div style="margin-top: 30px; font-size: 10px; color: #666; text-align: right;">
       Generated on ${fmtDate(new Date())} · BL No: ${esc(deal.bl_no || "—")}
+    </div>
     </div>
   </body>
   </html>`;
