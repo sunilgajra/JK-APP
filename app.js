@@ -1607,7 +1607,8 @@ function exportDealsCsv() {
     "Product", "HSN", "Quantity", "Unit", 
     "Base Currency", "Doc Currency", "Conv Rate", 
     "Port of Loading", "Port of Discharge", "Country of Origin", "Vessel", "ETA", "Shipment Out", "Payment Terms",
-    "BL No", "No of Containers", "Package Details", "Loaded On", "Invoice Date"
+    "BL No", "No of Containers", "Package Details", "Loaded On", "Invoice Date",
+    "CI No", "PL No", "COO No"
   ];
 
   const rows = state.deals.map(d => {
@@ -1630,7 +1631,8 @@ function exportDealsCsv() {
       d.product_name, d.hsn_code, d.quantity, d.unit,
       d.base_currency, d.document_currency, d.conversion_rate,
       d.loading_port || "—", d.discharge_port || "—", d.country_of_origin || "—", d.vessel_voyage || d.vessel, d.eta, d.shipment_out_date, d.payment_terms,
-      d.bl_no || "—", containerCount, d.package_details || "—", d.loaded_on || "—", d.invoice_date || "—"
+      d.bl_no || "—", containerCount, d.package_details || "—", d.loaded_on || "—", d.invoice_date || "—",
+      d.ci_no || "—", d.pl_no || "—", d.coo_no || "—"
     ];
 
     return data.map(val => `"${String(val ?? "").replace(/"/g, '""')}"`).join(",");
