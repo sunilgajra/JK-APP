@@ -1010,7 +1010,7 @@ async function savePayment(e, dealId) {
     method: method,
     currency: currency,
     conversion_rate: rate,
-    converted_amount: convertedAmount,
+    converted_amount: Number(convertedAmount.toFixed(2)), // Ensure it's a number and rounded
     ref: fd.get("ref"),
     status: "completed"
   });
@@ -1106,7 +1106,7 @@ async function showEditPaymentForm(val) {
             </div>
             <div>
               <label style="font-size:11px; opacity:0.7">Converted</label>
-              <input id="pe-converted-${paymentId}" type="text" readonly value="${(p.converted_amount || p.amount).toFixed(2)}" style="background:transparent; border:none">
+              <input id="pe-converted-${paymentId}" type="text" readonly value="${(p.converted_amount !== null && p.converted_amount !== undefined ? p.converted_amount : p.amount).toFixed(2)}" style="background:transparent; border:none">
             </div>
           </div>
         </div>

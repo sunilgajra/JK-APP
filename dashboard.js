@@ -137,7 +137,8 @@ export function dashboardView() {
                 const payments = paymentsForDeal(d.id);
                 const received = payments.reduce((acc, p) => {
                   if (p.direction !== "in") return acc;
-                  return acc + Number(p.amount || 0);
+                  const hasConverted = p.converted_amount !== null && p.converted_amount !== undefined;
+                  return acc + Number(hasConverted ? p.converted_amount : p.amount || 0);
                 }, 0);
 
                 return `

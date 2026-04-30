@@ -150,7 +150,9 @@ function renderReport() {
     let recBank = 0, recYard = 0, sentBank = 0, sentYard = 0;
 
     list.forEach(p => {
-      const val = Number(p.converted_amount !== undefined ? p.converted_amount : p.amount || 0);
+      // Correctly check for null or undefined
+      const hasConverted = p.converted_amount !== null && p.converted_amount !== undefined;
+      const val = Number(hasConverted ? p.converted_amount : p.amount || 0);
       const isBank = (p.method || "").toLowerCase().includes("bank");
       
       if (p.direction === "out") {
