@@ -1973,8 +1973,8 @@ export function buildCOA(coa, deal, company = {}) {
         ${!tests.length ? '<tr><td colspan="4" style="text-align:center; padding:20px; opacity:0.5">No test parameters entered</td></tr>' : ''}
       </tbody>
     </table>
-    </div>
     ${footer(company, date, true)}
+    </div> <!-- end .doc -->
   </body>
   </html>`;
 }
