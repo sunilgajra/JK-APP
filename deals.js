@@ -62,14 +62,14 @@ export function dealsView() {
                 <div>
                   <span style="font-size: 16px; font-weight: 800; color: var(--accent-primary); letter-spacing: 0.5px;">${esc(d.deal_no || "—")}</span>
                   <span style="margin: 0 8px; opacity: 0.3">|</span>
-                  <span style="font-size: 15px; font-weight: 600; color: var(--text);">${esc(d.product_name || "—")}</span>
+                  <span style="font-size: 15px; font-weight: 600; color: var(--text);">BL: ${esc(d.bl_no || "—")}</span>
                 </div>
                 <div class="item-sub" style="margin:0; font-weight:700; color:var(--accent-secondary); opacity:1">${esc(d.status || "active")}</div>
               </div>
               
               <div style="padding: 15px;">
-              <div class="item-sub" style="font-weight:500; opacity:0.9; color:var(--accent-primary)">
-                BL: ${esc(d.bl_no || "—")} · ${esc(pkgDisplay)} · ${netWeight}
+              <div class="item-sub" style="font-weight:700; opacity:1; color:var(--text); font-size: 14px;">
+                ${esc(d.product_name || "—")} · ${esc(pkgDisplay)} · ${netWeight}
               </div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
               <div class="item-sub">Supplier: ${esc(supplierName(d.supplier_id))} · Shipper: ${esc(shipper?.name || "Default Company")} · Buyer: ${esc(buyerName(d.buyer_id))}</div>
