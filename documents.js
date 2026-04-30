@@ -694,15 +694,15 @@ function additionalDetailsBlock(deal, supplier, docLabel = "Packing list No. Dat
 function footer(company = {}, date = "", showSignatory = false) {
   return `
     <div class="footer">
-      <div style="position:relative; min-height:80px;">
+      <div style="position:relative; min-height:110px;">
         <div style="font-size: 10px; font-weight: 700; min-height: 18px;">
           FOR ${esc(company.name || "")}
         </div>
         ${showSignatory ? `
-          <div style="position:relative; margin-top:5px; height:70px;">
-            <img src="${SIGN_URL}" style="height:70px; position:absolute; left:20px; bottom:15px; z-index:3;" onerror="this.style.display='none'">
-            <img src="${STAMP_URL}" style="height:85px; position:absolute; left:60px; bottom:5px; z-index:2; opacity:0.85;" onerror="this.style.display='none'">
-            <div style="font-size:10px;font-weight:700; position:absolute; bottom:0; left:0; z-index:4; background:white; padding-right:5px;">Authorised Signatory</div>
+          <div style="position:relative; margin-top:5px; height:90px;">
+            <img src="${SIGN_URL}" style="height:75px; position:absolute; left:20px; bottom:25px; z-index:3;" onerror="this.style.display='none'">
+            <img src="${STAMP_URL}" style="height:90px; position:absolute; left:65px; bottom:15px; z-index:2; opacity:0.85;" onerror="this.style.display='none'">
+            <div style="font-size:10px;font-weight:700; position:absolute; bottom:0; left:0; z-index:4; padding-top:5px;">Authorised Signatory</div>
           </div>
         ` : `
           <div style="position:relative; margin-top:5px; height:70px;">
