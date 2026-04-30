@@ -2210,24 +2210,28 @@ function showCOAForm(dealId) {
   const shortGrade = prodName.substring(0,2).toUpperCase();
   const certNo = `COA/${shortGrade}/${d.bl_no || "BL"}/${today.replace(/-/g,"").slice(2)}`;
 
-  // Default tests if it's industrial oil
+  // Expanded default tests from user images
   let defaultTests = [
-    { parameter: "Density @ 15°C", method: "ASTM D 1298", unit: "Kg/L", result: "" },
-    { parameter: "Flash", method: "ASTM D 93", unit: "°C", result: "" },
-    { parameter: "Sulfur", method: "ASTM D 4294", unit: "PPM", result: "" },
-    { parameter: "Viscosity @ 40°C", method: "ASTM D 445", unit: "cSt", result: "" },
+    { parameter: "Flash Point", method: "ASTM D-92", unit: "°C", result: "" },
+    { parameter: "Density @ 15°C", method: "ASTM D-4052", unit: "g/cm³", result: "" },
+    { parameter: "Kinematic Viscosity @ 40°C", method: "ASTM D-445", unit: "Cst", result: "" },
+    { parameter: "Kinematic Viscosity @ 100°C", method: "ASTM D-445", unit: "Cst", result: "" },
+    { parameter: "Viscosity Index", method: "ASTM D-2270", unit: "", result: "" },
+    { parameter: "Ash content", method: "", unit: "%", result: "" },
+    { parameter: "Color", method: "ASTM D-1500", unit: "", result: "" },
+    { parameter: "Water Solubility", method: "", unit: "", result: "" },
+    { parameter: "Pour Point", method: "", unit: "°C", result: "" },
+    { parameter: "Base oil - highly refined", method: "", unit: "", result: "" },
     { parameter: "Distillation", method: "", unit: "", result: "", isHeader: true },
-    { parameter: "IBP", method: "ASTM D 86", unit: "°C", result: "" },
-    { parameter: "10% Recovered", method: "ASTM D 86", unit: "°C", result: "" },
-    { parameter: "50% Recovered", method: "ASTM D 86", unit: "°C", result: "" },
-    { parameter: "90% Recovered", method: "ASTM D 86", unit: "°C", result: "" },
-    { parameter: "FBP", method: "ASTM D 86", unit: "°C", result: "" }
+    { parameter: "IBP", method: "ASTM D-86", unit: "°C", result: "" },
+    { parameter: "50% Recovered", method: "ASTM D-86", unit: "°C", result: "" },
+    { parameter: "FBP", method: "ASTM D-86", unit: "°C", result: "" }
   ];
 
   modal.innerHTML = `
-    <div class="modal-content" style="max-width:800px; padding:30px">
+    <div class="modal-content" style="max-width:800px; padding:30px; max-height:90vh; overflow-y:auto">
       <div class="title" style="margin-bottom:10px">Prepare Certificate of Analysis</div>
-      <p class="item-sub">Fill in the details for the test report. You can add or remove rows as needed.</p>
+      <p class="item-sub">Fill in the details for the test report. Rows with no "Result" will be ignored in the printout.</p>
       
       <form id="coa-generation-form">
         <div class="grid grid-2 gap-10 mt-12">
@@ -2245,7 +2249,7 @@ function showCOAForm(dealId) {
           </div>
           <div>
             <label class="form-label">Grade / Description</label>
-            <input type="text" name="grade" value="${esc(d.product_name || "")}" required>
+            <input type="text" name="grade" value="${esc(prodName)}" required>
           </div>
         </div>
 
@@ -2270,7 +2274,7 @@ function showCOAForm(dealId) {
                   <td><input name="test_param" value="${esc(t.parameter)}" placeholder="Parameter" ${t.isHeader ? 'style="font-weight:bold; background:rgba(255,255,255,0.05)"' : ''}></td>
                   <td><input name="test_method" value="${esc(t.method)}" placeholder="Method" ${t.isHeader ? 'disabled' : ''}></td>
                   <td><input name="test_unit" value="${esc(t.unit)}" placeholder="Unit" ${t.isHeader ? 'disabled' : ''}></td>
-                  <td><input name="test_result" value="${esc(t.result)}" placeholder="Result" ${t.isHeader ? 'disabled' : ''}></td>
+                  <td><input name="test_result" value="${esc(t.result)}" placeholder="Result (Value)" ${t.isHeader ? 'disabled' : ''}></td>
                   <td><button type="button" class="btn-danger btn-small remove-coa-row">×</button></td>
                 </tr>
               `).join("")}
@@ -2324,13 +2328,29 @@ function showCOAForm(dealId) {
     const rows = modal.querySelectorAll(".coa-test-row");
     rows.forEach(row => {
       const isHeader = row.dataset.header === "1";
-      coaData.tests.push({
-        parameter: row.querySelector("[name='test_param']").value,
-        method: row.querySelector("[name='test_method']").value,
-        unit: row.querySelector("[name='test_unit']").value,
-        result: row.querySelector("[name='test_result']").value,
-        isHeader: isHeader
-      });
+      const param = row.querySelector("[name='test_param']").value;
+      const result = row.querySelector("[name='test_result']").value;
+      
+      // Only include if there is a result, or if it's a header
+      if (isHeader || (result && result.trim() !== "")) {
+        coaData.tests.push({
+          parameter: param,
+          method: row.querySelector("[name='test_method']").value,
+          unit: row.querySelector("[name='test_unit']").value,
+          result: result,
+          isHeader: isHeader
+        });
+      }
+    });
+
+    // Final check: filter out headers that have no tests following them (optional but cleaner)
+    coaData.tests = coaData.tests.filter((t, i, arr) => {
+      if (t.isHeader) {
+        // If next item is a header or doesn't exist, this header is empty
+        const next = arr[i+1];
+        return next && !next.isHeader;
+      }
+      return true;
     });
 
     const html = buildCOA(coaData, d, state.company);
