@@ -12,6 +12,7 @@ import { dealsView, dealFormHtml } from "./deals.js";
 import { dealDetailView } from "./dealDetail.js";
 import { settingsView } from "./settings.js";
 import { shippingInstructionsView } from "./shipping.js";
+import { poView, bindPOUI } from "./po.js";
 import { productsView, productEditFormHtml } from "./products.js";
 import { reportsView, bindReportsUI } from "./reports.js";
 import { trackingView, performQuickTrack } from "./tracking.js";
@@ -164,12 +165,18 @@ async function loadSupabaseData() {
     await loadCompanySettings();
     await loadProducts();
     await loadShippingInstructions();
+    await loadPurchaseOrders();
 
     state.ready = true;
   } catch (err) {
     console.error("Load failed:", err);
   }
   handleRoute();
+}
+
+async function loadPurchaseOrders() {
+  const { data } = await supabase.from("purchase_orders").select("*").order("id", { ascending: false });
+  if (data) state.purchaseOrders = data;
 }
 
 async function loadCompanySettings() {
@@ -227,6 +234,7 @@ function render() {
   else if (state.page === "agents") content.innerHTML = agentsView();
   else if (state.page === "deals") content.innerHTML = dealsView();
   else if (state.page === "dealDetail") content.innerHTML = dealDetailView();
+  else if (state.page === "po") content.innerHTML = poView();
   else if (state.page === "shippingInstructions") content.innerHTML = shippingInstructionsView();
   else if (state.page === "tracking") content.innerHTML = trackingView();
   else if (state.page === "products") content.innerHTML = productsView();
@@ -253,6 +261,7 @@ function bindUI() {
   document.getElementById("logout-btn")?.addEventListener("click", logoutUser);
   
   if (state.page === "reports") bindReportsUI();
+  if (state.page === "po") bindPOUI();
   if (state.page === "dashboard") bindDashboardUI();
   
   // Navigation

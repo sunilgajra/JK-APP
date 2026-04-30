@@ -6,6 +6,7 @@ export const state = {
   suppliers: [],
   agents: [],
   shippingInstructions: [],
+  purchaseOrders: [],
   products: [],
   deals: [],
   dealSearch: "",

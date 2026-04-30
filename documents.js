@@ -1095,24 +1095,6 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
       .doc { page-break-after: always !important; }
       .doc:last-child { page-break-after: auto !important; }
     </style>
-  </head>
-  <body>
-    ${previewActions()}
-    <div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div>
-    <div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div>
-    <div class="doc">${innerCOO(deal, buyer, supplier, company, date)}</div>
-  </body>
-  </html>`;
-}
-
-
-export function buildSupplierStatement(deal, buyer, supplier, payments, company = {}) {
-  const date = new Date().toISOString();
-  const outPayments = payments.filter(p => p.direction === "out");
-  const purchaseTotalUsd = Number(deal.purchase_total_usd || 0);
-  const purchaseTotalAed = Number(deal.purchase_total_aed || 0);
-  const conv = Number(deal.purchase_conversion_rate || deal.conversion_rate || 3.6725);
-
   let paidAed = 0;
   let paidUsd = 0;
   outPayments.forEach(p => {
@@ -1987,6 +1969,101 @@ export function buildCOA(coa, deal, company = {}) {
     </table>
     ${footer(company, date, true)}
     </div> <!-- end .doc -->
+  </body>
+  </html>`;
+}
+
+export function buildPO(po, supplier, company = {}) {
+  const date = po.po_date;
+  const specs = Array.isArray(po.specifications) ? po.specifications : [];
+  const terms = Array.isArray(po.commercial_terms) ? po.commercial_terms : [];
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Purchase Order - ${esc(po.po_no)}</title>
+    ${commonStyle()}
+    <style>
+      .po-header { text-align: center; margin-bottom: 30px; }
+      .po-header h1 { text-decoration: underline; font-size: 24px; margin-bottom: 20px; text-transform: uppercase; }
+      .po-meta { margin-bottom: 25px; font-weight: bold; font-size: 14px; }
+      .supplier-info { margin-bottom: 25px; line-height: 1.6; }
+      .supplier-info b { font-size: 16px; }
+      .po-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+      .po-table th, .po-table td { border: 1px solid #000; padding: 8px; text-align: center; font-size: 12px; }
+      .po-table th { background: #f2f2f2; font-weight: bold; }
+      .po-section { margin-bottom: 20px; line-height: 1.6; }
+      .po-section h3 { font-size: 14px; margin-bottom: 5px; text-decoration: underline; }
+      .po-section p { margin: 0; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+    <div class="doc">
+      <div class="po-header">
+        <h1>Purchase Order</h1>
+      </div>
+
+      <div class="po-meta">
+        <div>PONo.: ${esc(po.po_no)}</div>
+        <div>PODate: ${esc(fmtDate(date))}</div>
+      </div>
+
+      <div class="supplier-info">
+        <b>Supplier:</b><br>
+        ${esc(supplier?.name || "—")}<br>
+        ${esc(supplier?.company_name || "")}<br>
+        ${esc(supplier?.address || "—")}<br>
+        Email: ${esc(supplier?.email || "—")}<br>
+        Website: ${esc(supplier?.website || "—")}
+      </div>
+
+      <table class="po-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Product Name</th>
+            <th>HSN Code</th>
+            <th>Packing</th>
+            <th>Quantity</th>
+            <th>Weight</th>
+            <th>Price</th>
+            <th>Incoterm</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>${esc(po.product_name)}</td>
+            <td>${esc(po.hsn_code)}</td>
+            <td>${esc(po.packing)}</td>
+            <td>${esc(po.quantity)}</td>
+            <td>${esc(po.weight)}</td>
+            <td>${esc(po.price)}</td>
+            <td>${esc(po.incoterm)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      ${specs.length ? `
+        <div class="po-section">
+          <h3>Specifications:</h3>
+          ${specs.map(s => `<p>${esc(s)}</p>`).join("")}
+        </div>
+      ` : ""}
+
+      ${terms.length ? `
+        <div class="po-section">
+          <h3>Commercial Terms:</h3>
+          ${terms.map(t => `<p>${esc(t)}</p>`).join("")}
+        </div>
+      ` : ""}
+
+      <div style="margin-top: 50px;">
+        ${footer(company, date, true)}
+      </div>
+    </div>
   </body>
   </html>`;
 }
