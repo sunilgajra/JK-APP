@@ -135,7 +135,6 @@ export function dashboardView() {
                     : Number(d.total_amount_aed || d.total_amount || 0);
 
                 const payments = paymentsForDeal(d.id);
-                const dealCurrency = d.document_currency || d.currency || d.base_currency || "AED";
                 const dealConv = Number(d.conversion_rate || 3.67);
 
                 const received = payments.reduce((acc, p) => {
