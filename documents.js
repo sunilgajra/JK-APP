@@ -179,19 +179,24 @@ function previewScript() {
         const actions = document.querySelector(".previewActions");
         if (actions) actions.style.display = "none";
 
+        // FORCE A4 WIDTH FOR GENERATION (Fixes overlapping on mobile)
+        document.body.classList.add("is-generating-pdf");
+        
         const element = document.body;
         const title = document.title || "document";
 
         await waitForImages(element);
-        await new Promise((r) => setTimeout(r, 500));
+        await new Promise((r) => setTimeout(r, 800)); // Give extra time for layout to settle
 
         const opt = {
           margin: [0, 0, 0, 0],
           filename: title + ".pdf",
-          image: { type: "jpeg", quality: 1 },
+          image: { type: "jpeg", quality: 0.98 },
           html2canvas: {
             scale: 2,
             useCORS: true,
+            width: 794, // Fixed A4 width in pixels at 96 DPI
+            windowWidth: 794,
             backgroundColor: "#ffffff",
             logging: false
           },
@@ -207,10 +212,12 @@ function previewScript() {
           .set(opt)
           .save()
           .then(() => {
+            document.body.classList.remove("is-generating-pdf");
             if (actions) actions.style.display = "flex";
           })
           .catch((err) => {
             console.error(err);
+            document.body.classList.remove("is-generating-pdf");
             if (actions) actions.style.display = "flex";
             alert("Failed to generate PDF");
           });
@@ -259,6 +266,19 @@ function commonStyle() {
       margin: 0 auto;
       padding-top: 10mm;
       padding-bottom: 10mm;
+    }
+
+    /* PDF Generation Fix for Mobile */
+    .is-generating-pdf {
+      width: 210mm !important;
+      overflow: visible !important;
+      background: white !important;
+    }
+    .is-generating-pdf .doc {
+      width: 210mm !important;
+      min-width: 210mm !important;
+      margin: 0 !important;
+      padding: 15mm 10mm !important;
     }
 
     .previewActions {
