@@ -1095,6 +1095,23 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
       .doc { page-break-after: always !important; }
       .doc:last-child { page-break-after: auto !important; }
     </style>
+  </head>
+  <body>
+    ${previewActions()}
+    <div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div>
+    <div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div>
+    <div class="doc">${innerCOO(deal, buyer, supplier, company, date)}</div>
+  </body>
+  </html>`;
+}
+
+export function buildSupplierStatement(deal, buyer, supplier, payments, company = {}) {
+  const date = new Date().toISOString();
+  const outPayments = payments.filter(p => p.direction === "out");
+  const purchaseTotalUsd = Number(deal.purchase_total_usd || 0);
+  const purchaseTotalAed = Number(deal.purchase_total_aed || 0);
+  const conv = Number(deal.purchase_conversion_rate || deal.conversion_rate || 3.6725);
+
   let paidAed = 0;
   let paidUsd = 0;
   outPayments.forEach(p => {
