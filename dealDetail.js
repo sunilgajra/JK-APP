@@ -14,7 +14,7 @@ export function dealDetailView() {
     ? Number(d.total_amount_usd || d.total_amount || 0)
     : Number(d.total_amount_aed || d.total_amount || 0);
   const pTotal = showCurrency === "USD" ? (d.purchase_total_usd || 0) : (d.purchase_total_aed || 0);
-  const s = paymentSummary(d.id, showTotal, pTotal);
+  const s = paymentSummary(d.id, showTotal, pTotal, showCurrency);
 
   return `
     <div class="card">

@@ -1745,7 +1745,8 @@ function exportDealsCsv() {
     const s = paymentSummary(
       d.id, 
       isUsd ? d.total_amount_usd : d.total_amount_aed,
-      isUsd ? d.purchase_total_usd : d.purchase_total_aed
+      isUsd ? d.purchase_total_usd : d.purchase_total_aed,
+      isUsd ? "USD" : "AED"
     );
 
     const containerCount = Array.isArray(d.container_numbers) ? d.container_numbers.length : 0;

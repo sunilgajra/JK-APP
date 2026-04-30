@@ -181,7 +181,7 @@ function renderReport() {
       }
     });
 
-    const s = paymentSummary(d.id, d.total_amount_aed, d.purchase_total_aed);
+    const s = paymentSummary(d.id, d.total_amount_aed, d.purchase_total_aed, "AED");
     const profit = s.sale - s.purchase;
     const margin = s.sale > 0 ? (profit / s.sale) * 100 : 0;
     

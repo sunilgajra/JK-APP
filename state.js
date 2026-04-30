@@ -49,13 +49,13 @@ export function documentsForDeal(dealId) {
   return state.documentsByDeal[String(dealId)] || [];
 }
 
-export function paymentSummary(dealId, saleTotal, purchaseTotal) {
+export function paymentSummary(dealId, saleTotal, purchaseTotal, targetCurrency = null) {
   const list = paymentsForDeal(dealId);
   let received = 0;
   let sent = 0;
 
   const deal = state.deals.find(d => String(d.id) === String(dealId));
-  const dealCurrency = deal?.document_currency || deal?.currency || deal?.base_currency || "AED";
+  const dealCurrency = targetCurrency || deal?.document_currency || deal?.currency || deal?.base_currency || "AED";
   const dealConv = Number(deal?.conversion_rate || 3.67);
 
   list.forEach((p) => {

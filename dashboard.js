@@ -15,7 +15,7 @@ export function dashboardView() {
 
   state.deals.forEach(d => {
     const conv = Number(d.conversion_rate || 3.67);
-    const s = paymentSummary(d.id, d.total_amount_usd, d.purchase_total_usd);
+    const s = paymentSummary(d.id, d.total_amount_usd, d.purchase_total_usd, "USD");
     
     // Convert USD balances to AED for the dashboard overview
     const saleAed = s.sale * conv;

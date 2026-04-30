@@ -41,7 +41,7 @@ export function dealsView() {
         ${
           filteredDeals.length
             ? filteredDeals.map((d) => {
-                const s = paymentSummary(d.id, d.total_amount, d.document_currency === "USD" ? d.purchase_total_usd : d.purchase_total_aed);
+                const s = paymentSummary(d.id, d.total_amount, d.document_currency === "USD" ? d.purchase_total_usd : d.purchase_total_aed, d.document_currency || d.currency || "AED");
                 const payments = paymentsForDeal(d.id);
                 const documents = documentsForDeal(d.id);
                 const curr = d.document_currency || d.currency || "AED";
