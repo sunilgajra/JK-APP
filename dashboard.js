@@ -9,18 +9,68 @@ export function dashboardView() {
   let totalReceivedAed = 0;
   let totalSentAed = 0;
 
+  const receivablesBreakdown = [];
+  const payablesBreakdown = [];
+  const profitBreakdown = [];
+
   state.deals.forEach(d => {
     const conv = Number(d.conversion_rate || 3.67);
     const s = paymentSummary(d.id, d.total_amount_usd, d.purchase_total_usd);
     
     // Convert USD balances to AED for the dashboard overview
-    totalSaleAed += (s.sale * conv);
-    totalPurchaseAed += (s.purchase * conv);
-    totalReceivableAed += (s.receivable * conv);
-    totalPayableAed += (s.payable * conv);
-    totalReceivedAed += (s.received * conv);
-    totalSentAed += (s.sent * conv);
+    const saleAed = s.sale * conv;
+    const purchaseAed = s.purchase * conv;
+    const receivableAed = s.receivable * conv;
+    const payableAed = s.payable * conv;
+    const receivedAed = s.received * conv;
+    const sentAed = s.sent * conv;
+
+    totalSaleAed += saleAed;
+    totalPurchaseAed += purchaseAed;
+    totalReceivableAed += receivableAed;
+    totalPayableAed += payableAed;
+    totalReceivedAed += receivedAed;
+    totalSentAed += sentAed;
+
+    if (receivableAed !== 0) {
+      receivablesBreakdown.push({
+        deal_no: d.deal_no,
+        product: d.product_name,
+        total_usd: s.sale,
+        received_usd: s.received,
+        balance_usd: s.receivable,
+        conv,
+        balance_aed: receivableAed
+      });
+    }
+
+    if (payableAed !== 0) {
+      payablesBreakdown.push({
+        deal_no: d.deal_no,
+        product: d.product_name,
+        total_usd: s.purchase,
+        sent_usd: s.sent,
+        balance_usd: s.payable,
+        conv,
+        balance_aed: payableAed
+      });
+    }
+
+    profitBreakdown.push({
+      deal_no: d.deal_no,
+      product: d.product_name,
+      sale_aed: saleAed,
+      purchase_aed: purchaseAed,
+      profit_aed: saleAed - purchaseAed
+    });
   });
+
+  // Store breakdown in global state for the Working button to access
+  state._lastDashboardBreakdown = {
+    receivables: receivablesBreakdown,
+    payables: payablesBreakdown,
+    profit: profitBreakdown
+  };
 
   const totalProfitAed = totalSaleAed - totalPurchaseAed;
   const profitMargin = totalSaleAed > 0 ? (totalProfitAed / totalSaleAed) * 100 : 0;
@@ -28,19 +78,22 @@ export function dashboardView() {
 
   return `
     <div class="grid grid-3 mb-12">
-      <div class="card" style="border-left: 4px solid var(--success)">
+      <div class="card" style="border-left: 4px solid var(--success); position: relative;">
+        <button class="working-btn" data-breakdown="receivables" title="Show Working">Working</button>
         <div class="stat-label">Total Receivables</div>
         <div class="stat-value" style="color:var(--success)">AED ${fmtMoney(totalReceivableAed)}</div>
         <div class="item-sub">Outstanding from Buyers</div>
       </div>
 
-      <div class="card" style="border-left: 4px solid var(--danger)">
+      <div class="card" style="border-left: 4px solid var(--danger); position: relative;">
+        <button class="working-btn" data-breakdown="payables" title="Show Working">Working</button>
         <div class="stat-label">Total Payables</div>
         <div class="stat-value" style="color:var(--danger)">AED ${fmtMoney(totalPayableAed)}</div>
         <div class="item-sub">Outstanding to Suppliers</div>
       </div>
 
-      <div class="card" style="border-left: 4px solid var(--primary)">
+      <div class="card" style="border-left: 4px solid var(--primary); position: relative;">
+        <button class="working-btn" data-breakdown="profit" title="Show Working">Working</button>
         <div class="stat-label">Expected Profit</div>
         <div class="stat-value" style="color:var(--primary)">AED ${fmtMoney(totalProfitAed)}</div>
         <div class="item-sub">Avg Margin: ${profitMargin.toFixed(1)}%</div>
@@ -52,6 +105,16 @@ export function dashboardView() {
         <div class="stat-label">Network</div>
         <div class="stat-value" style="font-size:20px">${state.buyers.length + state.suppliers.length}</div>
         <div class="item-sub">${state.buyers.length} buyers · ${state.suppliers.length} suppliers</div>
+      </div>
+    </div>
+
+    <div id="working-modal" class="modal" style="display:none">
+      <div class="modal-content" style="max-width: 900px;">
+        <div class="flex flex-between flex-center mb-14">
+          <div class="title mb-0" id="working-title">Calculation Breakdown</div>
+          <button class="btn-close" id="close-working-modal">&times;</button>
+        </div>
+        <div id="working-body" class="scroll-y" style="max-height: 70vh;"></div>
       </div>
     </div>
 

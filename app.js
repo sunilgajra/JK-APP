@@ -253,6 +253,7 @@ function bindUI() {
   document.getElementById("logout-btn")?.addEventListener("click", logoutUser);
   
   if (state.page === "reports") bindReportsUI();
+  if (state.page === "dashboard") bindDashboardUI();
   
   // Navigation
   document.getElementById("show-buyer-form")?.addEventListener("click", showBuyerForm);
@@ -437,6 +438,130 @@ function bindUI() {
   // Auto-binding logic
   bindDealAutoTotal();
   bindProductHsnLookup();
+}
+
+/**
+ * DASHBOARD BREAKDOWN LOGIC
+ */
+function bindDashboardUI() {
+  const modal = document.getElementById("working-modal");
+  const title = document.getElementById("working-title");
+  const body = document.getElementById("working-body");
+  const closeBtn = document.getElementById("close-working-modal");
+
+  const fmt = (val) => Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  document.querySelectorAll(".working-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const type = btn.dataset.breakdown;
+      const data = state._lastDashboardBreakdown[type] || [];
+      
+      let html = "";
+      if (type === "receivables") {
+        title.innerText = "Receivables Breakdown (AED)";
+        html = `
+          <table class="breakdown-table">
+            <thead>
+              <tr>
+                <th>Deal No</th>
+                <th>Sale (USD)</th>
+                <th>Received (USD)</th>
+                <th>Balance (USD)</th>
+                <th>Conv</th>
+                <th>Balance (AED)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(item => `
+                <tr>
+                  <td style="font-weight:700">${esc(item.deal_no)}</td>
+                  <td>${fmt(item.total_usd)}</td>
+                  <td style="color:var(--success)">${fmt(item.received_usd)}</td>
+                  <td style="font-weight:700">${fmt(item.balance_usd)}</td>
+                  <td style="color:var(--text-dim)">${item.conv}</td>
+                  <td style="font-weight:800; color:var(--success)">${fmt(item.balance_aed)}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+          <div class="formula-box">
+            <strong>Formula:</strong> (Sale Amount USD - Received Payments USD) × Conversion Rate = <strong>Receivable AED</strong>
+          </div>
+        `;
+      } else if (type === "payables") {
+        title.innerText = "Payables Breakdown (AED)";
+        html = `
+          <table class="breakdown-table">
+            <thead>
+              <tr>
+                <th>Deal No</th>
+                <th>Purchase (USD)</th>
+                <th>Sent (USD)</th>
+                <th>Balance (USD)</th>
+                <th>Conv</th>
+                <th>Balance (AED)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(item => `
+                <tr>
+                  <td style="font-weight:700">${esc(item.deal_no)}</td>
+                  <td>${fmt(item.total_usd)}</td>
+                  <td style="color:var(--danger)">${fmt(item.sent_usd)}</td>
+                  <td style="font-weight:700">${fmt(item.balance_usd)}</td>
+                  <td style="color:var(--text-dim)">${item.conv}</td>
+                  <td style="font-weight:800; color:var(--danger)">${fmt(item.balance_aed)}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+          <div class="formula-box">
+            <strong>Formula:</strong> (Purchase Amount USD - Sent Payments USD) × Conversion Rate = <strong>Payable AED</strong>
+            <br><br>
+            <span style="color:var(--danger)">* If Balance is <strong>MINUS</strong>, it means you have paid MORE than the recorded Purchase Amount for that deal.</span>
+          </div>
+        `;
+      } else if (type === "profit") {
+        title.innerText = "Expected Profit Breakdown (AED)";
+        html = `
+          <table class="breakdown-table">
+            <thead>
+              <tr>
+                <th>Deal No</th>
+                <th>Total Sale (AED)</th>
+                <th>Total Purchase (AED)</th>
+                <th>Expected Profit (AED)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(item => `
+                <tr>
+                  <td style="font-weight:700">${esc(item.deal_no)}</td>
+                  <td style="color:var(--success)">${fmt(item.sale_aed)}</td>
+                  <td style="color:var(--danger)">${fmt(item.purchase_aed)}</td>
+                  <td style="font-weight:800; color:var(--primary)">${fmt(item.profit_aed)}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+          <div class="formula-box">
+            <strong>Formula:</strong> Total Sale AED - Total Purchase AED = <strong>Expected Profit AED</strong>
+          </div>
+        `;
+      }
+
+      body.innerHTML = html || "<div class='empty'>No data available</div>";
+      modal.style.display = "flex";
+    });
+  });
+
+  closeBtn?.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  window.addEventListener("click", (e) => {
+    if (e.target === modal) modal.style.display = "none";
+  });
 }
 
 /**
