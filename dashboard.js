@@ -135,11 +135,28 @@ export function dashboardView() {
                     : Number(d.total_amount_aed || d.total_amount || 0);
 
                 const payments = paymentsForDeal(d.id);
+                const dealCurrency = d.document_currency || d.currency || d.base_currency || "AED";
+                const dealConv = Number(d.conversion_rate || 3.67);
+
                 const received = payments.reduce((acc, p) => {
                   if (p.direction !== "in") return acc;
+                  
                   const hasConverted = p.converted_amount !== null && p.converted_amount !== undefined;
-                  return acc + Number(hasConverted ? p.converted_amount : p.amount || 0);
+                  let val = 0;
+                  
+                  if (hasConverted) {
+                    val = Number(p.converted_amount);
+                  } else {
+                    const pAmt = Number(p.amount || 0);
+                    const pCurr = p.currency || "AED";
+                    if (pCurr === dealCurrency) val = pAmt;
+                    else if (pCurr === "AED" && dealCurrency === "USD") val = pAmt / dealConv;
+                    else if (pCurr === "USD" && dealCurrency === "AED") val = pAmt * dealConv;
+                    else val = pAmt;
+                  }
+                  return acc + val;
                 }, 0);
+                
 
                 return `
               <div class="item" style="padding:14px">

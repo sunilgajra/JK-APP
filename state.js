@@ -54,8 +54,33 @@ export function paymentSummary(dealId, saleTotal, purchaseTotal) {
   let received = 0;
   let sent = 0;
 
+  const deal = state.deals.find(d => String(d.id) === String(dealId));
+  const dealCurrency = deal?.document_currency || deal?.currency || deal?.base_currency || "AED";
+  const dealConv = Number(deal?.conversion_rate || 3.67);
+
   list.forEach((p) => {
-    const val = Number(p.converted_amount !== undefined ? p.converted_amount : p.amount || 0);
+    let val = 0;
+    const hasConverted = p.converted_amount !== null && p.converted_amount !== undefined;
+    
+    if (hasConverted) {
+      val = Number(p.converted_amount);
+    } else {
+      // SMART FALLBACK: If conversion is missing, auto-calculate it
+      const pAmt = Number(p.amount || 0);
+      const pCurr = p.currency || "AED";
+      
+      if (pCurr === dealCurrency) {
+        val = pAmt;
+      } else if (pCurr === "AED" && dealCurrency === "USD") {
+        val = pAmt / dealConv;
+      } else if (pCurr === "USD" && dealCurrency === "AED") {
+        val = pAmt * dealConv;
+      } else {
+        // Fallback for other currencies or missing info
+        val = pAmt;
+      }
+    }
+    
     if (p.direction === "out") sent += val;
     else received += val;
   });
