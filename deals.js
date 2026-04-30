@@ -55,8 +55,7 @@ export function dealsView() {
                 const s = paymentSummary(d.id, saleVal, purchaseVal, curr);
                 const payments = paymentsForDeal(d.id);
                 const documents = documentsForDeal(d.id);
-                const curr = d.document_currency || d.currency || "AED";
-                const profit = s.sale - s.purchase;
+                 const profit = s.sale - s.purchase;
                 
                 let pkgDisplay = Array.isArray(d.container_numbers) && d.container_numbers.length > 0 
                   ? `${d.container_numbers.length} CTRS` 
