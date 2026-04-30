@@ -48,7 +48,11 @@ export function dealsView() {
         ${
           filteredDeals.length
             ? filteredDeals.map((d) => {
-                const s = paymentSummary(d.id, d.total_amount_usd || d.total_amount, d.document_currency === "USD" ? d.purchase_total_usd : d.purchase_total_aed, d.document_currency || d.currency || "AED");
+                const curr = d.document_currency || d.currency || "AED";
+                const saleVal = curr === "USD" ? (d.total_amount_usd || 0) : (d.total_amount_aed || d.total_amount || 0);
+                const purchaseVal = curr === "USD" ? (d.purchase_total_usd || 0) : (d.purchase_total_aed || 0);
+                
+                const s = paymentSummary(d.id, saleVal, purchaseVal, curr);
                 const payments = paymentsForDeal(d.id);
                 const documents = documentsForDeal(d.id);
                 const curr = d.document_currency || d.currency || "AED";
@@ -78,6 +82,8 @@ export function dealsView() {
                    paymentAlert = `<span class="badge badge-danger" style="margin-left:8px">💸 Payment Due: ${curr} ${fmtMoney(s.receivable)}</span>`;
                 }
                 
+                const shipper = d.shipper_index !== null && d.shipper_index !== "" ? (state.company.shippers || [])[d.shipper_index] : state.company;
+                
                 return `
             <div class="item relative" style="padding: 0; overflow: hidden; border-top: 4px solid var(--accent-primary); background: rgba(255,255,255,0.01);">
               <div style="background: linear-gradient(90deg, rgba(var(--primary-rgb), 0.15), transparent); padding: 12px 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
@@ -96,7 +102,7 @@ export function dealsView() {
                 ${esc(d.product_name || "—")} · ${esc(pkgDisplay)} · ${netWeight}
               </div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
-              <div class="item-sub">Supplier: ${esc(supplierName(d.supplier_id))} · Buyer: ${esc(buyerName(d.buyer_id))}</div>
+              <div class="item-sub">Supplier: ${esc(supplierName(d.supplier_id))} · Shipper: ${esc(shipper?.name || "Default Company")} · Buyer: ${esc(buyerName(d.buyer_id))}</div>
               
               <div class="grid grid-2 mt-8 p-10" style="background:rgba(255,255,255,0.03); border-radius:4px">
                 <div>

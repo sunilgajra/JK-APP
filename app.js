@@ -357,8 +357,12 @@ function bindUI() {
   document.querySelectorAll("[data-share-whatsapp]").forEach(btn => btn.addEventListener("click", () => {
     const deal = getDealById(btn.dataset.shareWhatsapp);
     if (!deal) return;
-    const s = paymentSummary(deal.id, deal.total_amount_usd || deal.total_amount, deal.document_currency === "USD" ? deal.purchase_total_usd : deal.purchase_total_aed);
+    
     const curr = deal.document_currency || deal.currency || "AED";
+    const saleVal = curr === "USD" ? (deal.total_amount_usd || 0) : (deal.total_amount_aed || deal.total_amount || 0);
+    const purchaseVal = curr === "USD" ? (deal.purchase_total_usd || 0) : (deal.purchase_total_aed || 0);
+    
+    const s = paymentSummary(deal.id, saleVal, purchaseVal, curr);
     
     const text = `*JK TRADE MANAGER - DEAL SUMMARY*%0A` +
                  `Deal No: ${deal.deal_no}%0A` +
@@ -366,9 +370,9 @@ function bindUI() {
                  `BL No: ${deal.bl_no || "—"}%0A` +
                  `Status: ${deal.status.toUpperCase()}%0A%0A` +
                  `*Payment Status:*%0A` +
-                 `Total Sale: ${curr} ${s.sale.toLocaleString()}%0A` +
-                 `Received: ${curr} ${s.received.toLocaleString()}%0A` +
-                 `*Outstanding: ${curr} ${s.receivable.toLocaleString()}*%0A%0A` +
+                 `Total Sale: ${curr} ${s.sale.toLocaleString(undefined, {minimumFractionDigits: 2})}%0A` +
+                 `Received: ${curr} ${s.received.toLocaleString(undefined, {minimumFractionDigits: 2})}%0A` +
+                 `*Outstanding: ${curr} ${s.receivable.toLocaleString(undefined, {minimumFractionDigits: 2})}*%0A%0A` +
                  `_Sent via JK Trade Manager_`;
     
     window.open(`https://wa.me/?text=${text}`, "_blank");
