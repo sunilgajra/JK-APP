@@ -2192,16 +2192,22 @@ async function saveTrackingLog(id) {
  * COA FORM
  */
 function showCOAForm(dealId) {
+  console.log("Showing COA Form for deal:", dealId);
   const d = getDealById(dealId);
-  if (!d) return;
+  if (!d) {
+    console.error("Deal not found for ID:", dealId);
+    return alert("Error: Deal not found.");
+  }
 
   const modal = document.createElement("div");
   modal.id = "coa-modal";
-  modal.className = "modal-overlay";
+  modal.className = "modal"; // Using standard modal class from style.css
+  modal.style.display = "flex"; // Force visibility
   modal.style.zIndex = "10000";
   
   const today = new Date().toISOString().split("T")[0];
-  const shortGrade = (d.product_name || "").substring(0,2).toUpperCase();
+  const prodName = d.product_name || "MATERIAL";
+  const shortGrade = prodName.substring(0,2).toUpperCase();
   const certNo = `COA/${shortGrade}/${d.bl_no || "BL"}/${today.replace(/-/g,"").slice(2)}`;
 
   // Default tests if it's industrial oil
