@@ -141,13 +141,16 @@ export function dashboardView() {
                   if (p.direction !== "in") return acc;
                   
                   const hasConverted = p.converted_amount !== null && p.converted_amount !== undefined;
-                  let val = 0;
+                  const pAmt = Number(p.amount || 0);
+                  const pCurr = p.currency || "AED";
                   
-                  if (hasConverted) {
+                  // SELF-HEALING
+                  const isSuspicious = hasConverted && Number(p.converted_amount) === pAmt && pCurr !== dealCurrency;
+                  
+                  let val = 0;
+                  if (hasConverted && !isSuspicious) {
                     val = Number(p.converted_amount);
                   } else {
-                    const pAmt = Number(p.amount || 0);
-                    const pCurr = p.currency || "AED";
                     if (pCurr === dealCurrency) val = pAmt;
                     else if (pCurr === "AED" && dealCurrency === "USD") val = pAmt / dealConv;
                     else if (pCurr === "USD" && dealCurrency === "AED") val = pAmt * dealConv;

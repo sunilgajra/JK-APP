@@ -153,14 +153,17 @@ function renderReport() {
     const dealConv = Number(d.conversion_rate || 3.67);
 
     list.forEach(p => {
-      let val = 0;
       const hasConverted = p.converted_amount !== null && p.converted_amount !== undefined;
-      
-      if (hasConverted) {
+      const pAmt = Number(p.amount || 0);
+      const pCurr = p.currency || "AED";
+
+      // SELF-HEALING
+      const isSuspicious = hasConverted && Number(p.converted_amount) === pAmt && pCurr !== dealCurrency;
+
+      let val = 0;
+      if (hasConverted && !isSuspicious) {
         val = Number(p.converted_amount);
       } else {
-        const pAmt = Number(p.amount || 0);
-        const pCurr = p.currency || "AED";
         if (pCurr === dealCurrency) val = pAmt;
         else if (pCurr === "AED" && dealCurrency === "USD") val = pAmt / dealConv;
         else if (pCurr === "USD" && dealCurrency === "AED") val = pAmt * dealConv;

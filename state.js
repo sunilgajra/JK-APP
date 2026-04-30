@@ -61,14 +61,17 @@ export function paymentSummary(dealId, saleTotal, purchaseTotal) {
   list.forEach((p) => {
     let val = 0;
     const hasConverted = p.converted_amount !== null && p.converted_amount !== undefined;
+    const pAmt = Number(p.amount || 0);
+    const pCurr = p.currency || "AED";
     
-    if (hasConverted) {
+    // SELF-HEALING: If converted_amount is exactly same as amount BUT currencies differ, 
+    // it's likely a remnant of the previous bug. We should force a re-calculation.
+    const isSuspicious = hasConverted && Number(p.converted_amount) === pAmt && pCurr !== dealCurrency;
+
+    if (hasConverted && !isSuspicious) {
       val = Number(p.converted_amount);
     } else {
-      // SMART FALLBACK: If conversion is missing, auto-calculate it
-      const pAmt = Number(p.amount || 0);
-      const pCurr = p.currency || "AED";
-      
+      // SMART FALLBACK & AUTO-FIX
       if (pCurr === dealCurrency) {
         val = pAmt;
       } else if (pCurr === "AED" && dealCurrency === "USD") {
@@ -76,7 +79,6 @@ export function paymentSummary(dealId, saleTotal, purchaseTotal) {
       } else if (pCurr === "USD" && dealCurrency === "AED") {
         val = pAmt * dealConv;
       } else {
-        // Fallback for other currencies or missing info
         val = pAmt;
       }
     }
