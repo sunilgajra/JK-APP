@@ -133,6 +133,7 @@ export function bindPOUI() {
       form.elements["quantity"].value = deal.quantity + " " + (deal.unit || "MT");
       form.elements["price"].value = (deal.document_currency || "USD") + " " + (deal.purchase_rate || deal.rate || 0);
       form.elements["incoterm"].value = (deal.terms_delivery || "") + " " + (deal.discharge_port || "");
+      updatePONumber();
     }
   });
 
@@ -140,7 +141,39 @@ export function bindPOUI() {
   document.getElementById("po-product-select")?.addEventListener("change", (e) => {
     const hsn = e.target.selectedOptions[0]?.dataset.hsn || "";
     if (hsn) form.elements["hsn_code"].value = hsn;
+    updatePONumber();
   });
+
+  form.elements["supplier_id"]?.addEventListener("change", updatePONumber);
+  form.elements["po_date"]?.addEventListener("change", updatePONumber);
+
+  function updatePONumber() {
+    const shipper = (state.company.name || "JK").substring(0, 2).toUpperCase();
+    
+    const supplierId = form.elements["supplier_id"].value;
+    const supplierName = state.suppliers.find(s => String(s.id) === String(supplierId))?.name || "";
+    const supplierInitials = supplierName.split(/\s+/).filter(Boolean).map(w => w[0]).join("").toUpperCase();
+    
+    const rawDate = form.elements["po_date"].value; // YYYY-MM-DD
+    let datePart = "";
+    if (rawDate) {
+      const d = new Date(rawDate);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = String(d.getFullYear()).slice(-2);
+      datePart = `${day}${month}${year}`;
+    }
+
+    const prodName = form.elements["product_name"].value || "";
+    const prodInitials = prodName.split(/\s+/).filter(Boolean).map(w => w[0]).join("").toUpperCase();
+
+    // Count existing POs for this supplier to determine sequence
+    const existingCount = state.purchaseOrders.filter(p => String(p.supplier_id) === String(supplierId)).length;
+    const sequence = String(existingCount + 1).padStart(3, '0');
+
+    const poNo = [shipper, supplierInitials, datePart, prodInitials, sequence].filter(Boolean).join("/");
+    form.elements["po_no"].value = poNo;
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
