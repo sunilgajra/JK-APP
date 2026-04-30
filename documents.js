@@ -25,6 +25,7 @@ function assetUrl(file) {
 
 const LOGO_URL = assetUrl("logo.PNG");
 const STAMP_URL = assetUrl("stamp.png");
+const SIGN_URL = assetUrl("signature.png");
 
 export function openPrintWindow(html) {
   const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
@@ -697,7 +698,12 @@ function footer(company = {}, date = "", showSignatory = false) {
         <div style="border-bottom: 2px solid #222; padding-bottom: 2px; font-size: 10px; font-weight: 700; min-height: 18px;">
           FOR ${esc(company.name || "")}
         </div>
-        ${showSignatory ? `<div style="font-size:10px;font-weight:700;margin-top:4px;">Authorised Signatory</div>` : ``}
+        ${showSignatory ? `
+          <div style="position:relative; margin-top:10px;">
+            <img src="${SIGN_URL}" style="height:60px; margin-bottom:-20px; position:relative; z-index:2;" onerror="this.style.display='none'">
+            <div style="font-size:10px;font-weight:700; position:relative; z-index:1;">Authorised Signatory</div>
+          </div>
+        ` : ``}
       </div>
       <div class="stamp"><img src="${STAMP_URL}" alt="stamp"></div>
       <div>
