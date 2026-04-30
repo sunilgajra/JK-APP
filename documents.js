@@ -220,7 +220,12 @@ function previewScript() {
 function commonStyle() {
   return `
   <style>
-    @page { size: A4; margin: 8mm; }
+    @page { size: A4; margin: 0; }
+    @media print {
+      body { margin: 0; -webkit-print-color-adjust: exact; }
+      .doc { padding: 15mm 10mm; width: 210mm !important; margin: 0 !important; border: none !important; }
+      .previewActions { display: none !important; }
+    }
 
     * { box-sizing: border-box; }
 
@@ -241,6 +246,8 @@ function commonStyle() {
       width: 190mm;
       min-width: 190mm;
       margin: 0 auto;
+      padding-top: 10mm;
+      padding-bottom: 10mm;
     }
 
     .previewActions {
