@@ -48,6 +48,8 @@ function handleRoute() {
     state.page = "shippingInstructions";
   } else if (hash === "#/products") {
     state.page = "products";
+  } else if (hash === "#/po") {
+    state.page = "po";
   } else if (hash === "#/reports") {
     state.page = "reports";
   } else if (hash === "#/tracking") {
