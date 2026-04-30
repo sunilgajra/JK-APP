@@ -1939,7 +1939,7 @@ export function buildCOA(coa, deal, company = {}) {
         <div style="width:75%; text-align:center;">
           <div style="font-size:32px; font-weight:bold; color:#00529b; margin-bottom:5px;">جيه كيه بتروكيم انترناشيونال م م ح</div>
           <div style="font-size:28px; font-weight:800; color:#00529b; margin-bottom:5px;">JK Petrochem International FZE</div>
-          <div style="font-size:12px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
+          <div style="font-size:12px; font-weight:600;">P6-ELOB, Office No. E2-110G-02,<br>Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
           <div style="font-size:12px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
         </div>
       </div>
@@ -2022,7 +2022,7 @@ export function buildPO(po, supplier, company = {}) {
         <div style="width:75%; text-align:center;">
           <div style="font-size:32px; font-weight:bold; color:#00529b; margin-bottom:5px;">جيه كيه بتروكيم انترناشيونال م م ح</div>
           <div style="font-size:28px; font-weight:800; color:#00529b; margin-bottom:5px;">JK Petrochem International FZE</div>
-          <div style="font-size:12px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
+          <div style="font-size:12px; font-weight:600;">P6-ELOB, Office No. E2-110G-02,<br>Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
           <div style="font-size:12px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
         </div>
       </div>
@@ -2034,7 +2034,7 @@ export function buildPO(po, supplier, company = {}) {
         <div>PODate: ${esc(fmtDate(date))}</div>
       </div>
 
-      <div style="margin-bottom: 25px; line-height: 1.6; color: #000;">
+      <div style="margin-bottom: 25px; line-height: 1.4; color: #000; max-width: 400px;">
         <div style="font-size: 16px; font-weight: 800; text-decoration: underline; margin-bottom:5px">Supplier:</div>
         <div style="font-size: 15px; font-weight: bold;">${esc(supplier?.name || "—")}</div>
         <div style="font-size: 14px;">${esc(supplier?.company_name || "")}</div>
