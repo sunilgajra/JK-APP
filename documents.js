@@ -1443,30 +1443,20 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
   <html>
   <head>
     <title>Master Settlement - ${esc(supplier.name)}</title>
+    ${commonStyle()}
+    ${previewScript()}
     <style>
-      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 10px; color: #333; background: #f0f2f5; }
-      .doc { width: 210mm; margin: auto; background: white; padding: 10mm; box-shadow: 0 0 10px rgba(0,0,0,0.1); box-sizing: border-box; }
       .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: auto; }
       .statement-table th { background: #3b9da2; color: white; border: 1px solid #2a7a7d; font-size: 10px; padding: 6px 4px; text-transform: uppercase; }
       .statement-table td { border: 1px solid #ccc; padding: 6px 4px; font-size: 11px; word-break: break-word; }
       .summary-box { border: 2px solid #3b9da2; padding: 15px; margin-top: 30px; background:#f9fdfe; border-radius: 8px; }
       .bal-to-pay { background: #ffff00; font-weight: 800; padding: 2px 6px; border: 1px solid #000; border-radius: 4px; }
       .excel-header { background: #2a7a7d; color:white; font-weight: bold; text-align: center; padding: 8px; border: 1px solid #333; text-transform: uppercase; margin-top: 20px; border-radius: 4px 4px 0 0; font-size: 14px; }
-      .right { text-align: right; }
-      .center { text-align: center; }
-      .btn-print { background: #3b9da2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
-      @media print { 
-        .btn-print { display: none; } 
-        body { background: white; padding: 0; } 
-        .doc { box-shadow: none; width: 100%; padding: 5mm; margin: 0; }
-        .statement-table th { font-size: 9px; padding: 4px 2px; }
-        .statement-table td { font-size: 10px; padding: 4px 2px; }
-      }
     </style>
   </head>
   <body>
+    ${previewActions()}
     <div class="doc">
-      <button class="btn-print" onclick="window.print()">Print Statement</button>
       <div style="margin-bottom: 25px; font-size: 18px; font-weight: bold; border-bottom: 4px solid #3b9da2; padding-bottom: 10px; display:flex; justify-content:space-between; align-items: flex-end;">
         <span style="color:#2a7a7d">MASTER SETTLEMENT REPORT</span>
         <span style="font-size: 14px; color: #666;">SUPPLIER: ${esc(supplier.name)}</span>
@@ -1622,30 +1612,20 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
   <html>
   <head>
     <title>Master Statement - ${esc(buyer.name)}</title>
+    ${commonStyle()}
+    ${previewScript()}
     <style>
-      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 10px; color: #333; background: #f0f2f5; }
-      .doc { width: 210mm; margin: auto; background: white; padding: 10mm; box-shadow: 0 0 10px rgba(0,0,0,0.1); box-sizing: border-box; }
       .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: auto; }
       .statement-table th { background: #3b9da2; color: white; border: 1px solid #2a7a7d; font-size: 10px; padding: 6px 4px; text-transform: uppercase; }
       .statement-table td { border: 1px solid #ccc; padding: 6px 4px; font-size: 11px; word-break: break-word; }
       .summary-box { border: 2px solid #3b9da2; padding: 15px; margin-top: 30px; background:#f9fdfe; border-radius: 8px; }
       .bal-to-rec { background: #ffff00; font-weight: 800; padding: 2px 6px; border: 1px solid #000; border-radius: 4px; }
       .excel-header { background: #2a7a7d; color:white; font-weight: bold; text-align: center; padding: 8px; border: 1px solid #333; text-transform: uppercase; margin-top: 20px; border-radius: 4px 4px 0 0; font-size: 14px; }
-      .right { text-align: right; }
-      .center { text-align: center; }
-      .btn-print { background: #3b9da2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
-      @media print { 
-        .btn-print { display: none; } 
-        body { background: white; padding: 0; } 
-        .doc { box-shadow: none; width: 100%; padding: 5mm; margin: 0; }
-        .statement-table th { font-size: 9px; padding: 4px 2px; }
-        .statement-table td { font-size: 10px; padding: 4px 2px; }
-      }
     </style>
   </head>
   <body>
+    ${previewActions()}
     <div class="doc">
-      <button class="btn-print" onclick="window.print()">Print Statement</button>
       <div style="margin-bottom: 25px; font-size: 18px; font-weight: bold; border-bottom: 4px solid #3b9da2; padding-bottom: 10px; display:flex; justify-content:space-between; align-items: flex-end;">
         <span style="color:#2a7a7d">MASTER SETTLEMENT REPORT</span>
         <span style="font-size: 14px; color: #666;">BUYER: ${esc(buyer.name)}</span>
