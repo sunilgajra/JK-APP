@@ -2002,57 +2002,64 @@ export function buildPO(po, supplier, company = {}) {
     <title>Purchase Order - ${esc(po.po_no)}</title>
     ${commonStyle()}
     <style>
-      .po-header { text-align: center; margin-bottom: 30px; }
-      .po-header h1 { text-decoration: underline; font-size: 24px; margin-bottom: 20px; text-transform: uppercase; }
-      .po-meta { margin-bottom: 25px; font-weight: bold; font-size: 14px; }
-      .supplier-info { margin-bottom: 25px; line-height: 1.6; }
-      .supplier-info b { font-size: 16px; }
       .po-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-      .po-table th, .po-table td { border: 1px solid #000; padding: 8px; text-align: center; font-size: 12px; }
-      .po-table th { background: #f2f2f2; font-weight: bold; }
-      .po-section { margin-bottom: 20px; line-height: 1.6; }
-      .po-section h3 { font-size: 14px; margin-bottom: 5px; text-decoration: underline; }
-      .po-section p { margin: 0; font-size: 13px; }
+      .po-table th, .po-table td { border: 1px solid #000; padding: 10px; text-align: center; font-size: 13px; color: #000; }
+      .po-table th { background: #dcdcdc; color: #000; font-weight: 800; text-transform: uppercase; }
+      .po-section { margin-bottom: 20px; line-height: 1.6; color: #000; }
+      .po-section h3 { font-size: 15px; margin-bottom: 5px; text-decoration: underline; font-weight: 800; }
+      .po-section p { margin: 0; font-size: 14px; font-weight: bold; }
+      .po-meta { font-weight: 800; font-size: 15px; color: #000; }
     </style>
   </head>
   <body>
     ${previewActions()}
     <div class="doc">
-      <div class="po-header">
-        <h1>Purchase Order</h1>
+      <!-- EXACT IMAGE HEADER START -->
+      <div style="display:flex; align-items:center; gap:20px; border-bottom:1px solid #000; padding-bottom:10px;">
+        <div style="width:25%">
+          <img src="${LOGO_URL}" style="width:100%; max-width:180px;">
+        </div>
+        <div style="width:75%; text-align:center;">
+          <div style="font-size:32px; font-weight:bold; color:#00529b; margin-bottom:5px;">جيه كيه بتروكيم انترناشيونال م م ح</div>
+          <div style="font-size:28px; font-weight:800; color:#00529b; margin-bottom:5px;">JK Petrochem International FZE</div>
+          <div style="font-size:12px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
+          <div style="font-size:12px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
+        </div>
       </div>
 
-      <div class="po-meta">
+      <div style="text-align:center; font-size:24px; font-weight:800; text-decoration:underline; margin:25px 0;">PURCHASE ORDER</div>
+
+      <div class="po-meta" style="margin-bottom:20px">
         <div>PONo.: ${esc(po.po_no)}</div>
         <div>PODate: ${esc(fmtDate(date))}</div>
       </div>
 
-      <div class="supplier-info">
-        <b>Supplier:</b><br>
-        ${esc(supplier?.name || "—")}<br>
-        ${esc(supplier?.company_name || "")}<br>
-        ${esc(supplier?.address || "—")}<br>
-        Email: ${esc(supplier?.email || "—")}<br>
-        Website: ${esc(supplier?.website || "—")}
+      <div style="margin-bottom: 25px; line-height: 1.6; color: #000;">
+        <div style="font-size: 16px; font-weight: 800; text-decoration: underline; margin-bottom:5px">Supplier:</div>
+        <div style="font-size: 15px; font-weight: bold;">${esc(supplier?.name || "—")}</div>
+        <div style="font-size: 14px;">${esc(supplier?.company_name || "")}</div>
+        <div style="font-size: 14px;">${esc(supplier?.address || "—")}</div>
+        <div style="font-size: 14px;">Email: ${esc(supplier?.email || "—")}</div>
+        <div style="font-size: 14px;">Website: ${esc(supplier?.website || "—")}</div>
       </div>
 
       <table class="po-table">
         <thead>
           <tr>
-            <th></th>
-            <th>Product Name</th>
-            <th>HSN Code</th>
-            <th>Packing</th>
-            <th>Quantity</th>
-            <th>Weight</th>
-            <th>Price</th>
-            <th>Incoterm</th>
+            <th style="width:5%"></th>
+            <th style="width:25%">Product Name</th>
+            <th style="width:15%">HSN Code</th>
+            <th style="width:10%">Packing</th>
+            <th style="width:10%">Quantity</th>
+            <th style="width:15%">Weight</th>
+            <th style="width:10%">Price</th>
+            <th style="width:10%">Incoterm</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>1</td>
-            <td>${esc(po.product_name)}</td>
+            <td><b>${esc(po.product_name)}</b></td>
             <td>${esc(po.hsn_code)}</td>
             <td>${esc(po.packing)}</td>
             <td>${esc(po.quantity)}</td>
@@ -2077,7 +2084,7 @@ export function buildPO(po, supplier, company = {}) {
         </div>
       ` : ""}
 
-      <div style="margin-top: 50px;">
+      <div style="margin-top: 40px;">
         ${footer(company, date, true)}
       </div>
     </div>
