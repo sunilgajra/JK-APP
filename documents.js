@@ -694,18 +694,23 @@ function additionalDetailsBlock(deal, supplier, docLabel = "Packing list No. Dat
 function footer(company = {}, date = "", showSignatory = false) {
   return `
     <div class="footer">
-      <div>
+      <div style="position:relative; min-height:80px;">
         <div style="border-bottom: 2px solid #222; padding-bottom: 2px; font-size: 10px; font-weight: 700; min-height: 18px;">
           FOR ${esc(company.name || "")}
         </div>
         ${showSignatory ? `
-          <div style="position:relative; margin-top:10px;">
-            <img src="${SIGN_URL}" style="height:60px; margin-bottom:-20px; position:relative; z-index:2;" onerror="this.style.display='none'">
-            <div style="font-size:10px;font-weight:700; position:relative; z-index:1;">Authorised Signatory</div>
+          <div style="position:relative; margin-top:5px; height:70px;">
+            <img src="${SIGN_URL}" style="height:70px; position:absolute; left:20px; bottom:15px; z-index:3;" onerror="this.style.display='none'">
+            <img src="${STAMP_URL}" style="height:85px; position:absolute; left:60px; bottom:5px; z-index:2; opacity:0.85;" onerror="this.style.display='none'">
+            <div style="font-size:10px;font-weight:700; position:absolute; bottom:0; left:0; z-index:4; background:white; padding-right:5px;">Authorised Signatory</div>
           </div>
-        ` : ``}
+        ` : `
+          <div style="position:relative; margin-top:5px; height:70px;">
+            <img src="${STAMP_URL}" style="height:85px; position:absolute; left:20px; bottom:5px; z-index:2; opacity:0.85;" onerror="this.style.display='none'">
+          </div>
+        `}
       </div>
-      <div class="stamp"><img src="${STAMP_URL}" alt="stamp"></div>
+      <div><!-- Empty middle col --></div>
       <div>
         <div style="border-bottom: 2px solid #222; padding-bottom: 2px; font-size: 10px; font-weight: 700; min-height: 18px; text-align: center;">
           ${esc(fmtDate(date) || "")}
@@ -1945,7 +1950,8 @@ export function buildCOA(coa, deal, company = {}) {
       <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:15px;">
         <div style="font-size:14px; font-weight:bold;">
           <div style="margin-bottom:8px;">BL No.: ${esc(blNo)}</div>
-          <div>Grade/Description : ${esc(grade)}</div>
+          <div style="margin-bottom:8px;">Grade/Description : ${esc(grade)}</div>
+          <div>Certificate no.: ${esc(certNo)}</div>
         </div>
         <div style="font-size:14px; font-weight:bold;">
           Date.: ${esc(fmtDate(date))}
