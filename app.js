@@ -2228,28 +2228,36 @@ function showCOAForm(dealId) {
     { parameter: "FBP", method: "ASTM D-86", unit: "°C", result: "" }
   ];
 
+  // Use saved data if available
+  const saved = d.coa_data || {};
+  const testsToUse = saved.tests || defaultTests;
+  const dateToUse = saved.date || today;
+  const certNoToUse = saved.cert_no || certNo;
+  const blNoToUse = saved.bl_no || d.bl_no || "";
+  const gradeToUse = saved.grade || prodName;
+
   modal.innerHTML = `
     <div class="modal-content" style="max-width:800px; padding:30px; max-height:90vh; overflow-y:auto">
       <div class="title" style="margin-bottom:10px">Prepare Certificate of Analysis</div>
-      <p class="item-sub">Fill in the details for the test report. Rows with no "Result" will be ignored in the printout.</p>
+      <p class="item-sub">Fill in the details for the test report. Rows with no "Result" will be ignored in the printout. <b>Results are automatically saved to the deal.</b></p>
       
       <form id="coa-generation-form">
         <div class="grid grid-2 gap-10 mt-12">
           <div>
             <label class="form-label">Date</label>
-            <input type="date" name="date" value="${today}" required>
+            <input type="date" name="date" value="${dateToUse}" required>
           </div>
           <div>
             <label class="form-label">Certificate No.</label>
-            <input type="text" name="cert_no" value="${certNo}" required>
+            <input type="text" name="cert_no" value="${esc(certNoToUse)}" required>
           </div>
           <div>
             <label class="form-label">BL No.</label>
-            <input type="text" name="bl_no" value="${esc(d.bl_no || "")}" required>
+            <input type="text" name="bl_no" value="${esc(blNoToUse)}" required>
           </div>
           <div>
             <label class="form-label">Grade / Description</label>
-            <input type="text" name="grade" value="${esc(prodName)}" required>
+            <input type="text" name="grade" value="${esc(gradeToUse)}" required>
           </div>
         </div>
 
@@ -2269,7 +2277,7 @@ function showCOAForm(dealId) {
               </tr>
             </thead>
             <tbody>
-              ${defaultTests.map((t, idx) => `
+              ${testsToUse.map((t, idx) => `
                 <tr class="coa-test-row" data-header="${t.isHeader ? '1' : '0'}">
                   <td><input name="test_param" value="${esc(t.parameter)}" placeholder="Parameter" ${t.isHeader ? 'style="font-weight:bold; background:rgba(255,255,255,0.05)"' : ''}></td>
                   <td><input name="test_method" value="${esc(t.method)}" placeholder="Method" ${t.isHeader ? 'disabled' : ''}></td>
@@ -2283,7 +2291,7 @@ function showCOAForm(dealId) {
         </div>
 
         <div class="flex gap-10 mt-20">
-          <button type="submit" class="btn-primary">Generate & Print COA</button>
+          <button type="submit" class="btn-primary">Save & Print COA</button>
           <button type="button" id="close-coa-modal">Cancel</button>
         </div>
       </form>
@@ -2314,8 +2322,13 @@ function showCOAForm(dealId) {
 
   modal.querySelector("#close-coa-modal").addEventListener("click", () => modal.remove());
 
-  modal.querySelector("#coa-generation-form").addEventListener("submit", (e) => {
+  modal.querySelector("#coa-generation-form").addEventListener("submit", async (e) => {
     e.preventDefault();
+    const btn = e.target.querySelector("button[type='submit']");
+    const originalText = btn.textContent;
+    btn.textContent = "Saving...";
+    btn.disabled = true;
+
     const fd = new FormData(e.target);
     const coaData = {
       date: fd.get("date"),
@@ -2331,31 +2344,60 @@ function showCOAForm(dealId) {
       const param = row.querySelector("[name='test_param']").value;
       const result = row.querySelector("[name='test_result']").value;
       
-      // Only include if there is a result, or if it's a header
-      if (isHeader || (result && result.trim() !== "")) {
-        coaData.tests.push({
-          parameter: param,
-          method: row.querySelector("[name='test_method']").value,
-          unit: row.querySelector("[name='test_unit']").value,
-          result: result,
-          isHeader: isHeader
-        });
-      }
+      // For SAVING, we include everything so it persists
+      coaData.tests.push({
+        parameter: param,
+        method: row.querySelector("[name='test_method']").value,
+        unit: row.querySelector("[name='test_unit']").value,
+        result: result,
+        isHeader: isHeader
+      });
     });
 
-    // Final check: filter out headers that have no tests following them (optional but cleaner)
-    coaData.tests = coaData.tests.filter((t, i, arr) => {
-      if (t.isHeader) {
-        // If next item is a header or doesn't exist, this header is empty
-        const next = arr[i+1];
-        return next && !next.isHeader;
-      }
-      return true;
-    });
+    try {
+      // Save to Supabase
+      const { error } = await supabase.from("deals").update({ coa_data: coaData }).eq("id", dealId);
+      if (error) throw error;
+      
+      // Update local state without full reload if possible, but loadSupabaseData is safer
+      await loadSupabaseData();
 
-    const html = buildCOA(coaData, d, state.company);
-    openPrintWindow(html);
-    modal.remove();
+      // For PRINTING, we filter out empty results
+      const printData = {
+        ...coaData,
+        tests: coaData.tests.filter((t, i, arr) => {
+          if (t.isHeader) {
+            // Check if there are any results in this section
+            let hasResults = false;
+            for (let j = i + 1; j < arr.length; j++) {
+              if (arr[j].isHeader) break;
+              if (arr[j].result && arr[j].result.trim() !== "") {
+                hasResults = true;
+                break;
+              }
+            }
+            return hasResults;
+          }
+          return t.result && t.result.trim() !== "";
+        })
+      };
+
+      const html = buildCOA(printData, d, state.company);
+      openPrintWindow(html);
+      modal.remove();
+    } catch (err) {
+      console.error("Save COA Error:", err);
+      alert("Failed to save COA data. Please ensure you have run the SQL command to add the 'coa_data' column. Printing will continue anyway.");
+      
+      // Fallback print
+      const printData = { ...coaData, tests: coaData.tests.filter(t => t.isHeader || (t.result && t.result.trim() !== "")) };
+      const html = buildCOA(printData, d, state.company);
+      openPrintWindow(html);
+      modal.remove();
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
   });
 }
 

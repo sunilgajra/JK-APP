@@ -1911,11 +1911,11 @@ export function buildCOA(coa, deal, company = {}) {
     ${previewScript()}
     <style>
       .coa-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-      .coa-table th, .coa-table td { border: 1px solid #000; padding: 6px 10px; font-size: 11px; }
-      .coa-table th { background: #f2f2f2; font-weight: bold; text-align: left; }
-      .coa-header-info { margin-top: 20px; font-size: 12px; line-height: 1.6; font-weight: bold; }
-      .coa-title { text-align: center; text-decoration: underline; font-size: 18px; font-weight: 800; margin: 20px 0; }
-      .sub-header { background: #eee; font-weight: bold; text-align: center !important; }
+      .coa-table th, .coa-table td { border: 1px solid #000; padding: 8px 12px; font-size: 11px; color: #000; }
+      .coa-table th { background: #dcdcdc; color: #000; font-weight: 800; text-align: left; text-transform: uppercase; }
+      .coa-header-info { margin-top: 20px; font-size: 12px; line-height: 1.6; font-weight: bold; color: #000; }
+      .coa-title { text-align: center; text-decoration: underline; font-size: 18px; font-weight: 800; margin: 20px 0; color: #000; }
+      .sub-header { background: #f0f0f0; font-weight: bold; text-align: center !important; color: #000; }
     </style>
   </head>
   <body>
