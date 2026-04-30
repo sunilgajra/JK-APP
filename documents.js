@@ -262,9 +262,17 @@ function commonStyle() {
 
     .doc {
       width: 190mm;
+      max-width: 100vw;
       margin: 0 auto;
-      padding-top: 10mm;
-      padding-bottom: 10mm;
+      padding: 10mm 5mm;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      min-width: 180mm; /* Prevents squashing on mobile preview */
+      border-collapse: collapse;
     }
 
     /* PDF Generation Fix for Mobile */
