@@ -1070,7 +1070,7 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
   else if (product.includes("BITUMEN")) productShort = "BT";
   const consignee = (buyer?.name || "BUYER").split(/\s+/).filter(Boolean).slice(0, 2).join(" ").toUpperCase();
   const docNo = String(deal.ci_no || deal.dealNo || deal.deal_no || "000").replace(/[^A-Z0-9\-\/]/gi, "");
-  
+
   const filename = `SET-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}`;
 
   return `
@@ -1899,7 +1899,7 @@ export function buildCOA(coa, deal, company = {}) {
   const date = coa.date || new Date().toISOString();
   const blNo = coa.bl_no || deal.bl_no || "—";
   const grade = coa.grade || deal.product_name || "—";
-  const certNo = coa.cert_no || `COA/${String(grade).substring(0,2).toUpperCase()}/${blNo}/${new Date().toISOString().slice(2,10).replace(/-/g,'')}`;
+  const certNo = coa.cert_no || `COA/${String(grade).substring(0, 2).toUpperCase()}/${blNo}/${new Date().toISOString().slice(2, 10).replace(/-/g, '')}`;
   const tests = coa.tests || [];
 
   return `
@@ -1920,19 +1920,32 @@ export function buildCOA(coa, deal, company = {}) {
   </head>
   <body>
     ${previewActions()}
-    <div class="top">
-      ${shipperBlock(company)}
-      ${logoBlock()}
-      <div style="text-align:right; font-weight:bold; font-size:12px; padding-top:40px">Date: ${esc(fmtDate(date))}</div>
-    </div>
+    <div class="doc">
+      <!-- EXACT IMAGE HEADER START -->
+      <div style="display:flex; align-items:center; gap:20px; border-bottom:1px solid #000; padding-bottom:10px;">
+        <div style="width:25%">
+          <img src="${LOGO_URL}" style="width:100%; max-width:180px;">
+        </div>
+        <div style="width:75%; text-align:center;">
+          <div style="font-size:32px; font-weight:bold; color:#00529b; margin-bottom:5px;">جيه كيه بتروكيم انترناشيونال م م ح</div>
+          <div style="font-size:28px; font-weight:800; color:#00529b; margin-bottom:5px;">JK Petrochem International FZE</div>
+          <div style="font-size:12px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
+          <div style="font-size:12px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
+        </div>
+      </div>
 
-    <div class="coa-title">Certificate Of Analysis</div>
+      <div style="text-align:center; font-size:24px; font-weight:800; text-decoration:underline; margin:25px 0;">Certificate Of Analysis</div>
 
-    <div class="coa-header-info">
-      <div>BL No.: ${esc(blNo)}</div>
-      <div>Grade/Description.: ${esc(grade)}</div>
-      <div>Certificate no.: ${esc(certNo)}</div>
-    </div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:15px;">
+        <div style="font-size:14px; font-weight:bold;">
+          <div style="margin-bottom:8px;">BL No.: ${esc(blNo)}</div>
+          <div>Grade/Description : ${esc(grade)}</div>
+        </div>
+        <div style="font-size:14px; font-weight:bold;">
+          Date.: ${esc(fmtDate(date))}
+        </div>
+      </div>
+      <!-- EXACT IMAGE HEADER END -->
 
     <table class="coa-table">
       <thead>
@@ -1945,10 +1958,10 @@ export function buildCOA(coa, deal, company = {}) {
       </thead>
       <tbody>
         ${tests.map(t => {
-          if (t.isHeader) {
-            return `<tr><td colspan="4" class="sub-header">${esc(t.parameter)}</td></tr>`;
-          }
-          return `
+    if (t.isHeader) {
+      return `<tr><td colspan="4" class="sub-header">${esc(t.parameter)}</td></tr>`;
+    }
+    return `
             <tr>
               <td>${esc(t.parameter)}</td>
               <td>${esc(t.method)}</td>
@@ -1956,11 +1969,11 @@ export function buildCOA(coa, deal, company = {}) {
               <td>${esc(t.result)}</td>
             </tr>
           `;
-        }).join("")}
+  }).join("")}
         ${!tests.length ? '<tr><td colspan="4" style="text-align:center; padding:20px; opacity:0.5">No test parameters entered</td></tr>' : ''}
       </tbody>
     </table>
-
+    </div>
     ${footer(company, date, true)}
   </body>
   </html>`;
