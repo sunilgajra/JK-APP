@@ -4,10 +4,7 @@ import { esc, nextDealNo, fmtMoney, cleanContainerNumbers } from "./utils.js";
 export function dealsView() {
   const q = state.dealSearch.trim().toLowerCase();
   const filteredDeals = state.deals.filter((d) => {
-    if (!q) return true;
-    const buyer = buyerName(d.buyer_id).toLowerCase();
-    const supplier = supplierName(d.supplier_id).toLowerCase();
-    const text = [
+    const matchesSearch = !q || [
       d.deal_no,
       d.product_name,
       d.hsn_code,
@@ -15,10 +12,13 @@ export function dealsView() {
       d.discharge_port,
       d.status,
       d.type,
-      buyer,
-      supplier
-    ].join(" ").toLowerCase();
-    return text.includes(q);
+      buyerName(d.buyer_id),
+      supplierName(d.supplier_id)
+    ].join(" ").toLowerCase().includes(q);
+
+    const matchesStatus = !state.dealStatusFilter || d.status === state.dealStatusFilter;
+
+    return matchesSearch && matchesStatus;
   });
 
   return `
@@ -31,8 +31,15 @@ export function dealsView() {
         </div>
       </div>
 
-      <div class="mb-12">
-        <input id="deal-search" value="${esc(state.dealSearch || "")}" placeholder="Search by deal no, product, buyer, supplier, route..." />
+      <div class="mb-12 flex gap-12">
+        <input id="deal-search" style="flex:1" value="${esc(state.dealSearch || "")}" placeholder="Search by deal no, product, buyer, supplier, route..." />
+        <select id="deal-status-filter" style="width:180px">
+          <option value="">All Statuses</option>
+          <option value="active" ${state.dealStatusFilter === "active" ? "selected" : ""}>active</option>
+          <option value="shipped" ${state.dealStatusFilter === "shipped" ? "selected" : ""}>shipped</option>
+          <option value="invoiced" ${state.dealStatusFilter === "invoiced" ? "selected" : ""}>invoiced</option>
+          <option value="completed" ${state.dealStatusFilter === "completed" ? "selected" : ""}>completed</option>
+        </select>
       </div>
 
       <div id="deal-form-wrap"></div>
@@ -41,20 +48,35 @@ export function dealsView() {
         ${
           filteredDeals.length
             ? filteredDeals.map((d) => {
-                const s = paymentSummary(d.id, d.total_amount, d.document_currency === "USD" ? d.purchase_total_usd : d.purchase_total_aed, d.document_currency || d.currency || "AED");
+                const s = paymentSummary(d.id, d.total_amount_usd || d.total_amount, d.document_currency === "USD" ? d.purchase_total_usd : d.purchase_total_aed, d.document_currency || d.currency || "AED");
                 const payments = paymentsForDeal(d.id);
                 const documents = documentsForDeal(d.id);
                 const curr = d.document_currency || d.currency || "AED";
                 const profit = s.sale - s.purchase;
-                const margin = s.sale > 0 ? (profit / s.sale) * 100 : 0;
-                const profitAed = d.document_currency === "USD" ? profit * (d.conversion_rate || 3.6725) : profit;
-                const shipper = d.shipper_index !== null && d.shipper_index !== "" ? (state.company.shippers || [])[d.shipper_index] : state.company;
                 
                 let pkgDisplay = Array.isArray(d.container_numbers) && d.container_numbers.length > 0 
                   ? `${d.container_numbers.length} CTRS` 
                   : (d.package_details || "—");
 
                 const netWeight = d.quantity ? `${Number(d.quantity).toFixed(3)} MT` : "—";
+                
+                // ETA Logic
+                let etaDisplay = "";
+                if (d.eta) {
+                  const today = new Date();
+                  today.setHours(0,0,0,0);
+                  const etaDate = new Date(d.eta);
+                  const diff = Math.ceil((etaDate - today) / (1000 * 60 * 60 * 24));
+                  if (diff > 0) etaDisplay = `<span class="badge badge-info" style="margin-left:8px">🚢 Arriving in ${diff} days</span>`;
+                  else if (diff === 0) etaDisplay = `<span class="badge badge-success" style="margin-left:8px">🚢 Arriving Today</span>`;
+                  else etaDisplay = `<span class="badge" style="margin-left:8px; background:rgba(255,255,255,0.1)">🚢 Arrived</span>`;
+                }
+
+                // Payment Alert
+                let paymentAlert = "";
+                if (s.receivable > 1 && (d.status === "invoiced" || d.status === "shipped")) {
+                   paymentAlert = `<span class="badge badge-danger" style="margin-left:8px">💸 Payment Due: ${curr} ${fmtMoney(s.receivable)}</span>`;
+                }
                 
                 return `
             <div class="item relative" style="padding: 0; overflow: hidden; border-top: 4px solid var(--accent-primary); background: rgba(255,255,255,0.01);">
@@ -63,6 +85,8 @@ export function dealsView() {
                   <span style="font-size: 16px; font-weight: 800; color: var(--accent-primary); letter-spacing: 0.5px;">${esc(d.deal_no || "—")}</span>
                   <span style="margin: 0 8px; opacity: 0.3">|</span>
                   <span style="font-size: 15px; font-weight: 600; color: var(--text);">BL: ${esc(d.bl_no || "—")}</span>
+                  ${etaDisplay}
+                  ${paymentAlert}
                 </div>
                 <div class="item-sub" style="margin:0; font-weight:700; color:var(--accent-secondary); opacity:1">${esc(d.status || "active")}</div>
               </div>
@@ -72,9 +96,9 @@ export function dealsView() {
                 ${esc(d.product_name || "—")} · ${esc(pkgDisplay)} · ${netWeight}
               </div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
-              <div class="item-sub">Supplier: ${esc(supplierName(d.supplier_id))} · Shipper: ${esc(shipper?.name || "Default Company")} · Buyer: ${esc(buyerName(d.buyer_id))}</div>
+              <div class="item-sub">Supplier: ${esc(supplierName(d.supplier_id))} · Buyer: ${esc(buyerName(d.buyer_id))}</div>
               
-              <div class="grid grid-3 mt-8 p-10" style="background:rgba(255,255,255,0.03); border-radius:4px">
+              <div class="grid grid-2 mt-8 p-10" style="background:rgba(255,255,255,0.03); border-radius:4px">
                 <div>
                   <div class="item-sub" style="font-weight:bold; color:var(--success)">Receivable (Buyer)</div>
                   <div class="item-title" style="font-size:14px">${curr} ${fmtMoney(s.receivable)}</div>
@@ -84,11 +108,6 @@ export function dealsView() {
                   <div class="item-sub" style="font-weight:bold; color:var(--danger)">Payable (Supplier)</div>
                   <div class="item-title" style="font-size:14px">${curr} ${fmtMoney(s.payable)}</div>
                   <div class="item-sub">Total: ${fmtMoney(s.purchase)} | Sent: ${fmtMoney(s.sent)}</div>
-                </div>
-                <div>
-                  <div class="item-sub" style="font-weight:bold; color:var(--warning)">Commission</div>
-                  <div class="item-title" style="font-size:14px">${d.commission_currency || curr} ${fmtMoney(d.commission_total || 0)}</div>
-                  <div class="item-sub">${esc(d.commission_name || "No agent")}</div>
                 </div>
               </div>
 
@@ -101,12 +120,10 @@ export function dealsView() {
               </div>
 
               <div class="mt-8 flex gap-8 flex-wrap">
-                <button data-print-pi="${d.id}">Print PI</button>
                 <button data-print-ci="${d.id}">Print CI</button>
-                <button data-print-pl="${d.id}">Print PL</button>
-                <button data-print-coo="${d.id}">Print COO</button>
                 <button data-print-coa="${d.id}">Print COA</button>
                 <button data-print-set="${d.id}" class="btn-info">Document Set</button>
+                <button class="btn-success" data-share-whatsapp="${d.id}">WhatsApp Share</button>
               </div>
 
               <div id="deal-edit-wrap-${d.id}" class="mt-10"></div>
