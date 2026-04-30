@@ -57,10 +57,17 @@ export function dealsView() {
                 const netWeight = d.quantity ? `${Number(d.quantity).toFixed(3)} MT` : "—";
                 
                 return `
-            <div class="item relative">
-              <div class="item-title">
-                ${esc(d.deal_no || "—")} · ${esc(d.product_name || "—")}
+            <div class="item relative" style="padding: 0; overflow: hidden; border-top: 4px solid var(--accent-primary); background: rgba(255,255,255,0.01);">
+              <div style="background: linear-gradient(90deg, rgba(var(--primary-rgb), 0.15), transparent); padding: 12px 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                  <span style="font-size: 16px; font-weight: 800; color: var(--accent-primary); letter-spacing: 0.5px;">${esc(d.deal_no || "—")}</span>
+                  <span style="margin: 0 8px; opacity: 0.3">|</span>
+                  <span style="font-size: 15px; font-weight: 600; color: var(--text);">${esc(d.product_name || "—")}</span>
+                </div>
+                <div class="item-sub" style="margin:0; font-weight:700; color:var(--accent-secondary); opacity:1">${esc(d.status || "active")}</div>
               </div>
+              
+              <div style="padding: 15px;">
               <div class="item-sub" style="font-weight:500; opacity:0.9; color:var(--accent-primary)">
                 BL: ${esc(d.bl_no || "—")} · ${esc(pkgDisplay)} · ${netWeight}
               </div>
@@ -145,7 +152,8 @@ export function dealsView() {
                 }
               </div>
             </div>
-          `;
+          </div>
+        `;
               }).join("")
             : `<div class="empty">No matching deals found.</div>`
         }
