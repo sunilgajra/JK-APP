@@ -33,6 +33,7 @@ export function openPrintWindow(html) {
   if (isMobile) {
     const newDoc = document.open("text/html", "replace");
     newDoc.write(html);
+    newDoc.title = ""; // Crucial to hide title on mobile print
     newDoc.close();
     return true;
   }
@@ -42,6 +43,7 @@ export function openPrintWindow(html) {
 
   w.document.open();
   w.document.write(html);
+  w.document.title = ""; // Hide title on desktop too
   w.document.close();
   return true;
 }
@@ -220,11 +222,20 @@ function previewScript() {
 function commonStyle() {
   return `
   <style>
-    @page { size: A4; margin: 0; }
+    @page { size: auto; margin: 0; }
     @media print {
-      body { margin: 0; -webkit-print-color-adjust: exact; }
-      .doc { padding: 15mm 10mm; width: 210mm !important; margin: 0 !important; border: none !important; }
+      html, body { margin: 0 !important; padding: 0 !important; height: 100%; overflow: visible !important; }
+      .doc { 
+        padding: 15mm 12mm !important; 
+        width: 100% !important; 
+        max-width: 210mm !important;
+        margin: 0 auto !important; 
+        border: none !important; 
+        box-shadow: none !important;
+      }
       .previewActions { display: none !important; }
+      /* Aggressive removal of browser headers/footers */
+      @page { margin: 0 !important; }
     }
 
     * { box-sizing: border-box; }
