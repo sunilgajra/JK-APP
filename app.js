@@ -2211,7 +2211,7 @@ function showCOAForm(dealId) {
   const certNo = `COA/${shortGrade}/${d.bl_no || "BL"}/${today.replace(/-/g,"").slice(2)}`;
 
   // Expanded default tests from user images
-  let defaultTests = [
+  const defaultTests = [
     { parameter: "Flash Point", method: "ASTM D-92", unit: "°C", result: "" },
     { parameter: "Density @ 15°C", method: "ASTM D-4052", unit: "g/cm³", result: "" },
     { parameter: "Kinematic Viscosity @ 40°C", method: "ASTM D-445", unit: "Cst", result: "" },
@@ -2228,13 +2228,30 @@ function showCOAForm(dealId) {
     { parameter: "FBP", method: "ASTM D-86", unit: "°C", result: "" }
   ];
 
-  // Use saved data if available
-  const saved = d.coa_data || {};
-  const testsToUse = saved.tests || defaultTests;
-  const dateToUse = saved.date || today;
-  const certNoToUse = saved.cert_no || certNo;
-  const blNoToUse = saved.bl_no || d.bl_no || "";
-  const gradeToUse = saved.grade || prodName;
+  // Logic to find the best data to pre-fill
+  let saved = d.coa_data || null;
+  
+  // If no data saved for THIS deal, look for the most recent deal with the SAME product name
+  if (!saved) {
+    const similarDeal = state.deals
+      .filter(other => other.id !== dealId && other.product_name === d.product_name && other.coa_data)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+    
+    if (similarDeal) {
+      console.log("Using COA template from similar deal:", similarDeal.deal_no);
+      saved = { ...similarDeal.coa_data };
+      // IMPORTANT: We ONLY want the tests. We clear the deal-specific fields.
+      delete saved.date;
+      delete saved.cert_no;
+      delete saved.bl_no;
+    }
+  }
+
+  const testsToUse = (saved && saved.tests) ? saved.tests : defaultTests;
+  const dateToUse = (saved && saved.date) ? saved.date : today;
+  const certNoToUse = (saved && saved.cert_no) ? saved.cert_no : certNo;
+  const blNoToUse = (saved && saved.bl_no) ? saved.bl_no : (d.bl_no || "");
+  const gradeToUse = (saved && saved.grade) ? saved.grade : prodName;
 
   modal.innerHTML = `
     <div class="modal-content" style="max-width:800px; padding:30px; max-height:90vh; overflow-y:auto">
