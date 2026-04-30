@@ -1891,14 +1891,6 @@ export function buildAgentStatement(agent, deals, company = {}, payments = []) {
         </div>
       </div>
 
-      <div style="margin-top:20px; border: 1px solid #ddd; padding:10px; font-size:11px; background:#fffdf5">
-        <strong>AGENT BANK DETAILS:</strong><br>
-        <div style="margin-top:5px; white-space:pre-wrap;">${esc(agent.bank_details || "Not Provided")}</div>
-      </div>
-
-      <div style="margin-top:40px; display:flex; justify-content:space-between">
-        <div style="text-align:center; width:200px; border-top:1px solid #333; padding-top:5px; font-size:10px">For ${esc(company.name)}<br>(Authorized Signatory)</div>
-        <div style="text-align:center; width:200px; border-top:1px solid #333; padding-top:5px; font-size:10px">Agent Acceptance<br>(${esc(agent.name)})</div>
       </div>
     </div>
   </body>
