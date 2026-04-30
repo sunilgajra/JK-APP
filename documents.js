@@ -695,7 +695,7 @@ function footer(company = {}, date = "", showSignatory = false) {
   return `
     <div class="footer">
       <div style="position:relative; min-height:80px;">
-        <div style="border-bottom: 2px solid #222; padding-bottom: 2px; font-size: 10px; font-weight: 700; min-height: 18px;">
+        <div style="font-size: 10px; font-weight: 700; min-height: 18px;">
           FOR ${esc(company.name || "")}
         </div>
         ${showSignatory ? `
