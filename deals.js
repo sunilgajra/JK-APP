@@ -98,6 +98,7 @@ export function dealsView() {
                 <button data-print-ci="${d.id}">Print CI</button>
                 <button data-print-pl="${d.id}">Print PL</button>
                 <button data-print-coo="${d.id}">Print COO</button>
+                <button data-print-coa="${d.id}">Print COA</button>
                 <button data-print-set="${d.id}" class="btn-info">Document Set</button>
               </div>
 

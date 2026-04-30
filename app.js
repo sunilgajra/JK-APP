@@ -1,4 +1,4 @@
-import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildDocumentSet, buildShippingInstruction, buildSupplierStatement, buildBuyerStatement, buildSupplierMasterStatement, buildBuyerMasterStatement, buildAgentStatement } from "./documents.js";
+import { openPrintWindow, buildPI, buildCI, buildPL, buildCOO, buildCOA, buildDocumentSet, buildShippingInstruction, buildSupplierStatement, buildBuyerStatement, buildSupplierMasterStatement, buildBuyerMasterStatement, buildAgentStatement } from "./documents.js";
 import { supabase } from "./supabase.js";
 import { state, buyerName, supplierName, getBuyerById, getDealById, getShipperOptions, paymentsForDeal, paymentSummary } from "./state.js";
 import { esc, cleanText, cleanUpper, cleanNumber, normalizeCustomerId, ensureDocNumbers, cleanContainerNumbers } from "./utils.js";
@@ -378,6 +378,7 @@ function bindUI() {
   document.querySelectorAll("[data-print-ci]").forEach(btn => btn.addEventListener("click", () => printDoc("ci", btn.dataset.printCi)));
   document.querySelectorAll("[data-print-pl]").forEach(btn => btn.addEventListener("click", () => printDoc("pl", btn.dataset.printPl)));
   document.querySelectorAll("[data-print-coo]").forEach(btn => btn.addEventListener("click", () => printDoc("coo", btn.dataset.printCoo)));
+  document.querySelectorAll("[data-print-coa]").forEach(btn => btn.addEventListener("click", () => showCOAForm(btn.dataset.printCoa)));
   document.querySelectorAll("[data-print-set]").forEach(btn => btn.addEventListener("click", () => printDoc("set", btn.dataset.printSet)));
   document.querySelectorAll("[data-print-supplier-statement]").forEach(btn => btn.addEventListener("click", () => printDoc("supplier-statement", btn.dataset.printSupplierStatement)));
   document.querySelectorAll("[data-print-buyer-statement]").forEach(btn => btn.addEventListener("click", () => printDoc("buyer-statement", btn.dataset.printBuyerStatement)));
@@ -1790,6 +1791,11 @@ function bindProductHsnLookup(id = null) {
 function printDoc(type, dealId) {
   const deal = getDealById(dealId);
   if (!deal) return;
+  
+  if (type === "coa") {
+    // COA is handled via showCOAForm
+    return;
+  }
 
   const buyer = getBuyerById(deal?.buyer_id);
   const supplier = state.suppliers.find(s => String(s.id) === String(deal?.supplier_id));
@@ -2180,6 +2186,151 @@ async function saveTrackingLog(id) {
   } catch (err) {
     alert("Save Tracking Log failed: " + err.message);
   }
+}
+
+/**
+ * COA FORM
+ */
+function showCOAForm(dealId) {
+  const d = getDealById(dealId);
+  if (!d) return;
+
+  const modal = document.createElement("div");
+  modal.id = "coa-modal";
+  modal.className = "modal-overlay";
+  modal.style.zIndex = "10000";
+  
+  const today = new Date().toISOString().split("T")[0];
+  const shortGrade = (d.product_name || "").substring(0,2).toUpperCase();
+  const certNo = `COA/${shortGrade}/${d.bl_no || "BL"}/${today.replace(/-/g,"").slice(2)}`;
+
+  // Default tests if it's industrial oil
+  let defaultTests = [
+    { parameter: "Density @ 15°C", method: "ASTM D 1298", unit: "Kg/L", result: "" },
+    { parameter: "Flash", method: "ASTM D 93", unit: "°C", result: "" },
+    { parameter: "Sulfur", method: "ASTM D 4294", unit: "PPM", result: "" },
+    { parameter: "Viscosity @ 40°C", method: "ASTM D 445", unit: "cSt", result: "" },
+    { parameter: "Distillation", method: "", unit: "", result: "", isHeader: true },
+    { parameter: "IBP", method: "ASTM D 86", unit: "°C", result: "" },
+    { parameter: "10% Recovered", method: "ASTM D 86", unit: "°C", result: "" },
+    { parameter: "50% Recovered", method: "ASTM D 86", unit: "°C", result: "" },
+    { parameter: "90% Recovered", method: "ASTM D 86", unit: "°C", result: "" },
+    { parameter: "FBP", method: "ASTM D 86", unit: "°C", result: "" }
+  ];
+
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:800px; padding:30px">
+      <div class="title" style="margin-bottom:10px">Prepare Certificate of Analysis</div>
+      <p class="item-sub">Fill in the details for the test report. You can add or remove rows as needed.</p>
+      
+      <form id="coa-generation-form">
+        <div class="grid grid-2 gap-10 mt-12">
+          <div>
+            <label class="form-label">Date</label>
+            <input type="date" name="date" value="${today}" required>
+          </div>
+          <div>
+            <label class="form-label">Certificate No.</label>
+            <input type="text" name="cert_no" value="${certNo}" required>
+          </div>
+          <div>
+            <label class="form-label">BL No.</label>
+            <input type="text" name="bl_no" value="${esc(d.bl_no || "")}" required>
+          </div>
+          <div>
+            <label class="form-label">Grade / Description</label>
+            <input type="text" name="grade" value="${esc(d.product_name || "")}" required>
+          </div>
+        </div>
+
+        <div class="mt-20">
+          <div class="flex flex-between flex-center">
+            <div class="item-title">Test Parameters</div>
+            <button type="button" id="add-coa-row" class="btn-small">Add Row</button>
+          </div>
+          <table class="table mt-10" id="coa-tests-table">
+            <thead>
+              <tr>
+                <th>Parameter</th>
+                <th>Method</th>
+                <th>Unit</th>
+                <th>Result</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${defaultTests.map((t, idx) => `
+                <tr class="coa-test-row" data-header="${t.isHeader ? '1' : '0'}">
+                  <td><input name="test_param" value="${esc(t.parameter)}" placeholder="Parameter" ${t.isHeader ? 'style="font-weight:bold; background:rgba(255,255,255,0.05)"' : ''}></td>
+                  <td><input name="test_method" value="${esc(t.method)}" placeholder="Method" ${t.isHeader ? 'disabled' : ''}></td>
+                  <td><input name="test_unit" value="${esc(t.unit)}" placeholder="Unit" ${t.isHeader ? 'disabled' : ''}></td>
+                  <td><input name="test_result" value="${esc(t.result)}" placeholder="Result" ${t.isHeader ? 'disabled' : ''}></td>
+                  <td><button type="button" class="btn-danger btn-small remove-coa-row">×</button></td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex gap-10 mt-20">
+          <button type="submit" class="btn-primary">Generate & Print COA</button>
+          <button type="button" id="close-coa-modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Bind Row Actions
+  modal.querySelector("#add-coa-row").addEventListener("click", () => {
+    const tbody = modal.querySelector("#coa-tests-table tbody");
+    const tr = document.createElement("tr");
+    tr.className = "coa-test-row";
+    tr.innerHTML = `
+      <td><input name="test_param" placeholder="Parameter"></td>
+      <td><input name="test_method" placeholder="Method"></td>
+      <td><input name="test_unit" placeholder="Unit"></td>
+      <td><input name="test_result" placeholder="Result"></td>
+      <td><button type="button" class="btn-danger btn-small remove-coa-row">×</button></td>
+    `;
+    tbody.appendChild(tr);
+    tr.querySelector(".remove-coa-row").addEventListener("click", () => tr.remove());
+  });
+
+  modal.querySelectorAll(".remove-coa-row").forEach(btn => {
+    btn.addEventListener("click", (e) => e.target.closest("tr").remove());
+  });
+
+  modal.querySelector("#close-coa-modal").addEventListener("click", () => modal.remove());
+
+  modal.querySelector("#coa-generation-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const coaData = {
+      date: fd.get("date"),
+      cert_no: fd.get("cert_no"),
+      bl_no: fd.get("bl_no"),
+      grade: fd.get("grade"),
+      tests: []
+    };
+
+    const rows = modal.querySelectorAll(".coa-test-row");
+    rows.forEach(row => {
+      const isHeader = row.dataset.header === "1";
+      coaData.tests.push({
+        parameter: row.querySelector("[name='test_param']").value,
+        method: row.querySelector("[name='test_method']").value,
+        unit: row.querySelector("[name='test_unit']").value,
+        result: row.querySelector("[name='test_result']").value,
+        isHeader: isHeader
+      });
+    });
+
+    const html = buildCOA(coaData, d, state.company);
+    openPrintWindow(html);
+    modal.remove();
+  });
 }
 
 // Start

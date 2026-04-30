@@ -1895,5 +1895,73 @@ export function buildAgentStatement(agent, deals, company = {}, payments = []) {
   </html>`;
 }
 
+export function buildCOA(coa, deal, company = {}) {
+  const date = coa.date || new Date().toISOString();
+  const blNo = coa.bl_no || deal.bl_no || "—";
+  const grade = coa.grade || deal.product_name || "—";
+  const certNo = coa.cert_no || `COA/${String(grade).substring(0,2).toUpperCase()}/${blNo}/${new Date().toISOString().slice(2,10).replace(/-/g,'')}`;
+  const tests = coa.tests || [];
 
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Certificate of Analysis - ${esc(blNo)}</title>
+    ${commonStyle()}
+    ${previewScript()}
+    <style>
+      .coa-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      .coa-table th, .coa-table td { border: 1px solid #000; padding: 6px 10px; font-size: 11px; }
+      .coa-table th { background: #f2f2f2; font-weight: bold; text-align: left; }
+      .coa-header-info { margin-top: 20px; font-size: 12px; line-height: 1.6; font-weight: bold; }
+      .coa-title { text-align: center; text-decoration: underline; font-size: 18px; font-weight: 800; margin: 20px 0; }
+      .sub-header { background: #eee; font-weight: bold; text-align: center !important; }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+    <div class="top">
+      ${shipperBlock(company)}
+      ${logoBlock()}
+      <div style="text-align:right; font-weight:bold; font-size:12px; padding-top:40px">Date: ${esc(fmtDate(date))}</div>
+    </div>
 
+    <div class="coa-title">Certificate Of Analysis</div>
+
+    <div class="coa-header-info">
+      <div>BL No.: ${esc(blNo)}</div>
+      <div>Grade/Description.: ${esc(grade)}</div>
+      <div>Certificate no.: ${esc(certNo)}</div>
+    </div>
+
+    <table class="coa-table">
+      <thead>
+        <tr>
+          <th style="width:35%">Test Parameters</th>
+          <th style="width:25%">Method</th>
+          <th style="width:15%">Unit</th>
+          <th style="width:25%">Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tests.map(t => {
+          if (t.isHeader) {
+            return `<tr><td colspan="4" class="sub-header">${esc(t.parameter)}</td></tr>`;
+          }
+          return `
+            <tr>
+              <td>${esc(t.parameter)}</td>
+              <td>${esc(t.method)}</td>
+              <td>${esc(t.unit)}</td>
+              <td>${esc(t.result)}</td>
+            </tr>
+          `;
+        }).join("")}
+        ${!tests.length ? '<tr><td colspan="4" style="text-align:center; padding:20px; opacity:0.5">No test parameters entered</td></tr>' : ''}
+      </tbody>
+    </table>
+
+    ${footer(company, date, true)}
+  </body>
+  </html>`;
+}
