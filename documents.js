@@ -184,6 +184,9 @@ function previewScript() {
 
         // FORCE A4 WIDTH FOR GENERATION (Fixes overlapping on mobile)
         document.body.classList.add("is-generating-pdf");
+        document.body.style.width = "800px";
+        document.body.style.margin = "0";
+        document.body.style.padding = "0";
         
         const element = document.body;
         const title = document.title || "document";
@@ -192,7 +195,7 @@ function previewScript() {
         await new Promise((r) => setTimeout(r, 1000)); // Increased time for PC stability
 
         const opt = {
-          margin: 10,
+          margin: 0,
           filename: title + ".pdf",
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: {
@@ -225,6 +228,9 @@ function previewScript() {
           })
           .finally(() => {
             document.body.classList.remove("is-generating-pdf");
+            document.body.style.width = "";
+            document.body.style.margin = "";
+            document.body.style.padding = "";
             if (actions) actions.style.display = "flex";
             window.scrollTo(0,0);
           });
@@ -282,13 +288,16 @@ function commonStyle() {
 
     /* PDF Generation Fix */
     .is-generating-pdf {
+      width: 800px !important;
       background: white !important;
-    }
-    .is-generating-pdf .doc {
-      width: 100% !important;
-      max-width: 100% !important;
       margin: 0 !important;
       padding: 0 !important;
+    }
+    .is-generating-pdf .doc {
+      width: 800px !important;
+      max-width: 800px !important;
+      margin: 0 !important;
+      padding: 30px !important;
       height: auto !important;
       overflow: visible !important;
     }
