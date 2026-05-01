@@ -192,20 +192,27 @@ function previewScript() {
         await new Promise((r) => setTimeout(r, 1000)); // Increased time for PC stability
 
         const opt = {
-          margin: [0, 0, 0, 0],
+          margin: 0,
           filename: title + ".pdf",
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: {
             scale: 2,
             useCORS: true,
             windowWidth: 794,
+            width: 794,
             scrollY: 0,
             scrollX: 0,
             backgroundColor: "#ffffff",
-            logging: false
+            logging: false,
+            onclone: (clonedDoc) => {
+              const b = clonedDoc.body;
+              b.style.width = '794px';
+              b.style.margin = '0';
+              b.style.padding = '0';
+            }
           },
           jsPDF: {
-            unit: "mm",
+            unit: "pt",
             format: "a4",
             orientation: "portrait"
           },
@@ -280,9 +287,13 @@ function commonStyle() {
       border-collapse: collapse;
     }
 
-    /* PDF Generation Fix for Mobile */
+    /* PDF Generation Fix for Mobile & PC */
     .is-generating-pdf {
       width: 794px !important;
+      min-width: 794px !important;
+      max-width: 794px !important;
+      margin: 0 !important;
+      padding: 0 !important;
       overflow: visible !important;
       background: white !important;
     }
@@ -290,12 +301,18 @@ function commonStyle() {
       box-sizing: border-box !important;
     }
     .is-generating-pdf .doc {
-      width: 790px !important; /* Slightly narrower than 794 to avoid rounding-induced overflow */
-      min-width: 790px !important;
-      margin: 0 auto !important;
-      padding: 20px !important;
+      width: 794px !important;
+      min-width: 794px !important;
+      max-width: 794px !important;
+      margin: 0 !important;
+      padding: 40px !important; /* Fixed padding for PDF output */
       height: auto !important;
       overflow: visible !important;
+      border: none !important;
+    }
+    .is-generating-pdf table {
+      width: 100% !important;
+      min-width: auto !important; /* Remove min-width for PDF */
     }
 
     .previewActions {
