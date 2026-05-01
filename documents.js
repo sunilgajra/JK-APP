@@ -2011,6 +2011,7 @@ export function buildPO(po, supplier, company = {}) {
   <head>
     <title>Purchase Order - ${esc(po.po_no)}</title>
     ${commonStyle()}
+    ${previewScript()}
     <style>
       .po-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }
       .po-table th, .po-table td { border: 1px solid #000; padding: 6px 4px; text-align: center; font-size: 11px; color: #000; word-break: break-word; }
