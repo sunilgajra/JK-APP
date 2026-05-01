@@ -198,7 +198,7 @@ function previewScript() {
           html2canvas: {
             scale: 2,
             useCORS: true,
-            windowWidth: 794, // Simulate A4 width for consistent layout
+            windowWidth: 794,
             scrollY: 0,
             scrollX: 0,
             backgroundColor: "#ffffff",
@@ -209,7 +209,7 @@ function previewScript() {
             format: "a4",
             orientation: "portrait"
           },
-          pagebreak: { mode: ['css', 'legacy'], before: '.doc' }
+          pagebreak: { mode: ['css', 'legacy'] }
         };
 
         html2pdf()
@@ -282,15 +282,18 @@ function commonStyle() {
 
     /* PDF Generation Fix for Mobile */
     .is-generating-pdf {
-      width: 210mm !important;
+      width: 794px !important;
       overflow: visible !important;
       background: white !important;
     }
+    .is-generating-pdf * {
+      box-sizing: border-box !important;
+    }
     .is-generating-pdf .doc {
-      width: 210mm !important;
-      min-width: 210mm !important;
-      margin: 0 !important;
-      padding: 10mm !important;
+      width: 790px !important; /* Slightly narrower than 794 to avoid rounding-induced overflow */
+      min-width: 790px !important;
+      margin: 0 auto !important;
+      padding: 20px !important;
       height: auto !important;
       overflow: visible !important;
     }
