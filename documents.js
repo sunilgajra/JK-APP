@@ -219,20 +219,20 @@ function commonStyle() {
     }
 
     .doc {
-      width: 100%;
-      max-width: 190mm;
-      margin: 30px auto; /* Centered with top/bottom margin */
+      width: 190mm;
+      max-width: 100%;
+      margin: 30px auto;
       padding: 10mm;
       background: white;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
       border: 1px solid #cfd4da;
-      border-radius: 2px;
+      border-radius: 4px;
       overflow: visible !important;
+      box-sizing: border-box;
     }
 
     table {
       width: 100%;
-      min-width: 180mm; /* Prevents squashing on mobile preview */
       border-collapse: collapse;
     }
 
@@ -1441,9 +1441,9 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
     ${commonStyle()}
     ${previewScript()}
     <style>
-      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
+      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: auto; }
       .statement-table th { background: #3b9da2; color: white; border: 1px solid #2a7a7d; font-size: 8px; padding: 4px 2px; text-transform: uppercase; }
-      .statement-table td { border: 1px solid #ccc; padding: 3px 2px; font-size: 8px; word-break: break-word; overflow: hidden; }
+      .statement-table td { border: 1px solid #ccc; padding: 3px 2px; font-size: 8px; word-break: break-word; }
       .summary-box { border: 2px solid #3b9da2; padding: 15px; margin-top: 30px; background:#f9fdfe; border-radius: 8px; }
       .bal-to-pay { background: #ffff00; font-weight: 800; padding: 2px 6px; border: 1px solid #000; border-radius: 4px; }
       .excel-header { background: #2a7a7d; color:white; font-weight: bold; text-align: center; padding: 8px; border: 1px solid #333; text-transform: uppercase; margin-top: 20px; border-radius: 4px 4px 0 0; font-size: 14px; }
@@ -1613,9 +1613,9 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
     ${commonStyle()}
     ${previewScript()}
     <style>
-      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
+      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: auto; }
       .statement-table th { background: #3b9da2; color: white; border: 1px solid #2a7a7d; font-size: 8px; padding: 4px 2px; text-transform: uppercase; }
-      .statement-table td { border: 1px solid #ccc; padding: 3px 2px; font-size: 8px; word-break: break-word; overflow: hidden; }
+      .statement-table td { border: 1px solid #ccc; padding: 3px 2px; font-size: 8px; word-break: break-word; }
       .summary-box { border: 2px solid #3b9da2; padding: 15px; margin-top: 30px; background:#f9fdfe; border-radius: 8px; }
       .bal-to-rec { background: #ffff00; font-weight: 800; padding: 2px 6px; border: 1px solid #000; border-radius: 4px; }
       .excel-header { background: #2a7a7d; color:white; font-weight: bold; text-align: center; padding: 8px; border: 1px solid #333; text-transform: uppercase; margin-top: 20px; border-radius: 4px 4px 0 0; font-size: 14px; }
