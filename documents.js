@@ -179,8 +179,10 @@ function previewScript() {
         const actions = document.querySelector(".previewActions");
         if (actions) actions.style.display = "none";
 
-        // Scroll to top to ensure html2canvas captures everything correctly
         window.scrollTo(0,0);
+        
+        const title = document.title || "document";
+        const element = document.body;
 
         // CREATE A HIDDEN CLONE FOR PERFECT SCALING
         const clone = element.cloneNode(true);
@@ -196,14 +198,13 @@ function previewScript() {
         await new Promise((r) => setTimeout(r, 1000)); 
 
         const opt = {
-          margin: 0,
+          margin: 10,
           filename: title + ".pdf",
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: {
             scale: 2,
             useCORS: true,
             windowWidth: 800,
-            width: 800,
             scrollY: 0,
             scrollX: 0,
             backgroundColor: "#ffffff",
@@ -221,15 +222,12 @@ function previewScript() {
           .from(clone)
           .set(opt)
           .save()
-          .then(() => {
-            console.log("PDF generated successfully");
-          })
           .catch((err) => {
             console.error(err);
             alert("Failed to generate PDF");
           })
           .finally(() => {
-            document.body.removeChild(clone);
+            if (clone.parentNode) document.body.removeChild(clone);
             if (actions) actions.style.display = "flex";
             window.scrollTo(0,0);
           });
@@ -287,21 +285,22 @@ function commonStyle() {
 
     /* PDF Generation Fix */
     .is-generating-pdf {
-      width: 800px !important;
       background: white !important;
-      margin: 0 !important;
-      padding: 0 !important;
     }
     .is-generating-pdf .doc {
-      width: 800px !important;
-      max-width: 800px !important;
+      width: 100% !important;
+      max-width: none !important;
       margin: 0 !important;
-      padding: 30px !important;
+      padding: 0 !important;
       height: auto !important;
       overflow: visible !important;
     }
     .is-generating-pdf table {
       width: 100% !important;
+      min-width: auto !important;
+    }
+    .is-generating-pdf .previewActions {
+      display: none !important;
     }
 
     .previewActions {
