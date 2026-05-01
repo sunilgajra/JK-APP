@@ -198,17 +198,30 @@ function previewScript() {
         await new Promise((r) => setTimeout(r, 1000)); 
 
         const opt = {
-          margin: 10,
+          margin: 0,
           filename: title + ".pdf",
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: {
-            scale: 2,
+            scale: 1, // Use 1 to avoid DPI scaling issues on high-res monitors
             useCORS: true,
             windowWidth: 800,
             scrollY: 0,
             scrollX: 0,
             backgroundColor: "#ffffff",
-            logging: false
+            logging: false,
+            onclone: (clonedDoc) => {
+              const b = clonedDoc.body;
+              b.style.width = "210mm";
+              b.style.margin = "0";
+              b.style.padding = "0";
+              const d = clonedDoc.querySelector(".doc");
+              if (d) {
+                d.style.width = "210mm";
+                d.style.maxWidth = "210mm";
+                d.style.margin = "0";
+                d.style.padding = "10mm";
+              }
+            }
           },
           jsPDF: {
             unit: "mm",
