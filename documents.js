@@ -158,20 +158,6 @@ function docCurrency(deal = {}) {
 function previewScript() {
   return `
     <script>
-      function loadLibrary() {
-        if (window.html2pdf) return Promise.resolve();
-        return new Promise((resolve) => {
-          const s = document.createElement('script');
-          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-          s.onload = resolve;
-          s.onerror = () => {
-            alert('Failed to load PDF library. Please check your internet connection.');
-            resolve();
-          };
-          document.head.appendChild(s);
-        });
-      }
-
       async function waitForImages(root) {
         const images = Array.from(root.querySelectorAll("img"));
         await Promise.all(images.map((img) => {
@@ -187,69 +173,13 @@ function previewScript() {
         const actions = document.querySelector(".previewActions");
         if (actions) actions.style.display = "none";
 
-        await loadLibrary();
-        if (typeof html2pdf === "undefined") {
-          alert("Could not load PDF library. Please try again.");
+        // Native print is 100% accurate for scaling on PC
+        window.print();
+
+        // Restore UI
+        setTimeout(() => {
           if (actions) actions.style.display = "flex";
-          return;
-        }
-
-        // SAVE ORIGINAL STATE
-        const originalWidth = document.body.style.width;
-        const originalMargin = document.body.style.margin;
-        const originalOverflow = document.body.style.overflow;
-
-        window.scrollTo(0,0);
-        
-        // APPLY GENERATION STYLES DIRECTLY TO BODY (More reliable than cloning)
-        document.body.classList.add("is-generating-pdf");
-        document.body.style.width = "800px";
-        document.body.style.margin = "0";
-        document.body.style.overflow = "visible";
-        document.body.style.background = "white";
-
-        const title = document.title || "document";
-        const element = document.body;
-
-        await waitForImages(element);
-        await new Promise((r) => setTimeout(r, 1200)); // Extra time for layout to settle
-
-        const opt = {
-          margin: 10,
-          filename: title + ".pdf",
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            windowWidth: 800,
-            scrollY: 0,
-            scrollX: 0,
-            backgroundColor: "#ffffff",
-            logging: false
-          },
-          jsPDF: {
-            unit: "mm",
-            format: "a4",
-            orientation: "portrait"
-          },
-          pagebreak: { mode: ['css', 'legacy'] }
-        };
-
-        try {
-          await html2pdf().from(element).set(opt).save();
-        } catch (err) {
-          console.error(err);
-          alert("Failed to generate PDF. You can try printing manually (Ctrl+P).");
-        } finally {
-          // RESTORE ORIGINAL STATE
-          document.body.classList.remove("is-generating-pdf");
-          document.body.style.width = originalWidth;
-          document.body.style.margin = originalMargin;
-          document.body.style.overflow = originalOverflow;
-          document.body.style.background = "";
-          if (actions) actions.style.display = "flex";
-          window.scrollTo(0,0);
-        }
+        }, 1000);
       }
     </script>
   `;
