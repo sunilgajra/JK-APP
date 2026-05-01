@@ -179,6 +179,9 @@ function previewScript() {
         const actions = document.querySelector(".previewActions");
         if (actions) actions.style.display = "none";
 
+        // Scroll to top to ensure html2canvas captures everything correctly
+        window.scrollTo(0,0);
+
         // FORCE A4 WIDTH FOR GENERATION (Fixes overlapping on mobile)
         document.body.classList.add("is-generating-pdf");
         
@@ -186,7 +189,7 @@ function previewScript() {
         const title = document.title || "document";
 
         await waitForImages(element);
-        await new Promise((r) => setTimeout(r, 800)); // Give extra time for layout to settle
+        await new Promise((r) => setTimeout(r, 1000)); // Increased time for PC stability
 
         const opt = {
           margin: [0, 0, 0, 0],
@@ -195,8 +198,9 @@ function previewScript() {
           html2canvas: {
             scale: 2,
             useCORS: true,
-            width: 794, // Fixed A4 width in pixels at 96 DPI
-            windowWidth: 794,
+            windowWidth: 794, // Simulate A4 width for consistent layout
+            scrollY: 0,
+            scrollX: 0,
             backgroundColor: "#ffffff",
             logging: false
           },
@@ -204,7 +208,8 @@ function previewScript() {
             unit: "mm",
             format: "a4",
             orientation: "portrait"
-          }
+          },
+          pagebreak: { mode: ['css', 'legacy'], before: '.doc' }
         };
 
         html2pdf()
@@ -212,14 +217,16 @@ function previewScript() {
           .set(opt)
           .save()
           .then(() => {
-            document.body.classList.remove("is-generating-pdf");
-            if (actions) actions.style.display = "flex";
+            console.log("PDF generated successfully");
           })
           .catch((err) => {
             console.error(err);
+            alert("Failed to generate PDF");
+          })
+          .finally(() => {
             document.body.classList.remove("is-generating-pdf");
             if (actions) actions.style.display = "flex";
-            alert("Failed to generate PDF");
+            window.scrollTo(0,0);
           });
       }
     </script>
@@ -229,20 +236,19 @@ function previewScript() {
 function commonStyle() {
   return `
   <style>
-    @page { size: auto; margin: 0; }
+    @page { size: A4; margin: 5mm; }
     @media print {
-      html, body { margin: 0 !important; padding: 0 !important; height: 100%; overflow: visible !important; }
+      html, body { margin: 0 !important; padding: 0 !important; height: auto !important; min-height: 100% !important; overflow: visible !important; }
       .doc { 
-        padding: 15mm 12mm !important; 
-        width: 100% !important; 
-        max-width: 210mm !important;
+        padding: 10mm !important; 
+        width: 190mm !important; 
+        max-width: 190mm !important;
         margin: 0 auto !important; 
         border: none !important; 
         box-shadow: none !important;
+        overflow: visible !important;
       }
       .previewActions { display: none !important; }
-      /* Aggressive removal of browser headers/footers */
-      @page { margin: 0 !important; }
     }
 
     * { box-sizing: border-box; }
@@ -265,8 +271,7 @@ function commonStyle() {
       max-width: 100vw;
       margin: 0 auto;
       padding: 10mm 5mm;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+      overflow: visible !important; /* Changed from auto to visible for better print/pdf support */
     }
 
     table {
@@ -285,7 +290,9 @@ function commonStyle() {
       width: 210mm !important;
       min-width: 210mm !important;
       margin: 0 !important;
-      padding: 15mm 10mm !important;
+      padding: 10mm !important;
+      height: auto !important;
+      overflow: visible !important;
     }
 
     .previewActions {
