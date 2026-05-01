@@ -157,8 +157,15 @@ function docCurrency(deal = {}) {
 
 function previewScript() {
   return `
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
+      // Load html2pdf dynamically to avoid document.write warnings
+      (function() {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js';
+        s.onload = () => console.log('PDF Library Loaded');
+        document.head.appendChild(s);
+      })();
+
       async function waitForImages(root) {
         const images = Array.from(root.querySelectorAll("img"));
         await Promise.all(images.map((img) => {
@@ -234,6 +241,10 @@ function previewScript() {
         html2pdf()
           .from(clone)
           .set(opt)
+          .toContainer()
+          .toCanvas()
+          .toImg()
+          .toPdf()
           .save()
           .catch((err) => {
             console.error(err);
