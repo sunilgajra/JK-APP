@@ -157,6 +157,7 @@ function docCurrency(deal = {}) {
 
 function previewScript() {
   return `
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
       async function waitForImages(root) {
         const images = Array.from(root.querySelectorAll("img"));
@@ -173,14 +174,33 @@ function previewScript() {
         const actions = document.querySelector(".previewActions");
         if (actions) actions.style.display = "none";
 
-        // Native print is 100% accurate for scaling on PC
-        window.print();
+        window.scrollTo(0,0);
+        
+        const title = document.title || "document";
+        const element = document.body;
 
-        // Restore UI
-        setTimeout(() => {
-          if (actions) actions.style.display = "flex";
-        }, 1000);
+        const opt = {
+          margin: 10,
+          filename: title + ".pdf",
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+        };
+
+        html2pdf()
+          .from(element)
+          .set(opt)
+          .save()
+          .then(() => {
+            if (actions) actions.style.display = "flex";
+          })
+          .catch((err) => {
+            console.error(err);
+            alert("Download failed. Please use 'Print / Save PDF' instead.");
+            if (actions) actions.style.display = "flex";
+          });
       }
+
     </script>
   `;
 }
@@ -1990,8 +2010,8 @@ export function buildPO(po, supplier, company = {}) {
     <title>Purchase Order - ${esc(po.po_no)}</title>
     ${commonStyle()}
     <style>
-      .po-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-      .po-table th, .po-table td { border: 1px solid #000; padding: 10px; text-align: center; font-size: 13px; color: #000; }
+      .po-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }
+      .po-table th, .po-table td { border: 1px solid #000; padding: 6px 4px; text-align: center; font-size: 11px; color: #000; word-break: break-word; }
       .po-table th { background: #dcdcdc; color: #000; font-weight: 800; text-transform: uppercase; }
       .po-section { margin-bottom: 20px; line-height: 1.6; color: #000; }
       .po-section h3 { font-size: 15px; margin-bottom: 5px; text-decoration: underline; font-weight: 800; }
