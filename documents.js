@@ -210,7 +210,7 @@ function commonStyle() {
   <style>
     @page { size: A4; margin: 5mm; }
     @media print {
-      html, body { margin: 0 !important; padding: 0 !important; height: auto !important; min-height: 100% !important; overflow: visible !important; }
+      html, body { margin: 0 !important; padding: 0 !important; height: auto !important; min-height: 100% !important; overflow: visible !important; background: white !important; }
       .doc { 
         padding: 10mm !important; 
         width: 190mm !important; 
@@ -218,7 +218,9 @@ function commonStyle() {
         margin: 0 auto !important; 
         border: none !important; 
         box-shadow: none !important;
+        border-radius: 0 !important;
         overflow: visible !important;
+        background: white !important;
       }
       .previewActions { display: none !important; }
     }
