@@ -192,27 +192,20 @@ function previewScript() {
         await new Promise((r) => setTimeout(r, 1000)); // Increased time for PC stability
 
         const opt = {
-          margin: 0,
+          margin: 10,
           filename: title + ".pdf",
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: {
             scale: 2,
             useCORS: true,
-            windowWidth: 794,
-            width: 794,
+            windowWidth: 800,
             scrollY: 0,
             scrollX: 0,
             backgroundColor: "#ffffff",
-            logging: false,
-            onclone: (clonedDoc) => {
-              const b = clonedDoc.body;
-              b.style.width = '794px';
-              b.style.margin = '0';
-              b.style.padding = '0';
-            }
+            logging: false
           },
           jsPDF: {
-            unit: "pt",
+            unit: "mm",
             format: "a4",
             orientation: "portrait"
           },
@@ -274,11 +267,11 @@ function commonStyle() {
     }
 
     .doc {
-      width: 190mm;
-      max-width: 100vw;
+      width: 100%;
+      max-width: 190mm;
       margin: 0 auto;
       padding: 10mm 5mm;
-      overflow: visible !important; /* Changed from auto to visible for better print/pdf support */
+      overflow: visible !important;
     }
 
     table {
@@ -287,32 +280,20 @@ function commonStyle() {
       border-collapse: collapse;
     }
 
-    /* PDF Generation Fix for Mobile & PC */
+    /* PDF Generation Fix */
     .is-generating-pdf {
-      width: 794px !important;
-      min-width: 794px !important;
-      max-width: 794px !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      overflow: visible !important;
       background: white !important;
     }
-    .is-generating-pdf * {
-      box-sizing: border-box !important;
-    }
     .is-generating-pdf .doc {
-      width: 794px !important;
-      min-width: 794px !important;
-      max-width: 794px !important;
+      width: 100% !important;
+      max-width: 100% !important;
       margin: 0 !important;
-      padding: 40px !important; /* Fixed padding for PDF output */
+      padding: 0 !important;
       height: auto !important;
       overflow: visible !important;
-      border: none !important;
     }
     .is-generating-pdf table {
       width: 100% !important;
-      min-width: auto !important; /* Remove min-width for PDF */
     }
 
     .previewActions {
