@@ -158,13 +158,19 @@ function docCurrency(deal = {}) {
 function previewScript() {
   return `
     <script>
-      // Load html2pdf dynamically to avoid document.write warnings
-      (function() {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js';
-        s.onload = () => console.log('PDF Library Loaded');
-        document.head.appendChild(s);
-      })();
+      function loadLibrary() {
+        if (window.html2pdf) return Promise.resolve();
+        return new Promise((resolve) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js';
+          s.onload = resolve;
+          s.onerror = () => {
+            alert('Failed to load PDF library. Please check your internet connection.');
+            resolve();
+          };
+          document.head.appendChild(s);
+        });
+      }
 
       async function waitForImages(root) {
         const images = Array.from(root.querySelectorAll("img"));
@@ -178,13 +184,14 @@ function previewScript() {
       }
 
       async function downloadExactPdf() {
-        if (typeof html2pdf === "undefined") {
-          alert("PDF library not loaded");
-          return;
-        }
-
         const actions = document.querySelector(".previewActions");
         if (actions) actions.style.display = "none";
+
+        await loadLibrary();
+        if (typeof html2pdf === "undefined") {
+          if (actions) actions.style.display = "flex";
+          return;
+        }
 
         window.scrollTo(0,0);
         
@@ -205,30 +212,17 @@ function previewScript() {
         await new Promise((r) => setTimeout(r, 1000)); 
 
         const opt = {
-          margin: 0,
+          margin: 10,
           filename: title + ".pdf",
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: {
-            scale: 1, // Use 1 to avoid DPI scaling issues on high-res monitors
+            scale: 2,
             useCORS: true,
             windowWidth: 800,
             scrollY: 0,
             scrollX: 0,
             backgroundColor: "#ffffff",
-            logging: false,
-            onclone: (clonedDoc) => {
-              const b = clonedDoc.body;
-              b.style.width = "210mm";
-              b.style.margin = "0";
-              b.style.padding = "0";
-              const d = clonedDoc.querySelector(".doc");
-              if (d) {
-                d.style.width = "210mm";
-                d.style.maxWidth = "210mm";
-                d.style.margin = "0";
-                d.style.padding = "10mm";
-              }
-            }
+            logging: false
           },
           jsPDF: {
             unit: "mm",
@@ -241,10 +235,6 @@ function previewScript() {
         html2pdf()
           .from(clone)
           .set(opt)
-          .toContainer()
-          .toCanvas()
-          .toImg()
-          .toPdf()
           .save()
           .catch((err) => {
             console.error(err);
