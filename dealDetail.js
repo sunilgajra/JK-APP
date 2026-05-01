@@ -16,6 +16,8 @@ export function dealDetailView() {
   const pTotal = showCurrency === "USD" ? (d.purchase_total_usd || 0) : (d.purchase_total_aed || 0);
   const s = paymentSummary(d.id, showTotal, pTotal, showCurrency);
 
+  const highSeasBuyer = d.is_high_seas && d.high_seas_buyer_id ? state.buyers.find(b => String(b.id) === String(d.high_seas_buyer_id)) : null;
+
   return `
     <div class="card">
       <div class="flex flex-between flex-center gap-12 mb-12">
@@ -44,7 +46,14 @@ export function dealDetailView() {
         <div class="item"><div class="item-title">CI No</div><div class="item-sub">${esc(d.ci_no || "—")}</div></div>
         <div class="item"><div class="item-title">PL No</div><div class="item-sub">${esc(d.pl_no || "—")}</div></div>
         <div class="item"><div class="item-title">COO No</div><div class="item-sub">${esc(d.coo_no || "—")}</div></div>
-        <div class="item"><div class="item-title">Buyer</div><div class="item-sub">${esc(buyer?.name || "—")}</div></div>
+        <div class="item"><div class="item-title">Buyer (Original)</div><div class="item-sub">${esc(buyer?.name || "—")}</div></div>
+        ${highSeasBuyer ? `
+          <div class="item" style="border-left: 4px solid var(--info); background: rgba(59, 130, 246, 0.05);">
+            <div class="item-title" style="color:var(--info)">High Seas Buyer</div>
+            <div class="item-sub" style="font-weight:700">${esc(highSeasBuyer.name)}</div>
+            <div class="item-sub">${esc(highSeasBuyer.company_name || "")}</div>
+          </div>
+        ` : ""}
         <div class="item">
           <div class="item-title">Supplier</div>
           <div class="item-sub">${esc(supplier?.name || "—")}</div>
@@ -59,7 +68,7 @@ export function dealDetailView() {
 
       <div class="item mt-12 grid grid-2 gap-10" style="background:rgba(255,255,255,0.03); padding:15px; border-radius:8px">
         <div>
-          <div class="item-title" style="color:var(--success)">Receivable (Buyer)</div>
+          <div class="item-title" style="color:var(--success)">Receivable (${highSeasBuyer ? "High Seas Buyer" : "Buyer"})</div>
           <div class="title" style="font-size:20px; margin-bottom:5px">${esc(showCurrency)} ${fmtMoney(s.receivable)}</div>
           <div class="item-sub">Sale Total: ${fmtMoney(s.sale)}</div>
           <div class="item-sub">Received: ${fmtMoney(s.received)}</div>

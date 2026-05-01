@@ -101,7 +101,11 @@ export function dealsView() {
                 ${esc(d.product_name || "—")} · ${esc(pkgDisplay)} · ${netWeight}
               </div>
               <div class="item-sub">${esc(d.loading_port || "—")} → ${esc(d.discharge_port || "—")}</div>
-              <div class="item-sub">Supplier: ${esc(supplierName(d.supplier_id))} · Shipper: ${esc(shipper?.name || "Default Company")} · Buyer: ${esc(buyerName(d.buyer_id))}</div>
+              <div class="item-sub">
+                Supplier: ${esc(supplierName(d.supplier_id))} · Shipper: ${esc(shipper?.name || "Default Company")} · 
+                Buyer: ${esc(buyerName(d.buyer_id))}
+                ${d.is_high_seas ? `<span class="badge badge-warning" style="margin-left:8px">HIGH SEAS: ${esc(buyerName(d.high_seas_buyer_id))}</span>` : ""}
+              </div>
               
               <div class="grid grid-2 mt-8 p-10" style="background:rgba(255,255,255,0.03); border-radius:4px">
                 <div>
@@ -121,6 +125,7 @@ export function dealsView() {
                 <button data-show-payment-form="${d.id}">Add Payment</button>
                 <button data-show-document-form="${d.id}">Upload Document</button>
                 <button data-edit-deal="${d.id}">Edit</button>
+                <button data-high-seas="${d.id}" class="btn-info">High Seas</button>
                 <button data-delete-deal="${d.id}">Delete</button>
               </div>
 
@@ -132,6 +137,7 @@ export function dealsView() {
               </div>
 
               <div id="deal-edit-wrap-${d.id}" class="mt-10"></div>
+              <div id="high-seas-form-wrap-${d.id}" class="mt-10"></div>
               <div id="payment-form-wrap-${d.id}" class="mt-10"></div>
               <div id="document-form-wrap-${d.id}" class="mt-10"></div>
 
@@ -527,7 +533,7 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
 
         <div class="grid grid-2 gap-10">
           <div>
-            <label class="form-label">Buyer</label>
+            <label class="form-label">Buyer (Original)</label>
             <select name="buyer_id">
               <option value="">Select buyer</option>
               ${state.buyers.map((b) => `<option value="${b.id}" ${String(d.buyer_id) === String(b.id) ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
@@ -542,9 +548,59 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
           </div>
         </div>
 
+        <div class="card">
+          <div class="title">High Seas Detail</div>
+          <div class="grid grid-2 gap-10 mt-10">
+            <div>
+              <label class="form-label">Is High Seas Deal?</label>
+              <select name="is_high_seas">
+                <option value="false" ${!d.is_high_seas ? "selected" : ""}>No</option>
+                <option value="true" ${d.is_high_seas ? "selected" : ""}>Yes</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">High Seas Buyer</label>
+              <select name="high_seas_buyer_id">
+                <option value="">Select high seas buyer (if any)</option>
+                ${state.buyers.map((b) => `<option value="${b.id}" ${String(d.high_seas_buyer_id) === String(b.id) ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div class="flex gap-10">
           <button type="submit" class="btn-primary">${edit ? "Update Deal" : "Save Deal"}</button>
           <button type="button" id="${edit ? `cancel-deal-edit-${id}` : "cancel-deal-form"}">Cancel</button>
+        </div>
+      </div>
+    </form>
+  `;
+}
+
+export function highSeasFormHtml(d) {
+  return `
+    <form id="high-seas-form-${d.id}" class="item mb-12" style="border-left: 4px solid var(--info)">
+      <div class="form-header">Mark as High Seas Sale</div>
+      <div class="grid gap-12">
+        <div class="grid grid-2 gap-10">
+          <div>
+            <label class="form-label">High Seas Buyer</label>
+            <select name="high_seas_buyer_id" required>
+              <option value="">Select high seas buyer</option>
+              ${state.buyers.map((b) => `<option value="${b.id}" ${String(d.high_seas_buyer_id) === String(b.id) ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Original Buyer</label>
+            <input value="${esc(buyerName(d.buyer_id))}" readonly style="background:rgba(255,255,255,0.05)">
+          </div>
+        </div>
+        <div class="item-sub" style="margin-top:0">
+          * This will mark the deal as a High Seas Sale. The amount to be received will be tracked against the High Seas Buyer's name in statements, but the original buyer remains linked.
+        </div>
+        <div class="flex gap-10 mt-10">
+          <button type="submit" class="btn-primary">Save High Seas Detail</button>
+          <button type="button" id="cancel-high-seas-${d.id}">Cancel</button>
         </div>
       </div>
     </form>

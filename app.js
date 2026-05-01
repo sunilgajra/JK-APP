@@ -8,7 +8,7 @@ import { dashboardView } from "./dashboard.js";
 import { buyersView, buyerFormHtml } from "./buyers.js";
 import { suppliersView, supplierFormHtml } from "./suppliers.js";
 import { agentsView, agentFormHtml, agentPaymentFormHtml } from "./agents.js";
-import { dealsView, dealFormHtml } from "./deals.js";
+import { dealsView, dealFormHtml, highSeasFormHtml } from "./deals.js";
 import { dealDetailView } from "./dealDetail.js";
 import { settingsView } from "./settings.js";
 import { shippingInstructionsView } from "./shipping.js";
@@ -403,6 +403,7 @@ function bindUI() {
   document.querySelectorAll("[data-edit-supplier]").forEach(btn => btn.addEventListener("click", () => showEditSupplierForm(btn.dataset.editSupplier)));
   document.querySelectorAll("[data-delete-supplier]").forEach(btn => btn.addEventListener("click", () => deleteSupplier(btn.dataset.deleteSupplier)));
   document.querySelectorAll("[data-edit-deal]").forEach(btn => btn.addEventListener("click", () => showEditDealForm(btn.dataset.editDeal)));
+  document.querySelectorAll("[data-high-seas]").forEach(btn => btn.addEventListener("click", () => showHighSeasForm(btn.dataset.highSeas)));
   document.querySelectorAll("[data-delete-deal]").forEach(btn => btn.addEventListener("click", () => deleteDeal(btn.dataset.deleteDeal)));
   document.querySelectorAll("[data-edit-product]").forEach(btn => btn.addEventListener("click", () => showEditProductForm(btn.dataset.editProduct)));
   document.querySelectorAll("[data-delete-product]").forEach(btn => btn.addEventListener("click", () => deleteProduct(btn.dataset.deleteProduct)));
@@ -730,7 +731,9 @@ function validateDeal(fd) {
     commission_name: fd.get("commission_name") || null,
     commission_rate: cleanNumber(fd.get("commission_rate")),
     commission_currency: fd.get("commission_currency") || "USD",
-    commission_total: cleanNumber(fd.get("commission_total"))
+    commission_total: cleanNumber(fd.get("commission_total")),
+    is_high_seas: fd.get("is_high_seas") === "true",
+    high_seas_buyer_id: fd.get("high_seas_buyer_id") || null
   };
 }
 
@@ -1274,6 +1277,32 @@ function showEditDealForm(id) {
   document.getElementById(`cancel-deal-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
   bindDealAutoTotal(id);
   bindProductHsnLookup(id);
+}
+
+function showHighSeasForm(id) {
+  const d = state.deals.find(x => String(x.id) === String(id));
+  const wrap = document.getElementById(`high-seas-form-wrap-${id}`);
+  if (!d || !wrap) return;
+  wrap.innerHTML = highSeasFormHtml(d);
+  document.getElementById(`high-seas-form-${id}`).addEventListener("submit", (e) => saveHighSeasDetail(e, id));
+  document.getElementById(`cancel-high-seas-${id}`).addEventListener("click", () => wrap.innerHTML = "");
+}
+
+async function saveHighSeasDetail(e, id) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const hsBuyerId = fd.get("high_seas_buyer_id");
+  
+  const { error } = await supabase.from("deals").update({
+    is_high_seas: true,
+    high_seas_buyer_id: hsBuyerId
+  }).eq("id", id);
+  
+  if (error) alert(error.message);
+  else {
+    await loadSupabaseData();
+    render();
+  }
 }
 
 function bindDealAutoTotal(id = null) {
