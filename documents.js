@@ -162,7 +162,7 @@ function previewScript() {
         if (window.html2pdf) return Promise.resolve();
         return new Promise((resolve) => {
           const s = document.createElement('script');
-          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js';
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
           s.onload = resolve;
           s.onerror = () => {
             alert('Failed to load PDF library. Please check your internet connection.');
@@ -189,27 +189,30 @@ function previewScript() {
 
         await loadLibrary();
         if (typeof html2pdf === "undefined") {
+          alert("Could not load PDF library. Please try again.");
           if (actions) actions.style.display = "flex";
           return;
         }
 
+        // SAVE ORIGINAL STATE
+        const originalWidth = document.body.style.width;
+        const originalMargin = document.body.style.margin;
+        const originalOverflow = document.body.style.overflow;
+
         window.scrollTo(0,0);
         
+        // APPLY GENERATION STYLES DIRECTLY TO BODY (More reliable than cloning)
+        document.body.classList.add("is-generating-pdf");
+        document.body.style.width = "800px";
+        document.body.style.margin = "0";
+        document.body.style.overflow = "visible";
+        document.body.style.background = "white";
+
         const title = document.title || "document";
         const element = document.body;
 
-        // CREATE A HIDDEN CLONE FOR PERFECT SCALING
-        const clone = element.cloneNode(true);
-        clone.classList.add("is-generating-pdf");
-        clone.style.width = "800px";
-        clone.style.position = "absolute";
-        clone.style.left = "-9999px";
-        clone.style.top = "0";
-        clone.style.background = "white";
-        document.body.appendChild(clone);
-
-        await waitForImages(clone);
-        await new Promise((r) => setTimeout(r, 1000)); 
+        await waitForImages(element);
+        await new Promise((r) => setTimeout(r, 1200)); // Extra time for layout to settle
 
         const opt = {
           margin: 10,
@@ -232,19 +235,21 @@ function previewScript() {
           pagebreak: { mode: ['css', 'legacy'] }
         };
 
-        html2pdf()
-          .from(clone)
-          .set(opt)
-          .save()
-          .catch((err) => {
-            console.error(err);
-            alert("Failed to generate PDF");
-          })
-          .finally(() => {
-            if (clone.parentNode) document.body.removeChild(clone);
-            if (actions) actions.style.display = "flex";
-            window.scrollTo(0,0);
-          });
+        try {
+          await html2pdf().from(element).set(opt).save();
+        } catch (err) {
+          console.error(err);
+          alert("Failed to generate PDF. You can try printing manually (Ctrl+P).");
+        } finally {
+          // RESTORE ORIGINAL STATE
+          document.body.classList.remove("is-generating-pdf");
+          document.body.style.width = originalWidth;
+          document.body.style.margin = originalMargin;
+          document.body.style.overflow = originalOverflow;
+          document.body.style.background = "";
+          if (actions) actions.style.display = "flex";
+          window.scrollTo(0,0);
+        }
       }
     </script>
   `;
