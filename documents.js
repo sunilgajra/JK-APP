@@ -208,7 +208,7 @@ function commonStyle() {
     html, body {
       margin: 0;
       padding: 0;
-      background: #fff;
+      background: #e4e7eb; /* Soft desk-like background */
       color: #111;
       font-family: Arial, Helvetica, sans-serif;
       font-size: 11px;
@@ -221,8 +221,12 @@ function commonStyle() {
     .doc {
       width: 100%;
       max-width: 190mm;
-      margin: 0 auto;
-      padding: 10mm 5mm;
+      margin: 30px auto; /* Centered with top/bottom margin */
+      padding: 15mm;
+      background: white;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      border: 1px solid #cfd4da;
+      border-radius: 2px;
       overflow: visible !important;
     }
 
