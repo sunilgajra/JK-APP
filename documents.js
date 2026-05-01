@@ -182,17 +182,18 @@ function previewScript() {
         // Scroll to top to ensure html2canvas captures everything correctly
         window.scrollTo(0,0);
 
-        // FORCE A4 WIDTH FOR GENERATION (Fixes overlapping on mobile)
-        document.body.classList.add("is-generating-pdf");
-        document.body.style.width = "800px";
-        document.body.style.margin = "0";
-        document.body.style.padding = "0";
-        
-        const element = document.body;
-        const title = document.title || "document";
+        // CREATE A HIDDEN CLONE FOR PERFECT SCALING
+        const clone = element.cloneNode(true);
+        clone.classList.add("is-generating-pdf");
+        clone.style.width = "800px";
+        clone.style.position = "absolute";
+        clone.style.left = "-9999px";
+        clone.style.top = "0";
+        clone.style.background = "white";
+        document.body.appendChild(clone);
 
-        await waitForImages(element);
-        await new Promise((r) => setTimeout(r, 1000)); // Increased time for PC stability
+        await waitForImages(clone);
+        await new Promise((r) => setTimeout(r, 1000)); 
 
         const opt = {
           margin: 0,
@@ -202,6 +203,7 @@ function previewScript() {
             scale: 2,
             useCORS: true,
             windowWidth: 800,
+            width: 800,
             scrollY: 0,
             scrollX: 0,
             backgroundColor: "#ffffff",
@@ -216,7 +218,7 @@ function previewScript() {
         };
 
         html2pdf()
-          .from(element)
+          .from(clone)
           .set(opt)
           .save()
           .then(() => {
@@ -227,10 +229,7 @@ function previewScript() {
             alert("Failed to generate PDF");
           })
           .finally(() => {
-            document.body.classList.remove("is-generating-pdf");
-            document.body.style.width = "";
-            document.body.style.margin = "";
-            document.body.style.padding = "";
+            document.body.removeChild(clone);
             if (actions) actions.style.display = "flex";
             window.scrollTo(0,0);
           });
