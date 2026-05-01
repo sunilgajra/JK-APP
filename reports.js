@@ -120,7 +120,7 @@ function renderReport() {
 
   // Filters
   if (type === "buyer" && buyerIds.length > 0) {
-    deals = deals.filter(d => buyerIds.includes(String(d.buyer_id)));
+    deals = deals.filter(d => buyerIds.includes(String(d.is_high_seas ? d.high_seas_buyer_id : d.buyer_id)));
   }
   if (type === "supplier" && supplierIds.length > 0) {
     deals = deals.filter(d => supplierIds.includes(String(d.supplier_id)));
@@ -234,7 +234,7 @@ function renderReport() {
       date: d.invoice_date || d.created_at?.split("T")[0],
       product: d.product_name,
       hsn: d.hsn_code,
-      buyer: buyerName(d.buyer_id),
+      buyer: d.is_high_seas ? buyerName(d.high_seas_buyer_id) : buyerName(d.buyer_id),
       supplier: supplierName(d.supplier_id),
       qty: d.quantity,
       unit: d.unit,

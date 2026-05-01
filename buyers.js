@@ -55,7 +55,7 @@ export function buyersView() {
                     </tr>
                   </thead>
                   <tbody>
-                    ${state.deals.filter(d => String(d.buyer_id) === String(b.id)).map(d => `
+                    ${state.deals.filter(d => (d.is_high_seas ? String(d.high_seas_buyer_id) === String(b.id) : String(d.buyer_id) === String(b.id))).map(d => `
                       <tr>
                         <td style="text-align: center; padding: 8px;">
                           <input type="checkbox" name="master_deal_ids_${b.id}" value="${d.id}" checked>
@@ -69,7 +69,7 @@ export function buyersView() {
                     `).join("")}
                   </tbody>
                 </table>
-                ${state.deals.filter(d => String(d.buyer_id) === String(b.id)).length === 0 ? '<div style="padding:10px; text-align:center; opacity:0.5; font-size:12px;">No deals found.</div>' : ''}
+                ${state.deals.filter(d => (d.is_high_seas ? String(d.high_seas_buyer_id) === String(b.id) : String(d.buyer_id) === String(b.id))).length === 0 ? '<div style="padding:10px; text-align:center; opacity:0.5; font-size:12px;">No deals found.</div>' : ''}
               </div>
               <div class="mt-8 flex gap-8 flex-wrap">
                 <button data-print-buyer-master-selected="${b.id}" class="btn-primary btn-xs">Generate Settlement</button>

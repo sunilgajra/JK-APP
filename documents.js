@@ -1331,7 +1331,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
       BUYER SETTLEMENT REPORT - ${esc(deal.deal_no)}
     </div>
 
-    <div class="excel-header">SALE (${esc(buyer?.name || "DETAILS")})</div>
+    <div class="excel-header">SALE (${d.is_high_seas ? 'HIGH SEAS BUYER: ' + esc(buyer?.name || "DETAILS") : esc(buyer?.name || "DETAILS")})</div>
     <table class="statement-table thin">
       <tr>
         <th style="width:25%">MATERIAL</th>
@@ -1510,7 +1510,10 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
               <td class="center" style="font-weight:bold">${esc(r.deal_no)}</td>
               <td class="center">${new Date(r.invoice_date || r.created_at).toLocaleDateString()}</td>
               <td class="center">${esc(r.bl_no || "—")}</td>
-              <td>${esc((state.buyers.find(b => String(b.id) === String(r.buyer_id)) || {}).name || "—")}</td>
+              <td>
+                ${esc((state.buyers.find(b => String(b.id) === String(r.buyer_id)) || {}).name || "—")}
+                ${r.is_high_seas ? `<br><small style="color:var(--info)">HSS: ${esc((state.buyers.find(b => String(b.id) === String(r.high_seas_buyer_id)) || {}).name || "—")}</small>` : ""}
+              </td>
               <td>${esc(r.product_name)}</td>
               <td class="right">${Number(r.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
               <td class="right">${Number(r.purchase_rate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
