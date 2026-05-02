@@ -33,7 +33,6 @@ export function openPrintWindow(html) {
   if (isMobile) {
     const newDoc = document.open("text/html", "replace");
     newDoc.write(html);
-    newDoc.title = ""; // Crucial to hide title on mobile print
     newDoc.close();
     return true;
   }
@@ -43,7 +42,6 @@ export function openPrintWindow(html) {
 
   w.document.open();
   w.document.write(html);
-  w.document.title = ""; // Hide title on desktop too
   w.document.close();
   return true;
 }
@@ -90,7 +88,7 @@ export function buildShippingInstruction(si, buyer, supplier, deal, company = {}
   <!DOCTYPE html>
   <html>
   <head>
-    <title>Shipping Instruction</title>
+    <title>${esc(suggestFilename("SI", deal, buyer, company))}</title>
     ${commonStyle()}
     ${previewScript()}
   </head>
@@ -654,30 +652,45 @@ function shippingBlock(deal = {}) {
   `;
 }
 
-function suggestFilename(type, deal, buyer, company) {
+function suggestFilename(type, deal, buyer, company, extra = {}) {
   const docType = type.toUpperCase();
-  const blNo = (deal.bl_no || deal.blNo || "NOBL").replace(/[^A-Z0-9]/gi, "");
   const shipper = (company.name || "JK").split(/\s+/)[0].toUpperCase();
+  
+  // If we have a PO object instead of a deal
+  if (type === "PO") {
+    const po = deal; // first arg is po
+    const poNo = String(po.po_no || "NOPO").replace(/[^A-Z0-9]/gi, "-");
+    const supp = (extra.supplier?.name || "SUPP").split(/\s+/)[0].toUpperCase();
+    return `PO-${poNo}-${shipper}-${supp}`;
+  }
 
-  const product = (deal.product_name || deal.productName || "PRODUCT").toUpperCase();
-  let productShort = product.split(/\s+/).filter(w => w.length > 0).map(w => w[0]).join("");
+  const blNo = (deal?.bl_no || deal?.blNo || "NOBL").replace(/[^A-Z0-9]/gi, "");
+
+  const product = (deal?.product_name || deal?.productName || "PRODUCT").toUpperCase();
+  let productShort = product.split(/\s+/).filter(w =\u003e w.length \u003e 0).map(w =\u003e w[0]).join("");
   if (product.includes("LUBRICATING OIL")) productShort = "LO";
   else if (product.includes("BASE OIL")) productShort = "BO";
   else if (product.includes("BITUMEN")) productShort = "BT";
 
-  const consignee = (buyer?.name || "BUYER").split(/\s+/).filter(Boolean).slice(0, 2).join(" ").toUpperCase();
+  const consignee = (buyer?.name || "BUYER").split(/\s+/).filter(Boolean).slice(0, 2).join("-").toUpperCase();
 
   // Prioritize the number based on the document type
   let dNo = "";
-  if (docType === "CI") dNo = deal.ci_no;
-  else if (docType === "PI") dNo = deal.pi_no;
-  else if (docType === "PL") dNo = deal.pl_no;
-  else if (docType === "COO") dNo = deal.coo_no || deal.ci_no;
+  if (docType === "CI") dNo = deal?.ci_no;
+  else if (docType === "PI") dNo = deal?.pi_no;
+  else if (docType === "PL") dNo = deal?.pl_no;
+  else if (docType === "COO") dNo = deal?.coo_no || deal?.ci_no;
+  else if (docType === "COA") dNo = extra.coa?.cert_no || deal?.bl_no;
 
   // Fallback if the specific type number is missing
-  const docNo = String(dNo || deal.ci_no || deal.pi_no || deal.pl_no || deal.dealNo || deal.deal_no || "000").replace(/[^A-Z0-9]/gi, "");
+  const docNo = String(dNo || deal?.ci_no || deal?.pi_no || deal?.pl_no || deal?.dealNo || deal?.deal_no || "000").replace(/[^A-Z0-9\-\/]/gi, "").replace(/\//g, "-");
 
-  const count = deal.dealCount || 1;
+  const count = deal?.dealCount || 1;
+
+  if (type.includes("STATEMENT") || type.includes("SETTLEMENT")) {
+    const date = new Date().toISOString().split("T")[0].replace(/-/g, "");
+    return `${docType}-${consignee}-${date}`;
+  }
 
   return `${docType}-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}-${count}`;
 }
@@ -1167,7 +1180,7 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
   <!DOCTYPE html>
   <html>
   <head>
-    <title>Supplier Statement - ${esc(deal.deal_no)}</title>
+    <title>${esc(suggestFilename("SUPPLIER-SETTLEMENT", deal, buyer, supplier, company))}</title>
     ${commonStyle()}
     ${previewScript()}
     <style>
@@ -1302,7 +1315,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
   <!DOCTYPE html>
   <html>
   <head>
-    <title>Buyer Statement - ${esc(deal.deal_no)}</title>
+    <title>${esc(suggestFilename("BUYER-SETTLEMENT", deal, buyer, supplier, company))}</title>
     ${commonStyle()}
     ${previewScript()}
     <style>
@@ -1459,7 +1472,7 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
   <!DOCTYPE html>
   <html>
   <head>
-    <title>Master Settlement - ${esc(supplier.name)}</title>
+    <title>${esc(suggestFilename("SUPPLIER-MASTER-SETTLEMENT", { dealCount: deals.length }, supplier, company))}</title>
     ${commonStyle()}
     ${previewScript()}
     <style>
@@ -1631,7 +1644,7 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
   <!DOCTYPE html>
   <html>
   <head>
-    <title>Master Statement - ${esc(buyer.name)}</title>
+    <title>${esc(suggestFilename("BUYER-MASTER-SETTLEMENT", { dealCount: deals.length }, buyer, company))}</title>
     ${commonStyle()}
     ${previewScript()}
     <style>
@@ -1926,7 +1939,7 @@ export function buildCOA(coa, deal, company = {}) {
   <!DOCTYPE html>
   <html>
   <head>
-    <title>Certificate of Analysis - ${esc(blNo)}</title>
+    <title>${esc(suggestFilename("COA", deal, (state.buyers.find(b =\u003e String(b.id) === String(deal?.buyer_id)) || {}), company, { coa }))}</title>
     ${commonStyle()}
     ${previewScript()}
     <style>
@@ -2009,7 +2022,7 @@ export function buildPO(po, supplier, company = {}) {
   <!DOCTYPE html>
   <html>
   <head>
-    <title>Purchase Order - ${esc(po.po_no)}</title>
+    <title>${esc(suggestFilename("PO", po, {}, company, { supplier }))}</title>
     ${commonStyle()}
     ${previewScript()}
     <style>
