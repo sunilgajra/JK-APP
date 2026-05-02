@@ -14,16 +14,19 @@ export function dashboardView() {
   const profitBreakdown = [];
 
   state.deals.forEach(d => {
-    const conv = Number(d.conversion_rate || 3.67);
+    // Determine conversion rates with fallbacks
+    const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.67);
+    const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.67);
+    
     const s = paymentSummary(d.id, d.total_amount_usd, d.purchase_total_usd, "USD");
     
     // Convert USD balances to AED for the dashboard overview
-    const saleAed = s.sale * conv;
-    const purchaseAed = s.purchase * conv;
-    const receivableAed = s.receivable * conv;
-    const payableAed = s.payable * conv;
-    const receivedAed = s.received * conv;
-    const sentAed = s.sent * conv;
+    const saleAed = s.sale * sConv;
+    const purchaseAed = s.purchase * pConv;
+    const receivableAed = s.receivable * sConv;
+    const payableAed = s.payable * pConv;
+    const receivedAed = s.received * sConv;
+    const sentAed = s.sent * pConv;
 
     totalSaleAed += saleAed;
     totalPurchaseAed += purchaseAed;
@@ -39,7 +42,7 @@ export function dashboardView() {
         total_usd: s.sale,
         received_usd: s.received,
         balance_usd: s.receivable,
-        conv,
+        conv: sConv,
         balance_aed: receivableAed
       });
     }
@@ -51,7 +54,7 @@ export function dashboardView() {
         total_usd: s.purchase,
         sent_usd: s.sent,
         balance_usd: s.payable,
-        conv,
+        conv: pConv,
         balance_aed: payableAed
       });
     }
