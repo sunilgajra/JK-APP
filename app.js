@@ -2041,7 +2041,7 @@ async function runAiScan(dealId, docId) {
       `Containers (${containerCount}): ${containerCount > 0 ? cleanContainers.slice(0, 3).join(", ") + (containerCount > 3 ? "..." : "") : "None found"}`
     ].join("\n");
 
-    if (confirm(`AI found the following details:\n\n${summary}\n\nApply these changes to the deal?`)) {
+    if (confirm(`AI found the following details:\n\n${summary}\n\nApply these changes?`)) {
       const updateData = {};
       if (data.bl_no) updateData.bl_no = String(data.bl_no).replace(/[^A-Z0-9\-\/]/gi, "").toUpperCase();
       if (data.vessel) updateData.vessel = String(data.vessel).trim().toUpperCase();
@@ -2053,9 +2053,16 @@ async function runAiScan(dealId, docId) {
       if (data.loading_port) updateData.loading_port = String(data.loading_port).trim().toUpperCase();
       if (data.discharge_port) updateData.discharge_port = String(data.discharge_port).trim().toUpperCase();
       if (data.product_name) updateData.product_name = String(data.product_name).trim().toUpperCase();
-      if (data.quantity) updateData.quantity = data.quantity;
+      
+      // Weight logic: If quantity is missing but net_weight is present, calculate it
+      let qty = data.quantity ? Number(data.quantity) : null;
+      let net = data.net_weight ? Number(data.net_weight) : null;
+      if (!qty && net) qty = Number((net / 1000).toFixed(3));
+      
+      if (qty) updateData.quantity = qty;
       if (data.gross_weight) updateData.gross_weight = Number(data.gross_weight);
-      if (data.net_weight) updateData.net_weight = Number(data.net_weight);
+      if (net) updateData.net_weight = net;
+      
       if (data.container_numbers) {
         updateData.container_numbers = data.container_numbers.map(c => 
           String(c).replace(/[^A-Z0-9]/gi, "").toUpperCase()
@@ -2069,12 +2076,32 @@ async function runAiScan(dealId, docId) {
       if (data.loaded_on) updateData.loaded_on = String(data.loaded_on).trim().toUpperCase();
       if (data.eta) updateData.eta = data.eta;
 
-      const { error } = await supabase.from("deals").update(updateData).eq("id", dealId);
-      if (error) throw error;
-      
-      alert("Deal updated successfully!");
-      await loadSupabaseData();
-      render();
+      // Check if the Edit Form is open for this deal
+      const editForm = document.getElementById(`deal-edit-form-${dealId}`);
+      if (editForm) {
+        console.log("Found open edit form, populating fields...");
+        Object.entries(updateData).forEach(([key, val]) => {
+          const input = editForm.querySelector(`[name="${key}"]`);
+          if (input) {
+            if (key === "container_numbers" && Array.isArray(val)) {
+              input.value = val.join("\n");
+            } else {
+              input.value = val;
+            }
+            // CRITICAL: Dispatch input event to trigger auto-calculations
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+        });
+        alert("Form populated with AI data! Please review and click 'Update Deal' to save.");
+      } else {
+        // Form not open, update Supabase directly
+        const { error } = await supabase.from("deals").update(updateData).eq("id", dealId);
+        if (error) throw error;
+        alert("Deal updated successfully!");
+        await loadSupabaseData();
+        render();
+      }
     }
   } catch (err) {
     console.error("AI Scan Error:", err);
