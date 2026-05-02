@@ -15,6 +15,7 @@ export function shippingInstructionsView() {
       </div>
 
       <form id="shipping-instruction-form" class="item mt-12">
+        <input type="hidden" name="id" id="si-id" value="">
         <div class="grid gap-10">
 
           <div class="grid grid-4 gap-10">
@@ -80,21 +81,22 @@ export function shippingInstructionsView() {
 
           <div>
             <label class="form-label">Free Days Text</label>
-            <input name="free_days_text" value="21 FREE DAYS AT POD">
+            <input name="free_days_text" id="si-free-days" value="21 FREE DAYS AT POD">
           </div>
 
           <div>
             <label class="form-label">Detention Text</label>
-            <input name="detention_text" value="THEREAFTER USD 25/ DAY/TANK">
+            <input name="detention_text" id="si-detention" value="THEREAFTER USD 25/ DAY/TANK">
           </div>
 
           <div>
             <label class="form-label">Other Instructions</label>
-            <textarea name="other_instructions" class="min-h-90" placeholder="Other instructions"></textarea>
+            <textarea name="other_instructions" id="si-other" class="min-h-90" placeholder="Other instructions"></textarea>
           </div>
 
           <div class="flex gap-10 flex-wrap">
-            <button type="submit" class="btn-primary">Save</button>
+            <button type="submit" class="btn-primary" id="si-save-btn">Save</button>
+            <button type="button" id="si-cancel-btn" style="display:none">Cancel Edit</button>
             <button type="button" id="download-shipping-instruction">Download</button>
             <button type="button" id="whatsapp-shipping-instruction">Send to WhatsApp</button>
           </div>
@@ -111,7 +113,8 @@ export function shippingInstructionsView() {
                 <div class="item-sub">Free Days: ${esc(si.free_days_text || "—")}</div>
                 <div class="item-sub">Detention: ${esc(si.detention_text || "—")}</div>
                 <div class="mt-8 flex gap-8">
-                  <button data-delete-si="${si.id}">Delete</button>
+                  <button data-edit-si="${si.id}" class="btn-info">Edit / Open</button>
+                  <button data-delete-si="${si.id}" class="btn-danger">Delete</button>
                 </div>
               </div>
             `).join("")

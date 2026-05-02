@@ -1490,17 +1490,50 @@ function bindShippingInstructionForm() {
     const hsn = e.target.selectedOptions[0]?.dataset.hsn || "";
     document.getElementById("si-hsn").value = hsn;
   });
+
+  // Edit and Delete handlers
+  document.querySelectorAll("[data-edit-si]").forEach(btn => {
+    btn.addEventListener("click", () => editShippingInstruction(btn.dataset.editSi));
+  });
+
+  document.getElementById("si-cancel-btn")?.addEventListener("click", () => {
+    form.reset();
+    document.getElementById("si-id").value = "";
+    document.getElementById("si-save-btn").textContent = "Save";
+    document.getElementById("si-cancel-btn").style.display = "none";
+  });
+}
+
+function editShippingInstruction(id) {
+  const si = state.shippingInstructions.find(x => String(x.id) === String(id));
+  if (!si) return;
+
+  document.getElementById("si-id").value = si.id;
+  document.getElementById("si-shipper").value = si.shipper_index ?? "";
+  document.getElementById("si-buyer").value = si.buyer_id ?? "";
+  document.getElementById("si-deal").value = si.deal_id ?? "";
+  document.getElementById("si-supplier").value = si.supplier_id ?? "";
+  document.getElementById("si-product").value = si.product || "";
+  document.getElementById("si-hsn").value = si.hsn_code || "";
+  document.getElementById("si-free-days").value = si.free_days_text || "";
+  document.getElementById("si-detention").value = si.detention_text || "";
+  document.getElementById("si-other").value = si.other_instructions || "";
+
+  document.getElementById("si-save-btn").textContent = "Update";
+  document.getElementById("si-cancel-btn").style.display = "inline-block";
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 async function saveShippingInstruction(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
+  const id = fd.get("id");
   const getVal = (k) => {
     const v = fd.get(k);
     return v && v.trim() !== "" ? parseInt(v, 10) : null;
   };
 
-  const { error } = await supabase.from("shipping_instructions").insert({
+  const payload = {
     shipper_index: getVal("shipper_index"),
     buyer_id: getVal("buyer_id"),
     deal_id: getVal("deal_id"),
@@ -1510,11 +1543,22 @@ async function saveShippingInstruction(e) {
     free_days_text: fd.get("free_days_text"),
     detention_text: fd.get("detention_text"),
     other_instructions: fd.get("other_instructions")
-  });
-  if (error) alert(error.message);
-  else {
-    alert("Saved!");
-    await loadSupabaseData();
+  };
+
+  if (id) {
+    const { error } = await supabase.from("shipping_instructions").update(payload).eq("id", id);
+    if (error) alert(error.message);
+    else {
+      alert("Updated!");
+      await loadSupabaseData();
+    }
+  } else {
+    const { error } = await supabase.from("shipping_instructions").insert(payload);
+    if (error) alert(error.message);
+    else {
+      alert("Saved!");
+      await loadSupabaseData();
+    }
   }
 }
 
