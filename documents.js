@@ -667,7 +667,7 @@ function suggestFilename(type, deal, buyer, company, extra = {}) {
   const blNo = (deal?.bl_no || deal?.blNo || "NOBL").replace(/[^A-Z0-9]/gi, "");
 
   const product = (deal?.product_name || deal?.productName || "PRODUCT").toUpperCase();
-  let productShort = product.split(/\s+/).filter(w =\u003e w.length \u003e 0).map(w =\u003e w[0]).join("");
+  let productShort = product.split(/\s+/).filter(w => w.length > 0).map(w => w[0]).join("");
   if (product.includes("LUBRICATING OIL")) productShort = "LO";
   else if (product.includes("BASE OIL")) productShort = "BO";
   else if (product.includes("BITUMEN")) productShort = "BT";
@@ -1939,7 +1939,7 @@ export function buildCOA(coa, deal, company = {}) {
   <!DOCTYPE html>
   <html>
   <head>
-    <title>${esc(suggestFilename("COA", deal, (state.buyers.find(b =\u003e String(b.id) === String(deal?.buyer_id)) || {}), company, { coa }))}</title>
+    <title>${esc(suggestFilename("COA", deal, (state.buyers.find(b => String(b.id) === String(deal?.buyer_id)) || {}), company, { coa }))}</title>
     ${commonStyle()}
     ${previewScript()}
     <style>
