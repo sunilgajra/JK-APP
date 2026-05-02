@@ -1981,9 +1981,9 @@ async function runAiScan(dealId, docId) {
     - loading_port: Port of loading.
     - discharge_port: Port of discharge.
     - product_name: Description of goods/product.
-    - quantity: Total quantity/weight of the main product (number only).
+    - quantity: Total quantity/weight of the main product as shown on the document (number only).
+    - unit: The unit of the quantity as shown on the document (e.g., MTON, KGS, LBS).
     - hsn_code: HSN or HS Code if mentioned.
-    - unit: Unit of measurement (e.g. MTON, KGS).
     - gross_weight: Total Gross Weight (number only).
     - net_weight: Total Net Weight (number only).
     - package_details: Details about packages (e.g. 20FT X 10 CONTAINERS).
@@ -2054,10 +2054,32 @@ async function runAiScan(dealId, docId) {
       if (data.discharge_port) updateData.discharge_port = String(data.discharge_port).trim().toUpperCase();
       if (data.product_name) updateData.product_name = String(data.product_name).trim().toUpperCase();
       
-      // Weight logic: If quantity is missing but net_weight is present, calculate it
+      // Weight and Unit logic:
       let qty = data.quantity ? Number(data.quantity) : null;
       let net = data.net_weight ? Number(data.net_weight) : null;
-      if (!qty && net) qty = Number((net / 1000).toFixed(3));
+      let scanUnit = String(data.unit || "").trim().toUpperCase();
+      
+      const currentDeal = state.deals.find(x => String(x.id) === String(dealId));
+      const dealUnit = (currentDeal?.unit || "MTON").toUpperCase();
+      
+      // Smart conversion if document unit differs from deal unit
+      if (qty && scanUnit && dealUnit === "MTON") {
+        if (scanUnit === "KGS" || scanUnit === "KG") {
+          qty = Number((qty / 1000).toFixed(3));
+        } else if (scanUnit === "LBS" || scanUnit === "LB") {
+          qty = Number((qty * 0.000453592).toFixed(3));
+        }
+      }
+      
+      // Fallback heuristic if scanUnit is missing
+      if (qty && !scanUnit && dealUnit === "MTON" && qty > 200) {
+        qty = Number((qty / 1000).toFixed(3));
+      }
+      
+      // If quantity is missing but net_weight is present, calculate it
+      if (!qty && net) {
+        qty = (dealUnit === "MTON" && net > 200) ? Number((net / 1000).toFixed(3)) : net;
+      }
       
       if (qty) updateData.quantity = qty;
       if (data.gross_weight) updateData.gross_weight = Number(data.gross_weight);
