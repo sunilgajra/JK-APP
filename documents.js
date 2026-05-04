@@ -1955,15 +1955,15 @@ export function buildCOA(coa, deal, company = {}) {
     ${previewActions()}
     <div class="doc">
       <!-- EXACT IMAGE HEADER START -->
-      <div style="display:flex; align-items:center; gap:20px; border-bottom:1px solid #000; padding-bottom:10px;">
-        <div style="width:25%">
-          <img src="${LOGO_URL}" style="width:100%; max-width:180px;">
+      <div style="display:flex; align-items:center; gap:15px; border-bottom:1px solid #000; padding-bottom:10px;">
+        <div style="width:15%">
+          <img src="${LOGO_URL}" style="width:100%; max-width:140px;">
         </div>
-        <div style="width:75%; text-align:center;">
-          <div style="font-size:32px; font-weight:bold; color:#00529b; margin-bottom:5px;">جيه كيه بتروكيم انترناشيونال م م ح</div>
-          <div style="font-size:28px; font-weight:800; color:#00529b; margin-bottom:5px;">JK Petrochem International FZE</div>
-          <div style="font-size:12px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
-          <div style="font-size:12px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
+        <div style="width:85%; text-align:center;">
+          <div style="font-size:28px; font-weight:bold; color:#00529b; margin-bottom:2px; white-space:nowrap;">جيه كيه بتروكيم انترناشيونال م م ح</div>
+          <div style="font-size:24px; font-weight:800; color:#00529b; margin-bottom:5px; white-space:nowrap;">JK Petrochem International FZE</div>
+          <div style="font-size:11px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
+          <div style="font-size:11px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
         </div>
       </div>
 
@@ -2039,15 +2039,15 @@ export function buildPO(po, supplier, company = {}) {
     ${previewActions()}
     <div class="doc">
       <!-- EXACT IMAGE HEADER START -->
-      <div style="display:flex; align-items:center; gap:20px; border-bottom:1px solid #000; padding-bottom:10px;">
-        <div style="width:25%">
-          <img src="${LOGO_URL}" style="width:100%; max-width:180px;">
+      <div style="display:flex; align-items:center; gap:15px; border-bottom:1px solid #000; padding-bottom:10px;">
+        <div style="width:15%">
+          <img src="${LOGO_URL}" style="width:100%; max-width:140px;">
         </div>
-        <div style="width:75%; text-align:center;">
-          <div style="font-size:32px; font-weight:bold; color:#00529b; margin-bottom:5px;">جيه كيه بتروكيم انترناشيونال م م ح</div>
-          <div style="font-size:28px; font-weight:800; color:#00529b; margin-bottom:5px;">JK Petrochem International FZE</div>
-          <div style="font-size:12px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
-          <div style="font-size:12px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
+        <div style="width:85%; text-align:center;">
+          <div style="font-size:28px; font-weight:bold; color:#00529b; margin-bottom:2px; white-space:nowrap;">جيه كيه بتروكيم انترناشيونال م م ح</div>
+          <div style="font-size:24px; font-weight:800; color:#00529b; margin-bottom:5px; white-space:nowrap;">JK Petrochem International FZE</div>
+          <div style="font-size:11px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
+          <div style="font-size:11px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
         </div>
       </div>
 
