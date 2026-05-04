@@ -171,17 +171,25 @@ function previewScript() {
       async function downloadExactPdf() {
         const actions = document.querySelector(".previewActions");
         if (actions) actions.style.display = "none";
-
+        
+        document.body.classList.add("is-generating-pdf");
         window.scrollTo(0,0);
         
         const title = document.title || "document";
         const element = document.body;
+        
+        // Wait for images to load
+        await waitForImages(element);
 
         const opt = {
           margin: 10,
           filename: title + ".pdf",
           image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: true, 
+            windowWidth: 1200 // Use a wider window for stable rendering
+          },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
         };
 
@@ -190,10 +198,12 @@ function previewScript() {
           .set(opt)
           .save()
           .then(() => {
+            document.body.classList.remove("is-generating-pdf");
             if (actions) actions.style.display = "flex";
           })
           .catch((err) => {
             console.error(err);
+            document.body.classList.remove("is-generating-pdf");
             alert("Download failed. Please use 'Print / Save PDF' instead.");
             if (actions) actions.style.display = "flex";
           });
@@ -261,12 +271,14 @@ function commonStyle() {
       background: white !important;
     }
     .is-generating-pdf .doc {
-      width: 100% !important;
-      max-width: none !important;
+      width: 190mm !important;
+      max-width: 190mm !important;
       margin: 0 !important;
-      padding: 0 !important;
+      padding: 10mm !important;
       height: auto !important;
       overflow: visible !important;
+      border: none !important;
+      box-shadow: none !important;
     }
     .is-generating-pdf table {
       width: 100% !important;
