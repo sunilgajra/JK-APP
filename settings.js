@@ -106,45 +106,45 @@ export function settingsView() {
             <button type="button" id="check-ai-btn" class="mt-8" style="background:#4f46e5; color:white">Check AI Connection</button>
           </div>
 
-          <div class="mt-20">
-            <div class="form-header">My Documents (Licenses, Agreements, etc.)</div>
-            <div class="item" style="background:rgba(255,255,255,0.02); padding:15px; border-radius:8px">
-              <form data-company-doc-upload="1" class="grid gap-10">
-                <div class="grid grid-2 gap-10">
-                  <input type="text" name="docType" placeholder="Document Type (e.g. Trade Licence, Lease)" required>
-                  <input type="date" name="expiryDate" title="Expiry Date">
-                </div>
-                <input type="file" name="file" required>
-                <button type="submit" class="btn-primary btn-xs">Upload</button>
-              </form>
-              
-              <div class="list mt-15" style="max-height:400px; overflow:auto">
-                ${state.documentsByCompany.length 
-                  ? state.documentsByCompany.map(doc => `
-                    <div class="item" style="padding:10px; background:rgba(0,0,0,0.2)">
-                      <div class="flex flex-between flex-center">
-                        <div>
-                          <div class="font-bold" style="font-size:14px">${esc(doc.doc_type || "Document")} ${doc.expiry_date ? `<span class="text-danger" style="margin-left:5px">(Exp: ${doc.expiry_date})</span>` : ""}</div>
-                          <div class="text-xs opacity-60">${esc(doc.file_name)}</div>
-                        </div>
-                        <div class="flex gap-10">
-                          <button data-ai-expiry-scan="${doc.id}" class="btn-xs" title="Scan Expiry Date" style="color:var(--accent-primary)">AI</button>
-                          <a href="${doc.file_url}" target="_blank" class="btn-xs">View</a>
-                          <button data-share-whatsapp-doc="${doc.id}" class="btn-xs" style="color:#25D366">WhatsApp</button>
-                          <button data-delete-company-doc="${doc.id}" class="btn-xs text-danger">Delete</button>
-                        </div>
-                      </div>
-                    </div>
-                  `).join("")
-                  : `<div class="empty" style="padding:20px; font-size:12px">No company documents uploaded.</div>`
-                }
-              </div>
-            </div>
-          </div>
-
           <button type="submit" class="btn-primary mt-20">Save Settings</button>
         </div>
       </form>
+
+      <div class="mt-20">
+        <div class="form-header">My Documents (Licenses, Agreements, etc.)</div>
+        <div class="item" style="background:rgba(255,255,255,0.02); padding:15px; border-radius:8px">
+          <form data-company-doc-upload="1" class="grid gap-10">
+            <div class="grid grid-2 gap-10">
+              <input type="text" name="docType" placeholder="Document Type (e.g. Trade Licence, Lease)" required>
+              <input type="date" name="expiryDate" title="Expiry Date">
+            </div>
+            <input type="file" name="file" required>
+            <button type="submit" class="btn-primary btn-xs">Upload</button>
+          </form>
+          
+          <div class="list mt-15" style="max-height:400px; overflow:auto">
+            ${state.documentsByCompany.length 
+              ? state.documentsByCompany.map(doc => `
+                <div class="item" style="padding:10px; background:rgba(0,0,0,0.2)">
+                  <div class="flex flex-between flex-center">
+                    <div>
+                      <div class="font-bold" style="font-size:14px">${esc(doc.doc_type || "Document")} ${doc.expiry_date ? `<span class="text-danger" style="margin-left:5px">(Exp: ${doc.expiry_date})</span>` : ""}</div>
+                      <div class="text-xs opacity-60">${esc(doc.file_name)}</div>
+                    </div>
+                    <div class="flex gap-10">
+                      <button data-ai-expiry-scan="${doc.id}" class="btn-xs" title="Scan Expiry Date" style="color:var(--accent-primary)">AI</button>
+                      <a href="${doc.file_url}" target="_blank" class="btn-xs">View</a>
+                      <button data-share-whatsapp-doc="${doc.id}" class="btn-xs" style="color:#25D366">WhatsApp</button>
+                      <button data-delete-company-doc="${doc.id}" class="btn-xs text-danger">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              `).join("")
+              : `<div class="empty" style="padding:20px; font-size:12px">No company documents uploaded.</div>`
+            }
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }

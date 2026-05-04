@@ -205,7 +205,7 @@ async function loadCompanySettings() {
       address: data.address || state.company.address,
       mobile: data.mobile || state.company.mobile,
       email: data.email || state.company.email,
-      gemini_api_key: data.gemini_api_key || "",
+      gemini_api_key: data.gemini_api_key || localStorage.getItem("gemini_api_key") || "",
       gemini_model: data.gemini_model || localStorage.getItem("gemini_model") || "gemini-2.5-flash",
       bankAccounts: Array.isArray(data.bank_accounts) ? data.bank_accounts : [],
       shippers: Array.isArray(data.shippers) ? data.shippers : []
@@ -422,17 +422,10 @@ function bindUI() {
   document.querySelectorAll("[data-edit-product]").forEach(btn => btn.addEventListener("click", () => showEditProductForm(btn.dataset.editProduct)));
   document.querySelectorAll("[data-delete-product]").forEach(btn => btn.addEventListener("click", () => deleteProduct(btn.dataset.deleteProduct)));
   
-  // Supplier Documents
-  document.querySelectorAll("[data-show-supplier-docs]").forEach(btn => btn.addEventListener("click", () => {
-    const id = btn.dataset.showSupplierDocs;
-    const wrap = document.getElementById(`supplier-docs-wrap-${id}`);
-    if (wrap) wrap.style.display = wrap.style.display === "none" ? "block" : "none";
-  }));
-  document.querySelectorAll("[data-delete-supplier-doc]").forEach(btn => btn.addEventListener("click", () => deleteSupplierDocument(btn.dataset.deleteSupplierDoc)));
   // Document Toggle Buttons
   document.querySelectorAll("[data-show-supplier-docs]").forEach(btn => {
     btn.addEventListener("click", (e) => {
-      const id = e.target.getAttribute("data-show-supplier-docs");
+      const id = e.currentTarget.getAttribute("data-show-supplier-docs");
       const wrap = document.getElementById(`supplier-docs-wrap-${id}`);
       if (wrap) wrap.style.display = wrap.style.display === "none" ? "block" : "none";
     });
@@ -440,31 +433,31 @@ function bindUI() {
 
   document.querySelectorAll("[data-show-buyer-docs]").forEach(btn => {
     btn.addEventListener("click", (e) => {
-      const id = e.target.getAttribute("data-show-buyer-docs");
+      const id = e.currentTarget.getAttribute("data-show-buyer-docs");
       const wrap = document.getElementById(`buyer-docs-wrap-${id}`);
       if (wrap) wrap.style.display = wrap.style.display === "none" ? "block" : "none";
     });
   });
 
   document.querySelectorAll("[data-delete-supplier-doc]").forEach(btn => {
-    btn.addEventListener("click", (e) => deleteSupplierDocument(e.target.getAttribute("data-delete-supplier-doc")));
+    btn.addEventListener("click", (e) => deleteSupplierDocument(e.currentTarget.getAttribute("data-delete-supplier-doc")));
   });
 
   document.querySelectorAll("[data-delete-buyer-doc]").forEach(btn => {
-    btn.addEventListener("click", (e) => deleteBuyerDocument(e.target.getAttribute("data-delete-buyer-doc")));
+    btn.addEventListener("click", (e) => deleteBuyerDocument(e.currentTarget.getAttribute("data-delete-buyer-doc")));
   });
 
   document.querySelectorAll("[data-delete-company-doc]").forEach(btn => {
-    btn.addEventListener("click", (e) => deleteCompanyDocument(e.target.getAttribute("data-delete-company-doc")));
+    btn.addEventListener("click", (e) => deleteCompanyDocument(e.currentTarget.getAttribute("data-delete-company-doc")));
   });
 
   document.querySelectorAll("[data-share-whatsapp-doc]").forEach(btn => {
-    btn.addEventListener("click", (e) => shareDocViaWhatsapp(e.target.getAttribute("data-share-whatsapp-doc")));
+    btn.addEventListener("click", (e) => shareDocViaWhatsapp(e.currentTarget.getAttribute("data-share-whatsapp-doc")));
   });
 
   document.querySelectorAll("[data-ai-expiry-scan]").forEach(btn => {
     btn.addEventListener("click", (e) => {
-      const docId = e.target.getAttribute("data-ai-expiry-scan");
+      const docId = e.currentTarget.getAttribute("data-ai-expiry-scan");
       runExpiryScan(docId);
     });
   });
@@ -1498,16 +1491,22 @@ async function saveCompanySettings(e) {
     gemini_model: fd.get("gemini_model")
   };
 
+  // 1. Always save AI keys to local storage as fallback
+  if (payload.gemini_api_key) localStorage.setItem("gemini_api_key", payload.gemini_api_key);
+  if (payload.gemini_model) localStorage.setItem("gemini_model", payload.gemini_model);
+
+  // 2. Try to save to Supabase
   let { error } = await supabase.from("company_settings").update(payload).eq("id", 1);
   
-  if (error && error.message.includes("gemini_model")) {
-    console.warn("gemini_model column missing, saving to localStorage instead.");
-    localStorage.setItem("gemini_model", payload.gemini_model);
-    delete payload.gemini_model;
-    const retry = await supabase.from("company_settings").update(payload).eq("id", 1);
+  // 3. Robust fallback if columns are missing
+  if (error && (error.message.includes("gemini_model") || error.message.includes("gemini_api_key"))) {
+    console.warn("AI setting columns missing in DB, retrying with basic settings only.");
+    const minimalPayload = { ...payload };
+    delete minimalPayload.gemini_model;
+    delete minimalPayload.gemini_api_key;
+    
+    const retry = await supabase.from("company_settings").update(minimalPayload).eq("id", 1);
     error = retry.error;
-  } else if (!error) {
-    localStorage.setItem("gemini_model", payload.gemini_model);
   }
 
   if (error) alert(error.message);
