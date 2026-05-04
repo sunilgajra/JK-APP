@@ -100,7 +100,10 @@ export function suppliersView() {
               <div id="supplier-docs-wrap-${s.id}" class="mt-10" style="display:none; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px">
                 <div class="item-title mb-8">Supplier Documents</div>
                 <form data-supplier-doc-upload="${s.id}" class="grid gap-10">
-                  <input type="text" name="docType" placeholder="Document Type (e.g. Master PI, Agreement)" required>
+                  <div class="grid grid-2 gap-10">
+                    <input type="text" name="docType" placeholder="Document Type (e.g. Trade Licence, MOA)" required>
+                    <input type="date" name="expiryDate" title="Expiry Date">
+                  </div>
                   <input type="file" name="file" required>
                   <button type="submit" class="btn-primary btn-xs">Upload</button>
                 </form>
@@ -110,11 +113,13 @@ export function suppliersView() {
                     <div class="item" style="padding:6px; background:rgba(0,0,0,0.2)">
                       <div class="flex flex-between flex-center">
                         <div>
-                          <div class="text-xs font-bold">${esc(doc.doc_type || "Document")}</div>
+                          <div class="text-xs font-bold">${esc(doc.doc_type || "Document")} ${doc.expiry_date ? `<span class="text-danger" style="margin-left:5px">(Exp: ${doc.expiry_date})</span>` : ""}</div>
                           <div class="text-xs opacity-60">${esc(doc.file_name)}</div>
                         </div>
                         <div class="flex gap-8">
+                          <button data-ai-expiry-scan="${doc.id}" class="text-xs" title="Scan Expiry Date" style="color:var(--accent-primary)">AI</button>
                           <a href="${doc.file_url}" target="_blank" class="text-xs">View</a>
+                          <button data-share-whatsapp-doc="${doc.id}" class="text-xs" style="color:#25D366">WhatsApp</button>
                           <button data-delete-supplier-doc="${s.id}:${doc.id}" class="text-xs text-danger">Delete</button>
                         </div>
                       </div>

@@ -141,6 +141,9 @@ async function loadSupabaseData() {
 
     const groupedDocs = {};
     const groupedSupplierDocs = {};
+    const groupedBuyerDocs = {};
+    const companyDocs = [];
+
     (documentsRes.data || []).forEach(doc => {
       if (doc.deal_id) {
         const k = String(doc.deal_id);
@@ -152,9 +155,20 @@ async function loadSupabaseData() {
         if (!groupedSupplierDocs[k]) groupedSupplierDocs[k] = [];
         groupedSupplierDocs[k].push(doc);
       }
+      if (doc.buyer_id) {
+        const k = String(doc.buyer_id);
+        if (!groupedBuyerDocs[k]) groupedBuyerDocs[k] = [];
+        groupedBuyerDocs[k].push(doc);
+      }
+      if (!doc.deal_id && !doc.supplier_id && !doc.buyer_id) {
+        companyDocs.push(doc);
+      }
     });
+
     state.documentsByDeal = groupedDocs;
     state.documentsBySupplier = groupedSupplierDocs;
+    state.documentsByBuyer = groupedBuyerDocs;
+    state.documentsByCompany = companyDocs;
 
     const groupedAudit = {};
     (auditRes.data || []).forEach(log => {
@@ -415,7 +429,49 @@ function bindUI() {
     if (wrap) wrap.style.display = wrap.style.display === "none" ? "block" : "none";
   }));
   document.querySelectorAll("[data-delete-supplier-doc]").forEach(btn => btn.addEventListener("click", () => deleteSupplierDocument(btn.dataset.deleteSupplierDoc)));
+  // Document Toggle Buttons
+  document.querySelectorAll("[data-show-supplier-docs]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const id = e.target.getAttribute("data-show-supplier-docs");
+      const wrap = document.getElementById(`supplier-docs-wrap-${id}`);
+      if (wrap) wrap.style.display = wrap.style.display === "none" ? "block" : "none";
+    });
+  });
+
+  document.querySelectorAll("[data-show-buyer-docs]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const id = e.target.getAttribute("data-show-buyer-docs");
+      const wrap = document.getElementById(`buyer-docs-wrap-${id}`);
+      if (wrap) wrap.style.display = wrap.style.display === "none" ? "block" : "none";
+    });
+  });
+
+  document.querySelectorAll("[data-delete-supplier-doc]").forEach(btn => {
+    btn.addEventListener("click", (e) => deleteSupplierDocument(e.target.getAttribute("data-delete-supplier-doc")));
+  });
+
+  document.querySelectorAll("[data-delete-buyer-doc]").forEach(btn => {
+    btn.addEventListener("click", (e) => deleteBuyerDocument(e.target.getAttribute("data-delete-buyer-doc")));
+  });
+
+  document.querySelectorAll("[data-delete-company-doc]").forEach(btn => {
+    btn.addEventListener("click", (e) => deleteCompanyDocument(e.target.getAttribute("data-delete-company-doc")));
+  });
+
+  document.querySelectorAll("[data-share-whatsapp-doc]").forEach(btn => {
+    btn.addEventListener("click", (e) => shareDocViaWhatsapp(e.target.getAttribute("data-share-whatsapp-doc")));
+  });
+
+  document.querySelectorAll("[data-ai-expiry-scan]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const docId = e.target.getAttribute("data-ai-expiry-scan");
+      runExpiryScan(docId);
+    });
+  });
+
   document.querySelectorAll("[data-supplier-doc-upload]").forEach(form => form.addEventListener("submit", saveSupplierDocument));
+  document.querySelectorAll("[data-buyer-doc-upload]").forEach(form => form.addEventListener("submit", saveBuyerDocument));
+  document.querySelectorAll("[data-company-doc-upload]").forEach(form => form.addEventListener("submit", saveCompanyDocument));
   
   // Print
   document.querySelectorAll("[data-print-pi]").forEach(btn => btn.addEventListener("click", () => printDoc("pi", btn.dataset.printPi)));
@@ -1655,6 +1711,7 @@ async function saveSupplierDocument(e) {
   const fd = new FormData(e.target);
   const file = fd.get("file");
   const docType = fd.get("docType");
+  const expiryDate = fd.get("expiryDate");
   
   if (!file || file.size === 0) return alert("Please select a file.");
   
@@ -1663,6 +1720,7 @@ async function saveSupplierDocument(e) {
   const filePath = `suppliers/${supplierId}/${fileName}`;
   
   const btn = e.target.querySelector("button");
+  const originalText = btn.textContent;
   btn.textContent = "Uploading...";
   btn.disabled = true;
 
@@ -1678,7 +1736,8 @@ async function saveSupplierDocument(e) {
       file_name: file.name,
       file_url: publicUrlData.publicUrl,
       file_path: filePath,
-      mime_type: file.type || "application/octet-stream"
+      mime_type: file.type || "application/octet-stream",
+      expiry_date: expiryDate || null
     });
     
     if (error) throw error;
@@ -1686,9 +1745,134 @@ async function saveSupplierDocument(e) {
     render();
   } catch (err) {
     alert("Upload failed: " + err.message);
-    btn.textContent = "Upload";
+    btn.textContent = originalText;
     btn.disabled = false;
   }
+}
+
+async function saveBuyerDocument(e) {
+  e.preventDefault();
+  const buyerId = e.target.getAttribute("data-buyer-doc-upload");
+  const fd = new FormData(e.target);
+  const file = fd.get("file");
+  const docType = fd.get("docType");
+  const expiryDate = fd.get("expiryDate");
+  
+  if (!file || file.size === 0) return alert("Please select a file.");
+  
+  const fileExt = file.name.split('.').pop();
+  const fileName = `buyer_${buyerId}_${Date.now()}.${fileExt}`;
+  const filePath = `buyers/${buyerId}/${fileName}`;
+  
+  const btn = e.target.querySelector("button");
+  const originalText = btn.textContent;
+  btn.textContent = "Uploading...";
+  btn.disabled = true;
+
+  try {
+    const { error: uploadError } = await supabase.storage.from("deal-documents").upload(filePath, file);
+    if (uploadError) throw uploadError;
+    
+    const { data: publicUrlData } = supabase.storage.from("deal-documents").getPublicUrl(filePath);
+    
+    const { error } = await supabase.from("deal_documents").insert({
+      buyer_id: buyerId,
+      doc_type: docType,
+      file_name: file.name,
+      file_url: publicUrlData.publicUrl,
+      file_path: filePath,
+      mime_type: file.type || "application/octet-stream",
+      expiry_date: expiryDate || null
+    });
+    
+    if (error) throw error;
+    await loadSupabaseData();
+    render();
+  } catch (err) {
+    alert("Upload failed: " + err.message);
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+
+async function saveCompanyDocument(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const file = fd.get("file");
+  const docType = fd.get("docType");
+  const expiryDate = fd.get("expiryDate");
+  
+  if (!file || file.size === 0) return alert("Please select a file.");
+  
+  const fileExt = file.name.split('.').pop();
+  const fileName = `company_${Date.now()}.${fileExt}`;
+  const filePath = `company/${fileName}`;
+  
+  const btn = e.target.querySelector("button");
+  const originalText = btn.textContent;
+  btn.textContent = "Uploading...";
+  btn.disabled = true;
+
+  try {
+    const { error: uploadError } = await supabase.storage.from("deal-documents").upload(filePath, file);
+    if (uploadError) throw uploadError;
+    
+    const { data: publicUrlData } = supabase.storage.from("deal-documents").getPublicUrl(filePath);
+    
+    const { error } = await supabase.from("deal_documents").insert({
+      doc_type: docType,
+      file_name: file.name,
+      file_url: publicUrlData.publicUrl,
+      file_path: filePath,
+      mime_type: file.type || "application/octet-stream",
+      expiry_date: expiryDate || null
+    });
+    
+    if (error) throw error;
+    await loadSupabaseData();
+    render();
+  } catch (err) {
+    alert("Upload failed: " + err.message);
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+
+async function deleteBuyerDocument(val) {
+  const [buyerId, docId] = val.split(":");
+  if (confirm("Delete this buyer document?")) {
+    const { error } = await supabase.from("deal_documents").update({ is_deleted: true }).eq("id", docId);
+    if (error) alert(error.message);
+    else {
+      await loadSupabaseData();
+      render();
+    }
+  }
+}
+
+async function deleteCompanyDocument(docId) {
+  if (confirm("Delete this company document?")) {
+    const { error } = await supabase.from("deal_documents").update({ is_deleted: true }).eq("id", docId);
+    if (error) alert(error.message);
+    else {
+      await loadSupabaseData();
+      render();
+    }
+  }
+}
+
+function shareDocViaWhatsapp(docId) {
+  const doc = Object.values(state.documentsByDeal).flat()
+    .concat(Object.values(state.documentsBySupplier).flat())
+    .concat(Object.values(state.documentsByBuyer).flat())
+    .concat(state.documentsByCompany)
+    .find(d => String(d.id) === String(docId));
+    
+  if (!doc) return alert("Document not found.");
+  
+  const text = `*Shared Document*\n\n*Type:* ${doc.doc_type || "Document"}\n*File:* ${doc.file_name}\n${doc.expiry_date ? `*Expiry:* ${doc.expiry_date}\n` : ""}*Link:* ${doc.file_url}\n\nGenerated via JK Trade Manager`;
+  
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
 }
 
 async function deleteSupplierDocument(val) {
@@ -1991,6 +2175,82 @@ function printMasterStatement(entityType, id, selectedDealIds = []) {
   }
 
   if (html) openPrintWindow(html);
+}
+
+async function runExpiryScan(docId) {
+  const key = state.company.gemini_api_key;
+  if (!key) return alert("Please add your Gemini API Key in Settings first.");
+
+  // Flatten all documents to find the one we need
+  const doc = Object.values(state.documentsByDeal).flat()
+    .concat(Object.values(state.documentsBySupplier).flat())
+    .concat(Object.values(state.documentsByBuyer).flat())
+    .concat(state.documentsByCompany)
+    .find(d => String(d.id) === String(docId));
+    
+  if (!doc || !doc.file_url) return alert("Document file not found.");
+
+  const btn = document.querySelector(`[data-ai-expiry-scan="${docId}"]`);
+  const originalText = btn?.textContent || "AI";
+  if (btn) {
+    btn.textContent = "⌛";
+    btn.disabled = true;
+  }
+
+  try {
+    const response = await fetch(doc.file_url);
+    const blob = await response.blob();
+    const reader = new FileReader();
+    const base64 = await new Promise((resolve) => {
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.readAsDataURL(blob);
+    });
+
+    const model = state.company.gemini_model || "gemini-2.5-flash";
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    const prompt = `Analyze this document and extract the EXPIRY DATE or RENEWAL DATE. 
+    Look for keywords like 'Expiry', 'Valid Until', 'Expires', 'Date of Expiry'.
+    Return ONLY a JSON object with the field 'expiry_date' in YYYY-MM-DD format. If not found, return {"expiry_date": null}.`;
+    
+    const aiRes = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inline_data: { mime_type: doc.mime_type || "image/jpeg", data: base64 } }
+          ]
+        }]
+      })
+    });
+
+    const result = await aiRes.json();
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error("AI could not read the document.");
+    
+    const jsonStr = text.replace(/```json|```/g, "").trim();
+    const data = JSON.parse(jsonStr);
+
+    if (data.expiry_date) {
+      if (confirm(`AI found Expiry Date: ${data.expiry_date}. Update document?`)) {
+        const { error } = await supabase.from("deal_documents").update({ expiry_date: data.expiry_date }).eq("id", docId);
+        if (error) throw error;
+        alert("Expiry date updated!");
+        await loadSupabaseData();
+        render();
+      }
+    } else {
+      alert("AI could not find an expiry date on this document.");
+    }
+  } catch (err) {
+    alert("Scan failed: " + err.message);
+  } finally {
+    if (btn) {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  }
 }
 
 async function runAiScan(dealId, docId) {
