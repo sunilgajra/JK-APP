@@ -1729,7 +1729,7 @@ async function saveSupplierDocument(e) {
     
     const { data: publicUrlData } = supabase.storage.from("deal-documents").getPublicUrl(filePath);
     
-    const { error } = await supabase.from("deal_documents").insert({
+    const docPayload = {
       supplier_id: supplierId,
       doc_type: docType,
       file_name: file.name,
@@ -1737,8 +1737,17 @@ async function saveSupplierDocument(e) {
       file_path: filePath,
       mime_type: file.type || "application/octet-stream",
       expiry_date: expiryDate || null
-    });
+    };
     
+    let { error } = await supabase.from("deal_documents").insert(docPayload);
+    
+    if (error && error.message.includes("expiry_date")) {
+      console.warn("expiry_date column missing, retrying without it.");
+      delete docPayload.expiry_date;
+      const retry = await supabase.from("deal_documents").insert(docPayload);
+      error = retry.error;
+    }
+
     if (error) throw error;
     await loadSupabaseData();
     render();
@@ -1774,7 +1783,7 @@ async function saveBuyerDocument(e) {
     
     const { data: publicUrlData } = supabase.storage.from("deal-documents").getPublicUrl(filePath);
     
-    const { error } = await supabase.from("deal_documents").insert({
+    const docPayload = {
       buyer_id: buyerId,
       doc_type: docType,
       file_name: file.name,
@@ -1782,8 +1791,17 @@ async function saveBuyerDocument(e) {
       file_path: filePath,
       mime_type: file.type || "application/octet-stream",
       expiry_date: expiryDate || null
-    });
+    };
     
+    let { error } = await supabase.from("deal_documents").insert(docPayload);
+    
+    if (error && error.message.includes("expiry_date")) {
+      console.warn("expiry_date column missing, retrying without it.");
+      delete docPayload.expiry_date;
+      const retry = await supabase.from("deal_documents").insert(docPayload);
+      error = retry.error;
+    }
+
     if (error) throw error;
     await loadSupabaseData();
     render();
@@ -1818,15 +1836,24 @@ async function saveCompanyDocument(e) {
     
     const { data: publicUrlData } = supabase.storage.from("deal-documents").getPublicUrl(filePath);
     
-    const { error } = await supabase.from("deal_documents").insert({
+    const docPayload = {
       doc_type: docType,
       file_name: file.name,
       file_url: publicUrlData.publicUrl,
       file_path: filePath,
       mime_type: file.type || "application/octet-stream",
       expiry_date: expiryDate || null
-    });
+    };
     
+    let { error } = await supabase.from("deal_documents").insert(docPayload);
+    
+    if (error && error.message.includes("expiry_date")) {
+      console.warn("expiry_date column missing, retrying without it.");
+      delete docPayload.expiry_date;
+      const retry = await supabase.from("deal_documents").insert(docPayload);
+      error = retry.error;
+    }
+
     if (error) throw error;
     await loadSupabaseData();
     render();
@@ -2234,10 +2261,17 @@ async function runExpiryScan(docId) {
     if (data.expiry_date) {
       if (confirm(`AI found Expiry Date: ${data.expiry_date}. Update document?`)) {
         const { error } = await supabase.from("deal_documents").update({ expiry_date: data.expiry_date }).eq("id", docId);
-        if (error) throw error;
-        alert("Expiry date updated!");
-        await loadSupabaseData();
-        render();
+        if (error) {
+          if (error.message.includes("expiry_date")) {
+            alert(`AI found the date (${data.expiry_date}), but it could not be saved because the 'expiry_date' column is missing from your database. Please update your database schema.`);
+          } else {
+            throw error;
+          }
+        } else {
+          alert("Expiry date updated!");
+          await loadSupabaseData();
+          render();
+        }
       }
     } else {
       alert("AI could not find an expiry date on this document.");
