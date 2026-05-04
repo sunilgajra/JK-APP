@@ -508,13 +508,11 @@ function commonStyle() {
 }
 
 function previewActions() {
-  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-
   return `
     <div class="previewActions">
       <button onclick="downloadExactPdf()">Download PDF</button>
-      ${isMobile ? "" : `<button onclick="window.print()">Print / Save PDF</button>`}
-      <button onclick="if(window.opener) { window.close(); } else { window.location.href = window.location.origin + window.location.pathname + window.location.hash; window.location.reload(); }">Back</button>
+      <button onclick="window.print()" style="background:#4f46e5">Print / Save PDF</button>
+      <button onclick="if(window.opener) { window.close(); } else { window.location.href = window.location.origin + window.location.pathname + window.location.hash; window.location.reload(); }" style="background:#6b7280">Back</button>
     </div>
   `;
 }
