@@ -75,7 +75,14 @@ export function suppliersView() {
                         </td>
                         <td class="font-bold" style="padding: 8px; color: var(--text);">${esc(d.deal_no)}</td>
                         <td style="padding: 8px;">${esc(d.bl_no || "—")}</td>
-                        <td style="padding: 8px;">${esc((state.buyers.find(b => String(b.id) === String(d.buyer_id)) || {}).name || "—")}</td>
+                        <td style="padding: 8px;">
+                          <div>${esc((state.buyers.find(b => String(b.id) === String(d.buyer_id)) || {}).name || "—")}</div>
+                          ${d.is_high_seas && d.high_seas_buyer_id ? `
+                            <div style="font-size: 10px; opacity: 0.7; margin-top: 2px;">
+                              HS: ${esc((state.buyers.find(b => String(b.id) === String(d.high_seas_buyer_id)) || {}).name || "—")}
+                            </div>
+                          ` : ''}
+                        </td>
                         <td style="padding: 8px;">${esc(d.product_name)}</td>
                         <td class="opacity-60" style="padding: 8px;">${new Date(d.invoice_date || d.created_at).toLocaleDateString()}</td>
                       </tr>
