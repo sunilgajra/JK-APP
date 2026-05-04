@@ -172,6 +172,7 @@ function previewScript() {
         const actions = document.querySelector(".previewActions");
         if (actions) actions.style.display = "none";
         
+        // Reset state for capture
         document.body.classList.add("is-generating-pdf");
         window.scrollTo(0,0);
         
@@ -182,13 +183,17 @@ function previewScript() {
         await waitForImages(element);
 
         const opt = {
-          margin: 10,
+          margin: 0, // Margin is handled by .doc padding
           filename: title + ".pdf",
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: { 
             scale: 2, 
             useCORS: true, 
-            windowWidth: 1200 // Use a wider window for stable rendering
+            windowWidth: 1200,
+            scrollX: 0,
+            scrollY: 0,
+            x: 0,
+            y: 0
           },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
         };
@@ -250,7 +255,7 @@ function commonStyle() {
 
     .doc {
       width: 190mm;
-      max-width: 100%;
+      min-width: 190mm;
       margin: 30px auto;
       padding: 10mm;
       background: white;
@@ -259,6 +264,7 @@ function commonStyle() {
       border-radius: 4px;
       overflow: visible !important;
       box-sizing: border-box;
+      position: relative;
     }
 
     table {
@@ -269,11 +275,14 @@ function commonStyle() {
     /* PDF Generation Fix */
     .is-generating-pdf {
       background: white !important;
+      width: 1200px !important; /* Force a stable width for capture */
+      overflow: visible !important;
     }
     .is-generating-pdf .doc {
       width: 190mm !important;
+      min-width: 190mm !important;
       max-width: 190mm !important;
-      margin: 0 !important;
+      margin: 0 auto !important;
       padding: 10mm !important;
       height: auto !important;
       overflow: visible !important;
@@ -282,7 +291,7 @@ function commonStyle() {
     }
     .is-generating-pdf table {
       width: 100% !important;
-      min-width: auto !important;
+      min-width: 100% !important;
     }
     .is-generating-pdf .previewActions {
       display: none !important;
