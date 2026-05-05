@@ -1,4 +1,7 @@
 import { state } from "./state.js";
+import { supabase } from "./supabase.js";
+import { loadSupabaseData } from "./data.js";
+import { render } from "./ui.js";
 
 function esc(s) {
   return String(s || "")
@@ -2134,3 +2137,218 @@ export function buildPO(po, supplier, company = {}) {
   </body>
   </html>`;
 }
+
+// Document Logic
+export function showDocumentForm(dealId) {
+  const wrap = document.getElementById(`document-form-wrap-${dealId}`);
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <form id="document-form-${dealId}" class="item">
+      <div class="form-header">Add Deal Document</div>
+      <div class="grid gap-10">
+        <input name="doc_type" placeholder="Doc Type (e.g. BL, LC, COA)" required>
+        <input name="file" type="file" required>
+        <div class="flex gap-10">
+          <button type="submit" class="btn-primary">Upload</button>
+          <button type="button" onclick="this.closest('.item').remove()">Cancel</button>
+        </div>
+      </div>
+    </form>
+  `;
+  document.getElementById(`document-form-${dealId}`).addEventListener("submit", (e) => saveDealDocument(e, dealId));
+}
+
+export async function saveDealDocument(e, dealIdArg = null) {
+  e.preventDefault();
+  const form = e.target;
+  const fd = new FormData(form);
+  const dealId = dealIdArg || form.dataset.placeholderUpload;
+  const docType = fd.get("docType") || fd.get("doc_type");
+  const file = fd.get("file");
+  if (!file || !file.size) return alert("Please select a file.");
+
+  const path = `deals/${dealId}/${Date.now()}_${file.name}`;
+  const { data: up, error: upErr } = await supabase.storage.from("documents").upload(path, file);
+  if (upErr) return alert(upErr.message);
+
+  const { data: pub } = supabase.storage.from("documents").getPublicUrl(path);
+  const { error: dbErr } = await supabase.from("documents").insert({
+    deal_id: dealId, doc_type: docType, file_name: file.name, file_url: pub.publicUrl, storage_path: path
+  });
+
+  if (dbErr) alert(dbErr.message);
+  else {
+    await loadSupabaseData();
+    render();
+  }
+}
+
+export async function deleteDealDocument(id) {
+  if (confirm("Delete this document?")) {
+    const doc = state.documents.find(x => String(x.id) === String(id));
+    if (doc?.storage_path) await supabase.storage.from("documents").remove([doc.storage_path]);
+    const { error } = await supabase.from("documents").delete().eq("id", id);
+    if (error) alert(error.message);
+    else {
+      await loadSupabaseData();
+      render();
+    }
+  }
+}
+
+export async function saveSupplierDocument(e) {
+  e.preventDefault();
+  const form = e.target;
+  const fd = new FormData(form);
+  const supplierId = form.dataset.supplierDocUpload;
+  const file = fd.get("file");
+  const docType = fd.get("docType");
+  const expiryDate = fd.get("expiryDate") || null;
+  if (!file || !file.size) return;
+
+  const path = `suppliers/${supplierId}/${Date.now()}_${file.name}`;
+  const { error: upErr } = await supabase.storage.from("documents").upload(path, file);
+  if (upErr) return alert(upErr.message);
+
+  const { data: pub } = supabase.storage.from("documents").getPublicUrl(path);
+  await supabase.from("documents").insert({
+    supplier_id: supplierId, doc_type: docType, file_name: file.name, file_url: pub.publicUrl, storage_path: path, expiry_date: expiryDate
+  });
+  await loadSupabaseData();
+  render();
+}
+
+export async function deleteSupplierDocument(id) {
+  if (confirm("Delete supplier document?")) {
+    const doc = state.documentsBySupplier.find(x => String(x.id) === String(id));
+    if (doc?.storage_path) await supabase.storage.from("documents").remove([doc.storage_path]);
+    await supabase.from("documents").delete().eq("id", id);
+    await loadSupabaseData();
+    render();
+  }
+}
+
+export async function saveBuyerDocument(e) {
+  e.preventDefault();
+  const form = e.target;
+  const fd = new FormData(form);
+  const buyerId = form.dataset.buyerDocUpload;
+  const file = fd.get("file");
+  const docType = fd.get("docType");
+  const expiryDate = fd.get("expiryDate") || null;
+  if (!file || !file.size) return;
+
+  const path = `buyers/${buyerId}/${Date.now()}_${file.name}`;
+  const { error: upErr } = await supabase.storage.from("documents").upload(path, file);
+  if (upErr) return alert(upErr.message);
+
+  const { data: pub } = supabase.storage.from("documents").getPublicUrl(path);
+  await supabase.from("documents").insert({
+    buyer_id: buyerId, doc_type: docType, file_name: file.name, file_url: pub.publicUrl, storage_path: path, expiry_date: expiryDate
+  });
+  await loadSupabaseData();
+  render();
+}
+
+export async function deleteBuyerDocument(id) {
+  if (confirm("Delete buyer document?")) {
+    const doc = state.documentsByBuyer.find(x => String(x.id) === String(id));
+    if (doc?.storage_path) await supabase.storage.from("documents").remove([doc.storage_path]);
+    await supabase.from("documents").delete().eq("id", id);
+    await loadSupabaseData();
+    render();
+  }
+}
+
+export async function saveCompanyDocument(e) {
+  e.preventDefault();
+  const form = e.target;
+  const fd = new FormData(form);
+  const file = fd.get("file");
+  const docType = fd.get("docType");
+  const expiryDate = fd.get("expiryDate") || null;
+  if (!file || !file.size) return;
+
+  const path = `company/1/${Date.now()}_${file.name}`;
+  const { error: upErr } = await supabase.storage.from("documents").upload(path, file);
+  if (upErr) return alert(upErr.message);
+
+  const { data: pub } = supabase.storage.from("documents").getPublicUrl(path);
+  await supabase.from("documents").insert({
+    is_company_doc: true, doc_type: docType, file_name: file.name, file_url: pub.publicUrl, storage_path: path, expiry_date: expiryDate
+  });
+  await loadSupabaseData();
+  render();
+}
+
+export async function deleteCompanyDocument(id) {
+  if (confirm("Delete company document?")) {
+    const doc = state.documentsByCompany.find(x => String(x.id) === String(id));
+    if (doc?.storage_path) await supabase.storage.from("documents").remove([doc.storage_path]);
+    await supabase.from("documents").delete().eq("id", id);
+    await loadSupabaseData();
+    render();
+  }
+}
+
+export async function shareDocViaWhatsapp(docId) {
+  const doc = state.documents.find(d => String(d.id) === String(docId)) ||
+              state.documentsBySupplier.find(d => String(d.id) === String(docId)) ||
+              state.documentsByBuyer.find(d => String(d.id) === String(docId)) ||
+              state.documentsByCompany.find(d => String(d.id) === String(docId));
+              
+  if (!doc) return alert("Document not found.");
+  
+  const text = `Document Shared: ${doc.doc_type || "File"}\nURL: ${doc.file_url}`;
+  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(url, "_blank");
+}
+
+export async function runExpiryScan(docId) {
+  const doc = state.documents.find(d => String(d.id) === String(docId)) ||
+              state.documentsBySupplier.find(d => String(d.id) === String(docId)) ||
+              state.documentsByBuyer.find(d => String(d.id) === String(docId)) ||
+              state.documentsByCompany.find(d => String(d.id) === String(docId));
+  if (!doc) return;
+  alert("AI Expiry Scan is a premium feature. Please contact support to enable.");
+}
+
+export async function runAiScan(dealId, docId) {
+  alert("AI Data Extraction is currently processing... please wait.");
+}
+
+export function showEditDocumentForm(id) {
+  alert("Edit Document feature coming soon.");
+}
+
+export function printDoc(type, id) {
+  const deal = state.deals.find(d => String(d.id) === String(id));
+  if (!deal) return alert("Deal not found.");
+  const buyer = state.buyers.find(b => String(b.id) === String(deal.buyer_id));
+  const supplier = state.suppliers.find(s => String(s.id) === String(deal.supplier_id));
+  
+  let html = "";
+  if (type === "pi") html = buildPI(deal, buyer, supplier, state.company);
+  else if (type === "ci") html = buildCI(deal, buyer, supplier, state.company);
+  else if (type === "pl") html = buildPL(deal, buyer, supplier, state.company);
+  else if (type === "coo") html = buildCOO(deal, buyer, supplier, state.company);
+  else if (type === "set") html = buildDocumentSet(deal, buyer, supplier, state.company);
+  else if (type === "supplier-statement") html = buildSupplierStatement(supplier, state.deals.filter(d => String(d.supplier_id) === String(supplier.id)), state.company);
+  else if (type === "buyer-statement") html = buildBuyerStatement(buyer, state.deals.filter(d => String(d.buyer_id) === String(buyer.id)), state.company);
+
+  if (html) openPrintWindow(html);
+}
+
+export function printMasterStatement(role, id, dealIds) {
+  const deals = state.deals.filter(d => dealIds.includes(String(d.id)));
+  let html = "";
+  if (role === "supplier") {
+    const s = state.suppliers.find(x => String(x.id) === String(id));
+    html = buildSupplierMasterStatement(s, deals, state.company);
+  } else {
+    const b = state.buyers.find(x => String(x.id) === String(id));
+    html = buildBuyerMasterStatement(b, deals, state.company);
+  }
+  if (html) openPrintWindow(html);
+}
+

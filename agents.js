@@ -1,8 +1,11 @@
 import { state } from "./state.js";
 import { esc } from "./utils.js";
+import { supabase } from "./supabase.js";
+import { loadSupabaseData } from "./data.js";
+import { buildAgentStatement, openPrintWindow } from "./documents.js";
 
 export function agentsView() {
-  const q = state.agentSearch.trim().toLowerCase();
+  const q = (state.agentSearch || "").trim().toLowerCase();
   const filteredAgents = state.agents.filter((a) => {
     if (!q) return true;
     const text = [a.name, a.phone, a.country, a.bank_details].join(" ").toLowerCase();
@@ -199,4 +202,115 @@ export function agentFormHtml(a = {}, edit = false, id = "") {
       </div>
     </form>
   `;
+}
+
+// Agent Logic
+export function showAgentForm() {
+  const wrap = document.getElementById("agent-form-wrap");
+  if (!wrap) return;
+  wrap.innerHTML = agentFormHtml();
+  document.getElementById("agent-form").addEventListener("submit", saveAgent);
+  document.getElementById("cancel-agent-form").addEventListener("click", () => wrap.innerHTML = "");
+}
+
+export function showEditAgentForm(id) {
+  const a = state.agents.find(x => String(x.id) === String(id));
+  const wrap = document.getElementById(`agent-edit-wrap-${id}`);
+  if (!a || !wrap) return;
+  wrap.innerHTML = agentFormHtml(a, true, id);
+  document.getElementById(`agent-edit-form-${id}`).addEventListener("submit", (e) => updateAgent(e, id));
+  document.getElementById(`cancel-agent-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
+}
+
+export async function saveAgent(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("commission_agents").insert({
+    name: fd.get("name"), country: fd.get("country"), phone: fd.get("phone"), bank_details: fd.get("bank_details")
+  });
+  if (error) return alert(error.message);
+  await loadSupabaseData();
+}
+
+export async function updateAgent(e, id) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("commission_agents").update({
+    name: fd.get("name"), country: fd.get("country"), phone: fd.get("phone"), bank_details: fd.get("bank_details")
+  }).eq("id", id);
+  if (error) return alert(error.message);
+  await loadSupabaseData();
+}
+
+export async function deleteAgent(id) {
+  if (confirm("Delete agent?")) {
+    const { error } = await supabase.from("commission_agents").delete().eq("id", id);
+    if (error) alert(error.message);
+    else await loadSupabaseData();
+  }
+}
+
+export function showAgentPaymentForm(agentId) {
+  const wrap = document.getElementById(`agent-payment-form-inner-${agentId}`);
+  if (!wrap) return;
+  wrap.innerHTML = agentPaymentFormHtml(agentId);
+  wrap.querySelector("form").addEventListener("submit", saveAgentPayment);
+  document.getElementById("cancel-agent-payment-form").addEventListener("click", () => wrap.innerHTML = "");
+}
+
+export async function saveAgentPayment(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("agent_payments").insert({
+    agent_id: fd.get("agent_id"),
+    amount: Number(fd.get("amount")),
+    currency: fd.get("currency"),
+    payment_date: fd.get("payment_date"),
+    type: fd.get("type"),
+    mode: fd.get("mode"),
+    ref: fd.get("ref")
+  });
+  if (error) alert(error.message);
+  else await loadSupabaseData();
+}
+
+export function showEditAgentPaymentForm(agentId, paymentId) {
+  const wrap = document.getElementById(`agent-payment-form-inner-${agentId}`);
+  if (!wrap) return;
+  const p = (state.agentPaymentsByAgent[agentId] || []).find(x => String(x.id) === String(paymentId));
+  if (!p) return;
+  wrap.innerHTML = agentPaymentFormHtml(agentId, p, true, paymentId);
+  document.getElementById(`agent-payment-edit-form-${paymentId}`).addEventListener("submit", (e) => updateAgentPayment(e, paymentId));
+  document.getElementById(`cancel-agent-payment-edit-${paymentId}`).addEventListener("click", () => wrap.innerHTML = "");
+}
+
+export async function updateAgentPayment(e, id) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("agent_payments").update({
+    amount: Number(fd.get("amount")),
+    currency: fd.get("currency"),
+    payment_date: fd.get("payment_date"),
+    type: fd.get("type"),
+    mode: fd.get("mode"),
+    ref: fd.get("ref")
+  }).eq("id", id);
+  if (error) alert(error.message);
+  else await loadSupabaseData();
+}
+
+export async function deleteAgentPayment(id) {
+  if (confirm("Delete agent payment?")) {
+    const { error } = await supabase.from("agent_payments").delete().eq("id", id);
+    if (error) alert(error.message);
+    else await loadSupabaseData();
+  }
+}
+
+export function printAgentStatement(agentId, selectedDealIds) {
+  const agent = state.agents.find(a => String(a.id) === String(agentId));
+  const deals = state.deals.filter(d => selectedDealIds.includes(String(d.id)));
+  const payments = (state.agentPaymentsByAgent[agentId] || []);
+  const html = buildAgentStatement(agent, deals, payments, state.company);
+  openPrintWindow(html);
 }

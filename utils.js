@@ -119,3 +119,25 @@ export function cleanContainerNumbers(val) {
                          
   return [...new Set(cleaned)];
 }
+export async function checkAiConnection() {
+  const key = state.company.gemini_api_key;
+  if (!key) return alert("Please enter an API Key first.");
+
+  const btn = document.getElementById("check-ai-btn");
+  if (!btn) return;
+  btn.textContent = "Checking...";
+  
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    const data = await res.json();
+    
+    if (!res.ok) throw new Error(data.error?.message || "Connection failed");
+    
+    const modelNames = data.models?.map(m => m.name.replace("models/", "")) || [];
+    alert(`Success! Your key can access these models:\n\n${modelNames.join("\n")}\n\nPlease tell Antigravity which ones you see!`);
+  } catch (err) {
+    alert("Connection failed: " + err.message);
+  } finally {
+    btn.textContent = "Check AI Connection";
+  }
+}

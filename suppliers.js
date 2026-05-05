@@ -1,5 +1,7 @@
 import { state } from "./state.js";
 import { esc } from "./utils.js";
+import { supabase } from "./supabase.js";
+import { loadSupabaseData } from "./data.js";
 
 export function suppliersView() {
   const q = state.supplierSearch.trim().toLowerCase();
@@ -198,4 +200,54 @@ export function supplierFormHtml(s = {}, edit = false, id = "") {
       </div>
     </form>
   `;
+}
+
+// Supplier Logic
+export function showSupplierForm() {
+  const wrap = document.getElementById("supplier-form-wrap");
+  if (!wrap) return;
+  wrap.innerHTML = supplierFormHtml();
+  document.getElementById("supplier-form").addEventListener("submit", saveSupplier);
+  document.getElementById("cancel-supplier-form").addEventListener("click", () => wrap.innerHTML = "");
+}
+
+export function showEditSupplierForm(id) {
+  const s = state.suppliers.find(x => String(x.id) === String(id));
+  const wrap = document.getElementById(`supplier-edit-wrap-${id}`);
+  if (!s || !wrap) return;
+  wrap.innerHTML = supplierFormHtml(s, true, id);
+  document.getElementById(`supplier-edit-form-${id}`).addEventListener("submit", (e) => updateSupplier(e, id));
+  document.getElementById(`cancel-supplier-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
+}
+
+export async function saveSupplier(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("suppliers").insert({
+    name: fd.get("name"), company_name: fd.get("company_name"), country: fd.get("country"),
+    email: fd.get("email"), address: fd.get("address"), bank_name: fd.get("bank_name"),
+    bank_account: fd.get("bank_account"), bank_iban: fd.get("bank_iban"), bank_swift: fd.get("bank_swift")
+  });
+  if (error) return alert(error.message);
+  await loadSupabaseData();
+}
+
+export async function updateSupplier(e, id) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("suppliers").update({
+    name: fd.get("name"), company_name: fd.get("company_name"), country: fd.get("country"),
+    email: fd.get("email"), address: fd.get("address"), bank_name: fd.get("bank_name"),
+    bank_account: fd.get("bank_account"), bank_iban: fd.get("bank_iban"), bank_swift: fd.get("bank_swift")
+  }).eq("id", id);
+  if (error) return alert(error.message);
+  await loadSupabaseData();
+}
+
+export async function deleteSupplier(id) {
+  if (confirm("Delete supplier?")) {
+    const { error } = await supabase.from("suppliers").delete().eq("id", id);
+    if (error) alert(error.message);
+    else await loadSupabaseData();
+  }
 }

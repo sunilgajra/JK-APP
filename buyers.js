@@ -1,5 +1,7 @@
 import { state } from "./state.js";
-import { esc, nextCustomerId } from "./utils.js";
+import { esc, nextCustomerId, normalizeCustomerId } from "./utils.js";
+import { supabase } from "./supabase.js";
+import { loadSupabaseData } from "./data.js";
 
 export function buyersView() {
   console.log("VIEWING BUYERS - STATE COUNT:", state.buyers.length);
@@ -192,4 +194,58 @@ export function buyerFormHtml(b = {}, edit = false, id = "") {
       </div>
     </form>
   `;
+}
+
+// Buyer Logic
+export function showBuyerForm() {
+  const wrap = document.getElementById("buyer-form-wrap");
+  if (!wrap) return;
+  wrap.innerHTML = buyerFormHtml();
+  document.getElementById("buyer-form").addEventListener("submit", saveBuyer);
+  document.getElementById("cancel-buyer-form").addEventListener("click", () => wrap.innerHTML = "");
+}
+
+export function showEditBuyerForm(id) {
+  const b = state.buyers.find(x => String(x.id) === String(id));
+  const wrap = document.getElementById(`buyer-edit-wrap-${id}`);
+  if (!b || !wrap) return;
+  wrap.innerHTML = buyerFormHtml(b, true, id);
+  document.getElementById(`buyer-edit-form-${id}`).addEventListener("submit", (e) => updateBuyer(e, id));
+  document.getElementById(`cancel-buyer-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
+}
+
+export async function saveBuyer(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { data, error } = await supabase.from("buyers").insert({
+    name: fd.get("name"), email: fd.get("email"), address: fd.get("address"), gst: fd.get("gst"), iec: fd.get("iec"), pan: fd.get("pan"),
+    customer_id: normalizeCustomerId(fd.get("customer_id")), phone: fd.get("phone")
+  }).select();
+  
+  if (error) {
+    if (error.code === "23505") alert("Error: This Customer ID is already in use. Please use a different ID.");
+    else alert(error.message);
+    return;
+  }
+  await loadSupabaseData();
+}
+
+export async function updateBuyer(e, id) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const { error } = await supabase.from("buyers").update({
+    name: fd.get("name"), email: fd.get("email"), address: fd.get("address"), gst: fd.get("gst"), iec: fd.get("iec"), pan: fd.get("pan"),
+    customer_id: normalizeCustomerId(fd.get("customer_id")), phone: fd.get("phone")
+  }).eq("id", id).select();
+  
+  if (error) return alert(error.message);
+  await loadSupabaseData();
+}
+
+export async function deleteBuyer(id) {
+  if (confirm("Delete buyer?")) {
+    const { error } = await supabase.from("buyers").delete().eq("id", id);
+    if (error) alert(error.message);
+    else await loadSupabaseData();
+  }
 }

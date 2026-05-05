@@ -1,5 +1,8 @@
 import { state } from "./state.js";
 import { esc } from "./utils.js";
+import { supabase } from "./supabase.js";
+import { loadProducts } from "./data.js";
+import { render } from "./ui.js";
 
 export function productsView() {
   return `
@@ -64,4 +67,64 @@ export function productEditFormHtml(p = {}) {
       </div>
     </form>
   `;
+}
+
+// Product Logic
+export async function saveProduct(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const name = String(fd.get("name") || "").trim().toUpperCase();
+  const hsn = String(fd.get("hsn_code") || "").trim().toUpperCase();
+
+  const exists = state.products.some(p => 
+    String(p.name || "").trim().toUpperCase() === name && 
+    String(p.hsn_code || "").trim().toUpperCase() === hsn
+  );
+
+  if (exists) return alert("Error: A product with this name and HSN code already exists.");
+
+  const { error } = await supabase.from("products").insert({ name: fd.get("name"), hsn_code: fd.get("hsn_code") });
+  if (error) return alert(error.message);
+  await loadProducts();
+  render();
+}
+
+export function showEditProductForm(id) {
+  const p = state.products.find(x => String(x.id) === String(id));
+  const wrap = document.getElementById(`product-edit-wrap-${id}`);
+  if (!p || !wrap) return;
+  wrap.innerHTML = productEditFormHtml(p);
+  document.getElementById(`product-edit-form-${id}`).addEventListener("submit", (e) => updateProduct(e, id));
+  document.getElementById(`cancel-product-edit-${id}`).addEventListener("click", () => wrap.innerHTML = "");
+}
+
+export async function updateProduct(e, id) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const name = String(fd.get("name") || "").trim().toUpperCase();
+  const hsn = String(fd.get("hsn_code") || "").trim().toUpperCase();
+
+  const exists = state.products.some(p => 
+    String(p.id) !== String(id) &&
+    String(p.name || "").trim().toUpperCase() === name && 
+    String(p.hsn_code || "").trim().toUpperCase() === hsn
+  );
+
+  if (exists) return alert("Error: Another product with this same name and HSN code already exists.");
+
+  const { error } = await supabase.from("products").update({ name: fd.get("name"), hsn_code: fd.get("hsn_code") }).eq("id", id);
+  if (error) return alert(error.message);
+  await loadProducts();
+  render();
+}
+
+export async function deleteProduct(id) {
+  if (confirm("Delete product?")) {
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) alert(error.message);
+    else {
+      await loadProducts();
+      render();
+    }
+  }
 }

@@ -1,5 +1,8 @@
 import { state } from "./state.js";
 import { esc } from "./utils.js";
+import { supabase } from "./supabase.js";
+import { loadSupabaseData } from "./data.js";
+import { render } from "./ui.js";
 
 export function settingsView() {
   const c = state.company;
@@ -147,4 +150,69 @@ export function settingsView() {
       </div>
     </div>
   `;
+}
+
+// Settings Logic
+export async function saveCompanySettings(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  
+  const bankAccounts = [];
+  document.querySelectorAll("[data-bank-index]").forEach(input => {
+    const idx = input.dataset.bankIndex;
+    if (!bankAccounts[idx]) bankAccounts[idx] = {};
+    bankAccounts[idx][input.dataset.bankField] = input.value;
+  });
+
+  const shippers = [];
+  document.querySelectorAll("[data-shipper-index]").forEach(input => {
+    const idx = input.dataset.shipperIndex;
+    if (!shippers[idx]) shippers[idx] = {};
+    shippers[idx][input.dataset.shipperField] = input.value;
+  });
+
+  const payload = {
+    name: fd.get("name"),
+    address: fd.get("address"),
+    bank_accounts: bankAccounts.filter(Boolean),
+    shippers: shippers.filter(Boolean),
+    gemini_api_key: fd.get("gemini_api_key"),
+    gemini_model: fd.get("gemini_model")
+  };
+
+  if (payload.gemini_api_key) localStorage.setItem("gemini_api_key", payload.gemini_api_key);
+  if (payload.gemini_model) localStorage.setItem("gemini_model", payload.gemini_model);
+
+  let { error } = await supabase.from("company_settings").update(payload).eq("id", 1);
+  
+  if (error && (error.message.includes("gemini_model") || error.message.includes("gemini_api_key"))) {
+    const minimalPayload = { ...payload };
+    delete minimalPayload.gemini_model;
+    delete minimalPayload.gemini_api_key;
+    const retry = await supabase.from("company_settings").update(minimalPayload).eq("id", 1);
+    error = retry.error;
+  }
+
+  if (error) alert(error.message);
+  else {
+    alert("Settings saved!");
+    await loadSupabaseData();
+  }
+}
+
+export function addBankAccount() {
+  state.company.bankAccounts.push({ bankName: "", account: "", iban: "", swift: "" });
+  render();
+}
+export function deleteBankAccount(idx) {
+  state.company.bankAccounts.splice(idx, 1);
+  render();
+}
+export function addShipper() {
+  state.company.shippers.push({ name: "", mobile: "", address: "", email: "" });
+  render();
+}
+export function deleteShipper(idx) {
+  state.company.shippers.splice(idx, 1);
+  render();
 }
