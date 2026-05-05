@@ -181,9 +181,32 @@ function previewScript() {
       window.addEventListener("resize", adjustScale);
       window.addEventListener("DOMContentLoaded", () => {
         adjustScale();
-        // Optional: Auto-trigger print dialog after a short delay for mobile users
-        // setTimeout(() => window.print(), 1000);
       });
+
+      function triggerPrint() {
+        const doc = document.querySelector(".doc");
+        const actions = document.querySelector(".previewActions");
+        const oldTransform = doc ? doc.style.transform : "";
+        const oldMargin = doc ? doc.style.marginTop : "";
+        
+        // TEMPORARILY REMOVE SCALING FOR PRINT ENGINE
+        if (doc) {
+          doc.style.transform = "none";
+          doc.style.marginTop = "0";
+        }
+        if (actions) actions.style.display = "none";
+        
+        window.print();
+        
+        // RESTORE SCALING AFTER DELAY
+        setTimeout(() => {
+          if (doc) {
+            doc.style.transform = oldTransform;
+            doc.style.marginTop = oldMargin;
+          }
+          if (actions) actions.style.display = "flex";
+        }, 1000);
+      }
 
       async function downloadExactPdf() {
         const actions = document.querySelector(".previewActions");
@@ -246,11 +269,13 @@ function commonStyle() {
         margin: 0 !important; 
         padding: 0 !important; 
         background: white !important;
-        width: 210mm;
+        width: 210mm !important;
+        height: 297mm !important;
       }
       .doc { 
         padding: 10mm !important; 
-        width: 100% !important; 
+        width: 210mm !important; 
+        height: 297mm !important;
         max-width: none !important;
         margin: 0 !important; 
         border: none !important; 
@@ -258,6 +283,7 @@ function commonStyle() {
         border-radius: 0 !important;
         transform: none !important;
         background: white !important;
+        page-break-after: avoid;
       }
       .previewActions { display: none !important; }
     }
@@ -557,7 +583,7 @@ function commonStyle() {
 function previewActions() {
   return `
     <div class="previewActions">
-      <button onclick="window.print()">Print / PDF</button>
+      <button onclick="triggerPrint()">Print / PDF</button>
       <button onclick="downloadExactPdf()" style="background:#555">Download</button>
       <button onclick="window.close()" style="background:#888">Back</button>
     </div>
