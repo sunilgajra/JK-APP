@@ -29,15 +29,23 @@ const SIGN_URL = assetUrl("signature.png");
 
 export function openPrintWindow(html) {
   // Always open in a new window/tab for all devices
-  const w = window.open("", "_blank");
+  const w = window.open("about:blank", "_blank");
   if (!w) {
     alert("Please allow pop-ups to view the document preview.");
     return false;
   }
 
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
+  try {
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    // Focus the new window for better user experience
+    w.focus();
+  } catch (e) {
+    console.error("Error writing to print window:", e);
+    // Fallback: If document.write fails, we might need a different approach
+    // but about:blank + document.write is standard.
+  }
   return true;
 }
 
@@ -1426,7 +1434,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
       BUYER SETTLEMENT REPORT - ${esc(deal.deal_no)}
     </div>
 
-    <div class="excel-header">SALE (${d.is_high_seas ? 'HIGH SEAS BUYER: ' + esc(buyer?.name || "DETAILS") : esc(buyer?.name || "DETAILS")})</div>
+    <div class="excel-header">SALE (${deal.is_high_seas ? 'HIGH SEAS BUYER: ' + esc(buyer?.name || "DETAILS") : esc(buyer?.name || "DETAILS")})</div>
     <table class="statement-table thin">
       <tr>
         <th style="width:25%">MATERIAL</th>
