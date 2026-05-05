@@ -29,7 +29,7 @@ const SIGN_URL = assetUrl("signature.png");
 
 export function openPrintWindow(html) {
   try {
-    const blob = new Blob([html], { type: "text/html" });
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const w = window.open(url, "_blank");
     
@@ -287,6 +287,7 @@ function previewScript() {
 
 function commonStyle() {
   return `
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no">
     <style>
