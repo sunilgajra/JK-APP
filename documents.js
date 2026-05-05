@@ -2085,7 +2085,7 @@ export function buildCOA(coa, deal, company = {}) {
           <img src="${LOGO_URL}" style="width:100%; max-width:140px;">
         </div>
         <div style="width:85%; text-align:center;">
-          <div style="font-size:28px; font-weight:bold; color:#00529b; margin-bottom:2px; white-space:nowrap;">جيه كيه بتروكيم انترناشيونال م م ح</div>
+          <div style="font-size:28px; font-weight:bold; color:#00529b; margin-bottom:2px; white-space:nowrap;">\u062C\u064A\u0647 \u0643\u064A\u0647 \u0628\u062A\u0631\u0648\u0643\u064A\u0645 \u0627\u0646\u062A\u0631\u0646\u0627\u0634\u064A\u0648\u0646\u0627\u0644 \u0645 \u0645 \u062D</div>
           <div style="font-size:24px; font-weight:800; color:#00529b; margin-bottom:5px; white-space:nowrap;">JK Petrochem International FZE</div>
           <div style="font-size:11px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
           <div style="font-size:11px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
@@ -2169,7 +2169,7 @@ export function buildPO(po, supplier, company = {}) {
           <img src="${LOGO_URL}" style="width:100%; max-width:140px;">
         </div>
         <div style="width:85%; text-align:center;">
-          <div style="font-size:28px; font-weight:bold; color:#00529b; margin-bottom:2px; white-space:nowrap;">جيه كيه بتروكيم انترناشيونال م م ح</div>
+          <div style="font-size:28px; font-weight:bold; color:#00529b; margin-bottom:2px; white-space:nowrap;">\u062C\u064A\u0647 \u0643\u064A\u0647 \u0628\u062A\u0631\u0648\u0643\u064A\u0645 \u0627\u0646\u062A\u0631\u0646\u0627\u0634\u064A\u0648\u0646\u0627\u0644 \u0645 \u0645 \u062D</div>
           <div style="font-size:24px; font-weight:800; color:#00529b; margin-bottom:5px; white-space:nowrap;">JK Petrochem International FZE</div>
           <div style="font-size:11px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
           <div style="font-size:11px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
