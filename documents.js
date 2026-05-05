@@ -242,16 +242,21 @@ function commonStyle() {
     <style>
     @page { size: A4; margin: 0; }
     @media print {
-      html, body { margin: 0 !important; padding: 0 !important; height: auto !important; min-height: 100% !important; overflow: visible !important; background: white !important; }
+      html, body { 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        background: white !important;
+        width: 210mm;
+      }
       .doc { 
         padding: 10mm !important; 
-        width: 210mm !important; 
-        max-width: 210mm !important;
-        margin: 0 auto !important; 
+        width: 100% !important; 
+        max-width: none !important;
+        margin: 0 !important; 
         border: none !important; 
         box-shadow: none !important;
         border-radius: 0 !important;
-        overflow: visible !important;
+        transform: none !important;
         background: white !important;
       }
       .previewActions { display: none !important; }
