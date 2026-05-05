@@ -196,18 +196,21 @@ function previewScript() {
         const actions = document.querySelector(".previewActions");
         const oldTransform = doc ? doc.style.transform : "";
         const oldMargin = doc ? doc.style.marginTop : "";
+        const oldTitle = document.title;
         
-        // TEMPORARILY REMOVE SCALING FOR PRINT ENGINE
+        // TEMPORARILY REMOVE SCALING AND TITLE FOR PRINT ENGINE
         if (doc) {
           doc.style.transform = "none";
           doc.style.marginTop = "0";
         }
         if (actions) actions.style.display = "none";
+        document.title = " "; // Clear title to suppress browser header
         
         window.print();
         
-        // RESTORE SCALING AFTER DELAY
+        // RESTORE AFTER DELAY
         setTimeout(() => {
+          document.title = oldTitle;
           if (doc) {
             doc.style.transform = oldTransform;
             doc.style.marginTop = oldMargin;
@@ -872,7 +875,7 @@ function footer(company = {}, date = "", showSignatory = false) {
         <div style="font-size:10px;font-weight:700;margin-top:2px; text-align: center;">Date</div>
       </div>
     </div>
-    <div class="note">This is computer generated Document, No signature required</div>
+    <div class="note">This is computer generated Document</div>
   </div>
   `;
 }
@@ -1694,7 +1697,7 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
       </div>
 
       <div style="margin-top: 50px; font-size: 11px; color: #999; text-align: right; border-top: 1px solid #eee; padding-top: 10px;">
-        Generated on ${new Date().toLocaleString()} · JK Trade Manager
+        Generated on ${new Date().toLocaleString()}
       </div>
     </div>
   </body>
@@ -1863,7 +1866,7 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
       </div>
 
       <div style="margin-top: 50px; font-size: 11px; color: #999; text-align: right; border-top: 1px solid #eee; padding-top: 10px;">
-        Generated on ${new Date().toLocaleString()} · JK Trade Manager
+        Generated on ${new Date().toLocaleString()}
       </div>
     </div>
   </body>
