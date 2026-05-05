@@ -28,17 +28,12 @@ const STAMP_URL = assetUrl("stamp.png");
 const SIGN_URL = assetUrl("signature.png");
 
 export function openPrintWindow(html) {
-  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-
-  if (isMobile) {
-    const newDoc = document.open("text/html", "replace");
-    newDoc.write(html);
-    newDoc.close();
-    return true;
-  }
-
+  // Always open in a new window/tab for all devices
   const w = window.open("", "_blank");
-  if (!w) return false;
+  if (!w) {
+    alert("Please allow pop-ups to view the document preview.");
+    return false;
+  }
 
   w.document.open();
   w.document.write(html);
@@ -168,9 +163,39 @@ function previewScript() {
         }));
       }
 
+      function adjustScale() {
+        const doc = document.querySelector(".doc");
+        if (!doc) return;
+        const vw = window.innerWidth;
+        const dw = doc.offsetWidth;
+        if (vw < dw + 40) {
+          const scale = (vw - 20) / dw;
+          doc.style.transform = "scale(" + scale + ")";
+          doc.style.marginTop = "60px";
+        } else {
+          doc.style.transform = "none";
+          doc.style.marginTop = "30px";
+        }
+      }
+
+      window.addEventListener("resize", adjustScale);
+      window.addEventListener("DOMContentLoaded", () => {
+        adjustScale();
+        // Optional: Auto-trigger print dialog after a short delay for mobile users
+        // setTimeout(() => window.print(), 1000);
+      });
+
       async function downloadExactPdf() {
         const actions = document.querySelector(".previewActions");
+        const doc = document.querySelector(".doc");
+        const oldTransform = doc ? doc.style.transform : "";
+        const oldMargin = doc ? doc.style.marginTop : "";
+
         if (actions) actions.style.display = "none";
+        if (doc) {
+          doc.style.transform = "none";
+          doc.style.marginTop = "0";
+        }
 
         window.scrollTo(0,0);
         
@@ -181,7 +206,7 @@ function previewScript() {
           margin: 10,
           filename: title + ".pdf",
           image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
+          html2canvas: { scale: 2, useCORS: true, windowWidth: 1100 },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
         };
 
@@ -191,11 +216,19 @@ function previewScript() {
           .save()
           .then(() => {
             if (actions) actions.style.display = "flex";
+            if (doc) {
+              doc.style.transform = oldTransform;
+              doc.style.marginTop = oldMargin;
+            }
           })
           .catch((err) => {
             console.error(err);
-            alert("Download failed. Please use 'Print / Save PDF' instead.");
+            alert("Download failed. Please use 'Print / PDF' instead.");
             if (actions) actions.style.display = "flex";
+            if (doc) {
+              doc.style.transform = oldTransform;
+              doc.style.marginTop = oldMargin;
+            }
           });
       }
 
@@ -205,14 +238,15 @@ function previewScript() {
 
 function commonStyle() {
   return `
-  <style>
-    @page { size: A4; margin: 5mm; }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+    @page { size: A4; margin: 0; }
     @media print {
       html, body { margin: 0 !important; padding: 0 !important; height: auto !important; min-height: 100% !important; overflow: visible !important; background: white !important; }
       .doc { 
         padding: 10mm !important; 
-        width: 190mm !important; 
-        max-width: 190mm !important;
+        width: 210mm !important; 
+        max-width: 210mm !important;
         margin: 0 auto !important; 
         border: none !important; 
         box-shadow: none !important;
@@ -223,14 +257,14 @@ function commonStyle() {
       .previewActions { display: none !important; }
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
 
     html, body {
       margin: 0;
       padding: 0;
-      background: #e4e7eb; /* Soft desk-like background */
+      background: #f0f2f5;
       color: #111;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: 'Segoe UI', Arial, sans-serif;
       font-size: 11px;
     }
 
@@ -239,16 +273,45 @@ function commonStyle() {
     }
 
     .doc {
-      width: 190mm;
-      max-width: 100%;
+      width: 210mm;
+      min-width: 210mm;
       margin: 30px auto;
       padding: 10mm;
       background: white;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      border: 1px solid #cfd4da;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      border: 1px solid #ddd;
       border-radius: 4px;
       overflow: visible !important;
       box-sizing: border-box;
+      transform-origin: top center;
+    }
+
+    @media (max-width: 215mm) {
+      body {
+        padding: 0;
+        background: #f0f2f5;
+        overflow-x: hidden;
+      }
+      .doc {
+        /* JS handles exact scaling */
+        min-width: 210mm;
+      }
+      .previewActions {
+        width: 100%;
+        left: 0;
+        position: fixed;
+        top: 0;
+        padding: 8px;
+        justify-content: center;
+        background: #fff;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        flex-wrap: nowrap;
+      }
+      .previewActions button {
+        padding: 8px 12px;
+        font-size: 14px;
+        flex: 1;
+      }
     }
 
     table {
@@ -487,13 +550,11 @@ function commonStyle() {
 }
 
 function previewActions() {
-  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-
   return `
     <div class="previewActions">
-      <button onclick="downloadExactPdf()">Download PDF</button>
-      ${isMobile ? "" : `<button onclick="window.print()">Print / Save PDF</button>`}
-      <button onclick="if(window.opener) { window.close(); } else { window.location.href = window.location.origin + window.location.pathname + window.location.hash; window.location.reload(); }">Back</button>
+      <button onclick="window.print()">Print / PDF</button>
+      <button onclick="downloadExactPdf()" style="background:#555">Download</button>
+      <button onclick="window.close()" style="background:#888">Back</button>
     </div>
   `;
 }
