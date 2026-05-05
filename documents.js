@@ -272,7 +272,10 @@ function commonStyle() {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no">
     <style>
-    @page { size: A4; margin: 0; }
+    @page { 
+      size: A4; 
+      margin: 0mm !important; 
+    }
     @media print {
       html, body { 
         margin: 0 !important; 
@@ -280,6 +283,7 @@ function commonStyle() {
         background: white !important;
         width: 210mm !important;
         height: 297mm !important;
+        -webkit-print-color-adjust: exact;
       }
       .doc { 
         padding: 10mm !important; 
@@ -293,6 +297,7 @@ function commonStyle() {
         transform: none !important;
         background: white !important;
         page-break-after: avoid;
+        box-sizing: border-box;
       }
       .previewActions { display: none !important; }
     }
