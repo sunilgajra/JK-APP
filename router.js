@@ -41,3 +41,9 @@ export function handleRoute() {
 
   render();
 }
+
+export function initRouter() {
+  window.addEventListener("hashchange", handleRoute);
+  handleRoute();
+}
+
