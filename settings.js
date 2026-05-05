@@ -1,8 +1,5 @@
 import { state } from "./state.js";
 import { esc } from "./utils.js";
-import { supabase } from "./supabase.js";
-import { loadSupabaseData } from "./data.js";
-import { render } from "./ui.js";
 
 export function settingsView() {
   const c = state.company;
@@ -109,110 +106,9 @@ export function settingsView() {
             <button type="button" id="check-ai-btn" class="mt-8" style="background:#4f46e5; color:white">Check AI Connection</button>
           </div>
 
-          <button type="submit" class="btn-primary mt-20">Save Settings</button>
+          <button type="submit" class="btn-primary">Save Settings</button>
         </div>
       </form>
-
-      <div class="mt-20">
-        <div class="form-header">My Documents (Licenses, Agreements, etc.)</div>
-        <div class="item" style="background:rgba(255,255,255,0.02); padding:15px; border-radius:8px">
-          <form data-company-doc-upload="1" class="grid gap-10">
-            <div class="grid grid-2 gap-10">
-              <input type="text" name="docType" placeholder="Document Type (e.g. Trade Licence, Lease)" required>
-              <input type="date" name="expiryDate" title="Expiry Date">
-            </div>
-            <input type="file" name="file" required>
-            <button type="submit" class="btn-primary btn-xs">Upload</button>
-          </form>
-          
-          <div class="list mt-15" style="max-height:400px; overflow:auto">
-            ${state.documentsByCompany.length 
-              ? state.documentsByCompany.map(doc => `
-                <div class="item" style="padding:10px; background:rgba(0,0,0,0.2)">
-                  <div class="flex flex-between flex-center">
-                    <div>
-                      <div class="font-bold" style="font-size:14px">${esc(doc.doc_type || "Document")} ${doc.expiry_date ? `<span class="text-danger" style="margin-left:5px">(Exp: ${doc.expiry_date})</span>` : ""}</div>
-                      <div class="text-xs opacity-60">${esc(doc.file_name)}</div>
-                    </div>
-                    <div class="flex gap-10">
-                      <button data-ai-expiry-scan="${doc.id}" class="btn-xs" title="Scan Expiry Date" style="color:var(--accent-primary)">AI</button>
-                      <a href="${doc.file_url}" target="_blank" class="btn-xs">View</a>
-                      <button data-share-whatsapp-doc="${doc.id}" class="btn-xs" style="color:#25D366">WhatsApp</button>
-                      <button data-delete-company-doc="${doc.id}" class="btn-xs text-danger">Delete</button>
-                    </div>
-                  </div>
-                </div>
-              `).join("")
-              : `<div class="empty" style="padding:20px; font-size:12px">No company documents uploaded.</div>`
-            }
-          </div>
-        </div>
-      </div>
     </div>
   `;
-}
-
-// Settings Logic
-export async function saveCompanySettings(e) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  
-  const bankAccounts = [];
-  document.querySelectorAll("[data-bank-index]").forEach(input => {
-    const idx = input.dataset.bankIndex;
-    if (!bankAccounts[idx]) bankAccounts[idx] = {};
-    bankAccounts[idx][input.dataset.bankField] = input.value;
-  });
-
-  const shippers = [];
-  document.querySelectorAll("[data-shipper-index]").forEach(input => {
-    const idx = input.dataset.shipperIndex;
-    if (!shippers[idx]) shippers[idx] = {};
-    shippers[idx][input.dataset.shipperField] = input.value;
-  });
-
-  const payload = {
-    name: fd.get("name"),
-    address: fd.get("address"),
-    bank_accounts: bankAccounts.filter(Boolean),
-    shippers: shippers.filter(Boolean),
-    gemini_api_key: fd.get("gemini_api_key"),
-    gemini_model: fd.get("gemini_model")
-  };
-
-  if (payload.gemini_api_key) localStorage.setItem("gemini_api_key", payload.gemini_api_key);
-  if (payload.gemini_model) localStorage.setItem("gemini_model", payload.gemini_model);
-
-  let { error } = await supabase.from("company_settings").update(payload).eq("id", 1);
-  
-  if (error && (error.message.includes("gemini_model") || error.message.includes("gemini_api_key"))) {
-    const minimalPayload = { ...payload };
-    delete minimalPayload.gemini_model;
-    delete minimalPayload.gemini_api_key;
-    const retry = await supabase.from("company_settings").update(minimalPayload).eq("id", 1);
-    error = retry.error;
-  }
-
-  if (error) alert(error.message);
-  else {
-    alert("Settings saved!");
-    await loadSupabaseData();
-  }
-}
-
-export function addBankAccount() {
-  state.company.bankAccounts.push({ bankName: "", account: "", iban: "", swift: "" });
-  render();
-}
-export function deleteBankAccount(idx) {
-  state.company.bankAccounts.splice(idx, 1);
-  render();
-}
-export function addShipper() {
-  state.company.shippers.push({ name: "", mobile: "", address: "", email: "" });
-  render();
-}
-export function deleteShipper(idx) {
-  state.company.shippers.splice(idx, 1);
-  render();
 }

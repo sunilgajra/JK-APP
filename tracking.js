@@ -1,8 +1,5 @@
 import { state } from "./state.js";
 import { esc, cleanContainerNumbers } from "./utils.js";
-import { supabase } from "./supabase.js";
-import { loadSupabaseData } from "./data.js";
-import { render } from "./ui.js";
 
 export function trackingView() {
   const deals = state.deals || [];
@@ -124,32 +121,4 @@ export function performQuickTrack() {
   }
   
   window.open(url, "_blank");
-}
-
-export function trackDeal(dealId) {
-  const d = state.deals.find(x => String(x.id) === String(dealId));
-  if (!d) return;
-  const num = d.bl_no || (cleanContainerNumbers(d.container_numbers)[0]) || d.vessel_name;
-  if (!num) return alert("No tracking number (BL or Container) or Vessel Name found for this deal.");
-  
-  document.getElementById("track-number").value = num;
-  // If it looks like a vessel name (no number)
-  if (d.vessel_name && !d.bl_no) {
-     document.getElementById("track-line").value = "marinetraffic";
-  }
-  performQuickTrack();
-}
-
-export async function saveTrackingLog(dealId) {
-  const val = document.getElementById(`tracking-input-${dealId}`).value;
-  const { error } = await supabase.from("deals").update({
-    tracking_status: val,
-    tracking_updated_at: new Date().toISOString()
-  }).eq("id", dealId);
-
-  if (error) alert(error.message);
-  else {
-    await loadSupabaseData();
-    render();
-  }
 }
