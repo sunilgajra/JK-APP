@@ -28,25 +28,31 @@ const STAMP_URL = assetUrl("stamp.png");
 const SIGN_URL = assetUrl("signature.png");
 
 export function openPrintWindow(html) {
-  // Always open in a new window/tab for all devices
-  const w = window.open("about:blank", "_blank");
-  if (!w) {
-    alert("Please allow pop-ups to view the document preview.");
-    return false;
-  }
-
   try {
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-    // Focus the new window for better user experience
-    w.focus();
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank");
+    
+    if (!w) {
+      alert("Please allow pop-ups to view the document preview.");
+      return false;
+    }
+    
+    // We don't revoke immediately to allow images/assets to load
+    // Browser will clean up the blob when tab is closed or session ends
+    return true;
   } catch (e) {
-    console.error("Error writing to print window:", e);
-    // Fallback: If document.write fails, we might need a different approach
-    // but about:blank + document.write is standard.
+    console.error("Error opening print window:", e);
+    // Fallback to old method if Blob fails
+    const w = window.open("about:blank", "_blank");
+    if (w) {
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+    }
+    return true;
   }
-  return true;
 }
 
 function amountWords(n) {
