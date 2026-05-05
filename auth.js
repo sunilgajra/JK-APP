@@ -21,7 +21,7 @@ export async function logoutUser() {
   render();
 }
 
-export async function loadSession() {
+export async function getSession() {
   const { data } = await supabase.auth.getSession();
   state.authUser = data.session?.user || null;
   if (state.authUser) await loadSupabaseData();
