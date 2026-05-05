@@ -224,6 +224,13 @@ function previewScript() {
         const doc = document.querySelector(".doc");
         const oldTransform = doc ? doc.style.transform : "";
         const oldMargin = doc ? doc.style.marginTop : "";
+        const btn = event.target;
+        const oldText = btn.innerText;
+
+        if (btn) {
+          btn.innerText = "Generating...";
+          btn.disabled = true;
+        }
 
         if (actions) actions.style.display = "none";
         if (doc) {
@@ -237,33 +244,35 @@ function previewScript() {
         const element = document.body;
 
         const opt = {
-          margin: 10,
+          margin: 0,
           filename: title + ".pdf",
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, windowWidth: 1100 },
+          image: { type: "jpeg", quality: 1.0 },
+          html2canvas: { 
+            scale: 4, 
+            useCORS: true, 
+            windowWidth: 1100,
+            logging: false,
+            letterRendering: true
+          },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
         };
 
-        html2pdf()
-          .from(element)
-          .set(opt)
-          .save()
-          .then(() => {
-            if (actions) actions.style.display = "flex";
-            if (doc) {
-              doc.style.transform = oldTransform;
-              doc.style.marginTop = oldMargin;
-            }
-          })
-          .catch((err) => {
-            console.error(err);
-            alert("Download failed. Please use 'Print / PDF' instead.");
-            if (actions) actions.style.display = "flex";
-            if (doc) {
-              doc.style.transform = oldTransform;
-              doc.style.marginTop = oldMargin;
-            }
-          });
+        try {
+          await html2pdf().from(element).set(opt).save();
+        } catch (err) {
+          console.error(err);
+          alert("Download failed. Please use 'Print / PDF' instead.");
+        } finally {
+          if (btn) {
+            btn.innerText = oldText;
+            btn.disabled = false;
+          }
+          if (actions) actions.style.display = "flex";
+          if (doc) {
+            doc.style.transform = oldTransform;
+            doc.style.marginTop = oldMargin;
+          }
+        }
       }
 
     </script>
@@ -600,8 +609,8 @@ function commonStyle() {
 function previewActions() {
   return `
     <div class="previewActions">
-      <button onclick="triggerPrint()">Print / PDF</button>
-      <button onclick="downloadExactPdf()" style="background:#555">Download</button>
+      <button onclick="downloadExactPdf(event)" style="background:#2f9aa0">Download Clean PDF</button>
+      <button onclick="triggerPrint()" style="background:#555">Browser Print</button>
       <button onclick="window.close()" style="background:#888">Back</button>
     </div>
   `;
