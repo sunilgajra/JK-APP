@@ -270,6 +270,7 @@ function previewScript() {
 function commonStyle() {
   return `
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
     <style>
     @page { size: A4; margin: 0; }
     @media print {
