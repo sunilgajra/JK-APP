@@ -607,6 +607,59 @@ function bindDashboardUI() {
   window.addEventListener("click", (e) => {
     if (e.target === modal) modal.style.display = "none";
   });
+
+  // Surrender Filter
+  document.getElementById("dashboard-party-filter")?.addEventListener("change", (e) => {
+    state.dashboardPartyFilter = e.target.value;
+    renderPage("dashboard");
+  });
+
+  // Export CSV
+  document.getElementById("export-surrender-csv")?.addEventListener("click", () => {
+    const table = document.getElementById("surrender-summary-table");
+    if (!table) return;
+    let csv = [];
+    const rows = table.querySelectorAll("tr");
+    for (const r of rows) {
+      const cols = r.querySelectorAll("th, td");
+      csv.push([...cols].map(c => `"${c.innerText.replace(/"/g, '""')}"`).join(","));
+    }
+    const blob = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Surrender_Summary_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  });
+
+  // Export PDF
+  document.getElementById("export-surrender-pdf")?.addEventListener("click", () => {
+    const table = document.getElementById("surrender-summary-table");
+    if (!table) return;
+    
+    const opt = {
+      margin: 10,
+      filename: `Surrender_Summary_${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+    
+    // Create a clone for PDF to apply better styling
+    const clone = table.cloneNode(true);
+    clone.style.background = "#fff";
+    clone.style.color = "#000";
+    clone.querySelectorAll("th, td").forEach(el => {
+      el.style.borderColor = "#ccc";
+      el.style.color = "#000";
+    });
+    clone.querySelectorAll("th").forEach(el => el.style.background = "#f2f2f2");
+
+    const container = document.createElement("div");
+    container.innerHTML = `<h2 style="text-align:center; color:#333">Surrender & Payment Summary</h2>`;
+    container.appendChild(clone);
+    
+    html2pdf().set(opt).from(container).save();
+  });
 }
 
 /**
@@ -734,8 +787,7 @@ function validateDeal(fd) {
     commission_total: cleanNumber(fd.get("commission_total")),
     is_high_seas: fd.get("is_high_seas") === "true",
     high_seas_buyer_id: fd.get("high_seas_buyer_id") || null,
-    surrendered_qty: cleanNumber(fd.get("surrendered_qty")),
-    surrendered_containers: cleanNumber(fd.get("surrendered_containers"))
+    is_bl_surrendered: fd.get("is_bl_surrendered") === "true"
   };
 }
 

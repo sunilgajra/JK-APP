@@ -122,12 +122,20 @@ export function dashboardView() {
     </div>
 
     <div class="card mt-14" style="overflow:hidden; border-top: 4px solid #f1c40f">
-      <div class="flex flex-between flex-center mb-12">
+      <div class="flex flex-between flex-center mb-12 flex-wrap gap-12">
         <div class="title mb-0">Surrender & Payment Summary</div>
+        <div class="flex gap-8 flex-wrap">
+          <select id="dashboard-party-filter" style="width:200px; padding:6px 10px; font-size:12px">
+            <option value="">All Parties</option>
+            ${state.buyers.map(b => `<option value="${b.id}" ${String(state.dashboardPartyFilter) === String(b.id) ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
+          </select>
+          <button id="export-surrender-csv" class="btn-small">Export CSV</button>
+          <button id="export-surrender-pdf" class="btn-small btn-info">Export PDF</button>
+        </div>
       </div>
       
       <div class="table-responsive">
-        <table class="report-table" style="font-size:12px; width:100%">
+        <table id="surrender-summary-table" class="report-table" style="font-size:12px; width:100%">
           <thead>
             <tr>
               <th rowspan="2" style="background:var(--card-bg); text-align:left">PARTY NAME</th>
@@ -150,7 +158,11 @@ export function dashboardView() {
           <tbody>
             ${(() => {
               const summary = {};
-              state.deals.forEach(d => {
+              const filteredDeals = state.dashboardPartyFilter 
+                ? state.deals.filter(d => String(d.buyer_id) === String(state.dashboardPartyFilter))
+                : state.deals;
+
+              filteredDeals.forEach(d => {
                 const b = state.buyers.find(x => String(x.id) === String(d.buyer_id));
                 const name = b?.name || "Unknown Buyer";
                 if (!summary[name]) {
@@ -159,7 +171,6 @@ export function dashboardView() {
                 
                 const curr = d.document_currency || d.currency || "AED";
                 const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.6725);
-                const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.6725);
                 
                 const s = paymentSummary(d.id, d.total_amount_usd, d.purchase_total_usd, "USD");
                 
@@ -174,15 +185,19 @@ export function dashboardView() {
                 summary[name].total += totalAed;
                 summary[name].rec += recAed;
                 summary[name].bal += balAed;
-                summary[name].sQty += Number(d.surrendered_qty || 0);
-                summary[name].sFcl += Number(d.surrendered_containers || 0);
+                
+                // If BL is surrendered, all qty and containers are "Given"
+                if (d.is_bl_surrendered) {
+                  summary[name].sQty += qty;
+                  summary[name].sFcl += fcl;
+                }
               });
               
               const sorted = Object.entries(summary).sort((a,b) => b[1].total - a[1].total);
               
               let tFcl=0, tQty=0, tTot=0, tRec=0, tBal=0, tsQty=0, tsFcl=0;
               
-              return sorted.map(([name, v]) => {
+              const rows = sorted.map(([name, v]) => {
                 const pQty = v.qty - v.sQty;
                 const pFcl = v.fcl - v.sFcl;
                 
@@ -204,7 +219,11 @@ export function dashboardView() {
                     <td class="right" style="background:rgba(241,196,15,0.05); font-weight:700">${fmtMoney(v.bal)}</td>
                   </tr>
                 `;
-              }).join("") + `
+              }).join("");
+
+              if (!rows) return `<tr><td colspan="11" class="empty">No deals found for the selected party.</td></tr>`;
+
+              return rows + `
                 <tr style="background:rgba(255,255,255,0.05); font-weight:800; border-top: 2px solid var(--border)">
                   <td style="text-align:left">TOTAL</td>
                   <td class="center">${tFcl}</td>
