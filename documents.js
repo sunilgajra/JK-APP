@@ -814,7 +814,11 @@ function suggestFilename(type, deal, buyer, company, extra = {}) {
 
   if (type.includes("STATEMENT") || type.includes("SETTLEMENT")) {
     const date = new Date().toISOString().split("T")[0].replace(/-/g, "");
-    return `${docType}-${consignee}-${date}`;
+    const prefix = docType.includes("MASTER") ? "MS" : "ST";
+    if (docType.includes("MASTER")) {
+      return `${prefix}-${shipper}-${consignee}-${date}`;
+    }
+    return `${prefix}-${blNo}-${shipper}-${productShort}-${consignee}-${date}`;
   }
 
   return `${docType}-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}-${count}`;
@@ -1305,7 +1309,7 @@ export function buildSupplierStatement(deal, buyer, supplier, payments, company 
   <!DOCTYPE html>
   <html>
   <head>
-    <title>${esc(suggestFilename("SUPPLIER-SETTLEMENT", deal, buyer, supplier, company))}</title>
+    <title>${esc(suggestFilename("SUPPLIER-SETTLEMENT", deal, supplier, company))}</title>
     ${commonStyle()}
     ${previewScript()}
     <style>
@@ -1440,7 +1444,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
   <!DOCTYPE html>
   <html>
   <head>
-    <title>${esc(suggestFilename("BUYER-SETTLEMENT", deal, buyer, supplier, company))}</title>
+    <title>${esc(suggestFilename("BUYER-SETTLEMENT", deal, buyer, company))}</title>
     ${commonStyle()}
     ${previewScript()}
     <style>
