@@ -125,9 +125,13 @@ export function dashboardView() {
       <div class="flex flex-between flex-center mb-12 flex-wrap gap-12">
         <div class="title mb-0">Surrender & Payment Summary</div>
         <div class="flex gap-8 flex-wrap">
-          <select id="dashboard-party-filter" style="width:200px; padding:6px 10px; font-size:12px">
-            <option value="">All Parties</option>
+          <select id="dashboard-party-filter" style="width:160px; padding:6px 10px; font-size:12px">
+            <option value="">Filter Buyer</option>
             ${state.buyers.map(b => `<option value="${b.id}" ${String(state.dashboardPartyFilter) === String(b.id) ? "selected" : ""}>${esc(b.name)}</option>`).join("")}
+          </select>
+          <select id="dashboard-supplier-filter" style="width:160px; padding:6px 10px; font-size:12px">
+            <option value="">Filter Supplier</option>
+            ${state.suppliers.map(s => `<option value="${s.id}" ${String(state.dashboardSupplierFilter) === String(s.id) ? "selected" : ""}>${esc(s.name)}</option>`).join("")}
           </select>
           <button id="export-surrender-csv" class="btn-small">Export CSV</button>
           <button id="export-surrender-pdf" class="btn-small btn-info">Export PDF</button>
@@ -158,9 +162,14 @@ export function dashboardView() {
           <tbody>
             ${(() => {
               const summary = {};
-              const filteredDeals = state.dashboardPartyFilter 
-                ? state.deals.filter(d => String(d.buyer_id) === String(state.dashboardPartyFilter))
-                : state.deals;
+              let filteredDeals = state.deals;
+
+              if (state.dashboardPartyFilter) {
+                filteredDeals = filteredDeals.filter(d => String(d.buyer_id) === String(state.dashboardPartyFilter));
+              }
+              if (state.dashboardSupplierFilter) {
+                filteredDeals = filteredDeals.filter(d => String(d.supplier_id) === String(state.dashboardSupplierFilter));
+              }
 
               filteredDeals.forEach(d => {
                 const b = state.buyers.find(x => String(x.id) === String(d.buyer_id));

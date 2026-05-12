@@ -608,10 +608,15 @@ function bindDashboardUI() {
     if (e.target === modal) modal.style.display = "none";
   });
 
-  // Surrender Filter
+  // Dashboard Filters
   document.getElementById("dashboard-party-filter")?.addEventListener("change", (e) => {
     state.dashboardPartyFilter = e.target.value;
-    renderPage("dashboard");
+    render();
+  });
+
+  document.getElementById("dashboard-supplier-filter")?.addEventListener("change", (e) => {
+    state.dashboardSupplierFilter = e.target.value;
+    render();
   });
 
   // Export CSV

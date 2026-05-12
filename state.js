@@ -31,6 +31,7 @@ export const state = {
     gemini_model: "gemini-2.5-flash"
   },
   dashboardPartyFilter: "",
+  dashboardSupplierFilter: "",
   error: "",
   ready: false
 };
