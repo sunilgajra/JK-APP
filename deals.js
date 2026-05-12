@@ -443,6 +443,10 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
               <input name="package_details" value="${esc(d.package_details || "20ft x 10 Containers")}">
             </div>
             <div>
+              <label class="form-label">Total FCL (No. of Containers)</label>
+              <input name="fcl_count" type="number" step="1" value="${esc(d.fcl_count || "")}" placeholder="e.g. 22">
+            </div>
+            <div>
               <label class="form-label">Loaded On</label>
               <input name="loaded_on" value="${esc(d.loaded_on || "ISO TANK")}">
             </div>

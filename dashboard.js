@@ -183,7 +183,8 @@ export function dashboardView() {
                 
                 const s = paymentSummary(d.id, d.total_amount_usd, d.purchase_total_usd, "USD");
                 
-                const fcl = Array.isArray(d.container_numbers) ? d.container_numbers.length : 0;
+                // Use fcl_count if available, otherwise fall back to container numbers count
+                const fcl = Number(d.fcl_count) || (Array.isArray(d.container_numbers) ? d.container_numbers.length : 0);
                 const qty = Number(d.quantity || 0);
                 const totalAed = s.sale * sConv;
                 const recAed = s.received * sConv;
