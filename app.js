@@ -642,7 +642,6 @@ function bindDashboardUI() {
     if (!table) return;
     
     const opt = {
-      margin: 5,
       filename: `Surrender_Summary_${new Date().toISOString().split('T')[0]}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
       html2canvas: { scale: 3, useCORS: true, logging: false },

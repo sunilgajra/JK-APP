@@ -179,8 +179,8 @@ export function dashboardView() {
                 }
                 
                 const curr = d.document_currency || d.currency || "AED";
-                const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.6725);
-                const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.6725);
+                const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.67);
+                const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.67);
                 
                 const s = paymentSummary(d.id, d.total_amount_usd, d.purchase_total_usd, "USD");
                 
@@ -239,7 +239,7 @@ export function dashboardView() {
                     <td class="center" style="background:rgba(255,255,255,0.02)">${v.sFcl}</td>
                     <td class="right" style="background:rgba(241,196,15,0.05)">${pQty.toFixed(2)}</td>
                     <td class="center" style="background:rgba(241,196,15,0.05)">${pFcl}</td>
-                    <td class="right" style="background:rgba(241,196,15,0.05); font-weight:700">${fmtMoney(v.bal)}</td>
+                    <td class="right" style="background:rgba(241,196,15,0.05); font-weight:700">${fmtMoney(v.pBal)}</td>
                   </tr>
                 `;
               }).join("");
@@ -260,7 +260,7 @@ export function dashboardView() {
                   <td class="center">${tsFcl}</td>
                   <td class="right">${(tQty - tsQty).toFixed(2)}</td>
                   <td class="center">${tFcl - tsFcl}</td>
-                  <td class="right">${fmtMoney(tBal)}</td>
+                  <td class="right">${fmtMoney(tpBal)}</td>
                 </tr>
               `;
             })()}
