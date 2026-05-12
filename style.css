@@ -32,7 +32,7 @@
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
-  --glass: blur(12px) saturate(180%);
+  --glass: blur(4px) saturate(150%);
   
   /* Legacy support */
   --primary: #d4af37;
@@ -167,12 +167,14 @@ body {
   border-radius: var(--radius-md);
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.1s ease;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: background;
 }
 
 .card:hover {
   background: var(--surface-hover);
-  box-shadow: var(--shadow-lg);
 }
 
 .title {
@@ -213,13 +215,15 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 1.25rem;
-  transition: all 0.2s ease;
+  transition: background 0.1s ease;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: background;
 }
 
 .item:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: var(--border-active);
-  transform: translateY(-2px);
 }
 
 .item-title {
