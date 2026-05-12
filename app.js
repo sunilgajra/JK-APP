@@ -642,27 +642,75 @@ function bindDashboardUI() {
     if (!table) return;
     
     const opt = {
-      margin: 10,
+      margin: 5,
       filename: `Surrender_Summary_${new Date().toISOString().split('T')[0]}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
+      image: { type: 'jpeg', quality: 1.0 },
+      html2canvas: { scale: 3, useCORS: true, logging: false },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
     };
     
-    // Create a clone for PDF to apply better styling
-    const clone = table.cloneNode(true);
-    clone.style.background = "#fff";
-    clone.style.color = "#000";
-    clone.querySelectorAll("th, td").forEach(el => {
-      el.style.borderColor = "#ccc";
-      el.style.color = "#000";
-    });
-    clone.querySelectorAll("th").forEach(el => el.style.background = "#f2f2f2");
-
+    // Create a styled container for the PDF
     const container = document.createElement("div");
-    container.innerHTML = `<h2 style="text-align:center; color:#333">Surrender & Payment Summary</h2>`;
+    container.style.padding = "10px";
+    container.style.background = "#fff";
+    container.style.color = "#000";
+    container.style.fontFamily = "'Outfit', sans-serif";
+
+    // Add Professional Header (Without company name)
+    container.innerHTML = `
+      <div style="text-align:center; margin-bottom:15px; border-bottom:2px solid #333; padding-bottom:10px">
+        <p style="margin:5px 0; font-size:16px; font-weight:700; color:#1a1a1a">SURRENDER & PAYMENT SUMMARY REPORT</p>
+        <p style="margin:0; font-size:11px; color:#666">Generated on: ${new Date().toLocaleString()}</p>
+      </div>
+    `;
+
+    // Clone and style the table specifically for PDF
+    const clone = table.cloneNode(true);
+    clone.style.width = "100%";
+    clone.style.borderCollapse = "collapse";
+    clone.style.fontSize = "10px";
+    
+    const cells = clone.querySelectorAll("th, td");
+    cells.forEach(c => {
+      c.style.border = "1px solid #000";
+      c.style.padding = "6px 4px";
+      c.style.color = "#000";
+    });
+
+    // Re-apply specific backgrounds that match the UI but are print-friendly
+    clone.querySelectorAll("thead th").forEach((th, idx) => {
+      th.style.background = "#e5e7eb";
+      th.style.fontWeight = "bold";
+    });
+
+    // Style the grouped headers
+    const mainHeaders = clone.querySelectorAll("thead tr:first-child th");
+    if (mainHeaders.length >= 9) {
+      mainHeaders[6].style.background = "#ccf2f4"; // Surrender Given
+      mainHeaders[7].style.background = "#fef3c7"; // Further Surrender Pending
+    }
+
+    const subHeaders = clone.querySelectorAll("thead tr:last-child th");
+    subHeaders.forEach(th => {
+      if (th.innerText.includes("MT") || th.innerText.includes("FCL") || th.innerText.includes("BAL")) {
+        // If it's under the yellow section
+        if (th.parentElement.parentElement.parentElement.querySelector("th[colspan='3']")) {
+           th.style.background = "#fffbeb";
+        }
+      }
+    });
+
     container.appendChild(clone);
     
+    // Footer
+    const footer = document.createElement("div");
+    footer.style.marginTop = "15px";
+    footer.style.fontSize = "9px";
+    footer.style.textAlign = "right";
+    footer.style.color = "#999";
+    footer.innerText = "JK Trade Manager - Automated Business Intelligence Report";
+    container.appendChild(footer);
+
     html2pdf().set(opt).from(container).save();
   });
 }
