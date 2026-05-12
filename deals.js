@@ -463,6 +463,19 @@ export function dealFormHtml(d = {}, edit = false, id = "") {
               placeholder="Enter one container number per line&#10;Example:&#10;RLTU2087940&#10;RLTU2038966&#10;RLTU2106736"
             >${esc(cleanContainerNumbers(d.container_numbers).join("\n"))}</textarea>
           </div>
+          <div style="background:rgba(var(--primary-rgb), 0.05); padding:10px; border-radius:6px; border:1px solid rgba(var(--primary-rgb), 0.1); margin-top:10px">
+            <div class="item-sub" style="font-weight:700; color:var(--accent-primary); margin-bottom:8px">SURRENDER TRACKING</div>
+            <div class="grid grid-2 gap-10">
+              <div>
+                <label class="form-label">Surrendered Qty (MT)</label>
+                <input name="surrendered_qty" type="number" step="0.001" value="${esc(d.surrendered_qty || "")}" placeholder="Qty already surrendered">
+              </div>
+              <div>
+                <label class="form-label">Surrendered Containers (FCL)</label>
+                <input name="surrendered_containers" type="number" step="1" value="${esc(d.surrendered_containers || "")}" placeholder="Containers surrendered">
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="card">

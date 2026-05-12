@@ -733,7 +733,9 @@ function validateDeal(fd) {
     commission_currency: fd.get("commission_currency") || "USD",
     commission_total: cleanNumber(fd.get("commission_total")),
     is_high_seas: fd.get("is_high_seas") === "true",
-    high_seas_buyer_id: fd.get("high_seas_buyer_id") || null
+    high_seas_buyer_id: fd.get("high_seas_buyer_id") || null,
+    surrendered_qty: cleanNumber(fd.get("surrendered_qty")),
+    surrendered_containers: cleanNumber(fd.get("surrendered_containers"))
   };
 }
 

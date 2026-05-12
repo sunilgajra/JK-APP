@@ -121,6 +121,110 @@ export function dashboardView() {
       </div>
     </div>
 
+    <div class="card mt-14" style="overflow:hidden; border-top: 4px solid #f1c40f">
+      <div class="flex flex-between flex-center mb-12">
+        <div class="title mb-0">Surrender & Payment Summary</div>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="report-table" style="font-size:12px; width:100%">
+          <thead>
+            <tr>
+              <th rowspan="2" style="background:var(--card-bg); text-align:left">PARTY NAME</th>
+              <th rowspan="2">TOTAL FCL</th>
+              <th rowspan="2">QTY (MT)</th>
+              <th rowspan="2">TOTAL (AED)</th>
+              <th rowspan="2">RECED (AED)</th>
+              <th rowspan="2">BALANCE (AED)</th>
+              <th colspan="2" style="background:rgba(59,157,162,0.2)">SURRENDER GIVEN</th>
+              <th colspan="3" style="background:rgba(241,196,15,0.2); color:#000">FURTHER SURRENDER PENDING</th>
+            </tr>
+            <tr>
+              <th style="background:rgba(59,157,162,0.1)">QTY (MT)</th>
+              <th style="background:rgba(59,157,162,0.1)">FCL NO.</th>
+              <th style="background:rgba(241,196,15,0.1); color:#000">QTY (MT)</th>
+              <th style="background:rgba(241,196,15,0.1); color:#000">FCL NO.</th>
+              <th style="background:rgba(241,196,15,0.1); color:#000">BAL AMT</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(() => {
+              const summary = {};
+              state.deals.forEach(d => {
+                const b = state.buyers.find(x => String(x.id) === String(d.buyer_id));
+                const name = b?.name || "Unknown Buyer";
+                if (!summary[name]) {
+                  summary[name] = { fcl:0, qty:0, total:0, rec:0, bal:0, sQty:0, sFcl:0 };
+                }
+                
+                const curr = d.document_currency || d.currency || "AED";
+                const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.6725);
+                const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.6725);
+                
+                const s = paymentSummary(d.id, d.total_amount_usd, d.purchase_total_usd, "USD");
+                
+                const fcl = Array.isArray(d.container_numbers) ? d.container_numbers.length : 0;
+                const qty = Number(d.quantity || 0);
+                const totalAed = s.sale * sConv;
+                const recAed = s.received * sConv;
+                const balAed = s.receivable * sConv;
+                
+                summary[name].fcl += fcl;
+                summary[name].qty += qty;
+                summary[name].total += totalAed;
+                summary[name].rec += recAed;
+                summary[name].bal += balAed;
+                summary[name].sQty += Number(d.surrendered_qty || 0);
+                summary[name].sFcl += Number(d.surrendered_containers || 0);
+              });
+              
+              const sorted = Object.entries(summary).sort((a,b) => b[1].total - a[1].total);
+              
+              let tFcl=0, tQty=0, tTot=0, tRec=0, tBal=0, tsQty=0, tsFcl=0;
+              
+              return sorted.map(([name, v]) => {
+                const pQty = v.qty - v.sQty;
+                const pFcl = v.fcl - v.sFcl;
+                
+                tFcl += v.fcl; tQty += v.qty; tTot += v.total; tRec += v.rec; tBal += v.bal;
+                tsQty += v.sQty; tsFcl += v.sFcl;
+                
+                return `
+                  <tr>
+                    <td style="font-weight:700; text-align:left">${esc(name)}</td>
+                    <td class="center">${v.fcl}</td>
+                    <td class="right">${v.qty.toFixed(2)}</td>
+                    <td class="right">${fmtMoney(v.total)}</td>
+                    <td class="right" style="color:var(--success)">${fmtMoney(v.rec)}</td>
+                    <td class="right" style="font-weight:700">${fmtMoney(v.bal)}</td>
+                    <td class="right" style="background:rgba(255,255,255,0.02)">${v.sQty.toFixed(2)}</td>
+                    <td class="center" style="background:rgba(255,255,255,0.02)">${v.sFcl}</td>
+                    <td class="right" style="background:rgba(241,196,15,0.05)">${pQty.toFixed(2)}</td>
+                    <td class="center" style="background:rgba(241,196,15,0.05)">${pFcl}</td>
+                    <td class="right" style="background:rgba(241,196,15,0.05); font-weight:700">${fmtMoney(v.bal)}</td>
+                  </tr>
+                `;
+              }).join("") + `
+                <tr style="background:rgba(255,255,255,0.05); font-weight:800; border-top: 2px solid var(--border)">
+                  <td style="text-align:left">TOTAL</td>
+                  <td class="center">${tFcl}</td>
+                  <td class="right">${tQty.toFixed(2)}</td>
+                  <td class="right">${fmtMoney(tTot)}</td>
+                  <td class="right">${fmtMoney(tRec)}</td>
+                  <td class="right">${fmtMoney(tBal)}</td>
+                  <td class="right">${tsQty.toFixed(2)}</td>
+                  <td class="center">${tsFcl}</td>
+                  <td class="right">${(tQty - tsQty).toFixed(2)}</td>
+                  <td class="center">${tFcl - tsFcl}</td>
+                  <td class="right">${fmtMoney(tBal)}</td>
+                </tr>
+              `;
+            })()}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="card mt-14">
       <div class="flex flex-between flex-center gap-12 flex-wrap">
         <div class="title mb-0">Recent Deals</div>
