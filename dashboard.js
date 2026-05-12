@@ -15,18 +15,31 @@ export function dashboardView() {
 
   state.deals.forEach(d => {
     // Determine conversion rates with fallbacks
-    const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.67);
-    const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.67);
+    const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.6725);
+    const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.6725);
     
-    const s = paymentSummary(d.id, d.total_amount_usd, d.purchase_total_usd, "USD");
+    const saleAed = Number(d.total_amount_aed || (d.total_amount_usd * sConv) || 0);
+    const purchaseAed = Number(d.purchase_total_aed || (d.purchase_total_usd * pConv) || 0);
+
+    const payments = paymentsForDeal(d.id);
+    let receivedAed = 0, sentAed = 0;
     
-    // Convert USD balances to AED for the dashboard overview
-    const saleAed = s.sale * sConv;
-    const purchaseAed = s.purchase * pConv;
-    const receivableAed = s.receivable * sConv;
-    const payableAed = s.payable * pConv;
-    const receivedAed = s.received * sConv;
-    const sentAed = s.sent * pConv;
+    payments.forEach(p => {
+      const pAmt = Number(p.amount || 0);
+      const pCurr = p.currency || "AED";
+      const pConvUsed = Number(p.conversion_rate && p.conversion_rate !== 1 ? p.conversion_rate : pConv);
+      
+      let valAed = 0;
+      if (pCurr === "AED") valAed = pAmt;
+      else if (pCurr === "USD") valAed = pAmt * pConvUsed;
+      else valAed = pAmt;
+
+      if (p.direction === "out") sentAed += valAed;
+      else receivedAed += valAed;
+    });
+
+    const receivableAed = saleAed - receivedAed;
+    const payableAed = purchaseAed - sentAed;
 
     totalSaleAed += saleAed;
     totalPurchaseAed += purchaseAed;
@@ -39,21 +52,21 @@ export function dashboardView() {
       receivablesBreakdown.push({
         deal_no: d.deal_no,
         product: d.product_name,
-        total_usd: s.sale,
-        received_usd: s.received,
-        balance_usd: s.receivable,
+        total_usd: Number(d.total_amount_usd || 0),
+        received_usd: receivedAed / sConv,
+        balance_usd: receivableAed / sConv,
         conv: sConv,
         balance_aed: receivableAed
       });
     }
-
+    
     if (payableAed !== 0) {
       payablesBreakdown.push({
         deal_no: d.deal_no,
         product: d.product_name,
-        total_usd: s.purchase,
-        sent_usd: s.sent,
-        balance_usd: s.payable,
+        total_usd: Number(d.purchase_total_usd || 0),
+        sent_usd: sentAed / pConv,
+        balance_usd: payableAed / pConv,
         conv: pConv,
         balance_aed: payableAed
       });
@@ -179,34 +192,46 @@ export function dashboardView() {
                 }
                 
                 const curr = d.document_currency || d.currency || "AED";
-                const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.67);
-                const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.67);
+                const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.6725);
+                const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.6725);
                 
-                const s = paymentSummary(d.id, d.total_amount_usd, d.purchase_total_usd, "USD");
+                const payments = paymentsForDeal(d.id);
+                let recAed = 0, pPaidAed = 0;
                 
-                // Use fcl_count if available, otherwise fall back to container numbers count
-                const fcl = Number(d.fcl_count) || (Array.isArray(d.container_numbers) ? d.container_numbers.length : 0);
+                payments.forEach(p => {
+                  const pAmt = Number(p.amount || 0);
+                  const pCurr = p.currency || "AED";
+                  const pConvUsed = Number(p.conversion_rate && p.conversion_rate !== 1 ? p.conversion_rate : pConv);
+                  
+                  let valAed = 0;
+                  if (pCurr === "AED") {
+                    valAed = pAmt;
+                  } else if (pCurr === "USD") {
+                    valAed = pAmt * pConvUsed;
+                  } else {
+                    valAed = pAmt; // Fallback
+                  }
+
+                  if (p.direction === "out") pPaidAed += valAed;
+                  else recAed += valAed;
+                });
+
                 const qty = Number(d.quantity || 0);
+                const totalAed = Number(d.total_amount_aed || (d.total_amount_usd * sConv) || 0);
+                const pTotalAed = Number(d.purchase_total_aed || (d.purchase_total_usd * pConv) || 0);
                 
-                const totalAed = s.sale * sConv;
-                const recAed = s.received * sConv;
-                const balAed = s.receivable * sConv;
-                
-                const pTotalAed = s.purchase * pConv;
-                const pPaidAed = s.sent * pConv;
-                const pBalAed = s.payable * pConv;
+                const fcl = Number(d.fcl_count) || (Array.isArray(d.container_numbers) ? d.container_numbers.length : 0);
                 
                 summary[name].fcl += fcl;
                 summary[name].qty += qty;
                 summary[name].total += totalAed;
                 summary[name].rec += recAed;
-                summary[name].bal += balAed;
+                summary[name].bal += (totalAed - recAed);
                 
                 summary[name].pTotal += pTotalAed;
                 summary[name].pPaid += pPaidAed;
-                summary[name].pBal += pBalAed;
+                summary[name].pBal += (pTotalAed - pPaidAed);
                 
-                // If BL is surrendered, all qty and containers are "Given"
                 if (d.is_bl_surrendered) {
                   summary[name].sQty += qty;
                   summary[name].sFcl += fcl;
