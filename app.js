@@ -685,9 +685,9 @@ function bindDashboardUI() {
 
     // Style the grouped headers
     const mainHeaders = clone.querySelectorAll("thead tr:first-child th");
-    if (mainHeaders.length >= 12) {
-      mainHeaders[9].style.background = "#ccf2f4"; // Surrender Given
-      mainHeaders[10].style.background = "#fef3c7"; // Further Surrender Pending
+    if (mainHeaders.length >= 9) {
+      mainHeaders[6].style.background = "#ccf2f4"; // Surrender Given
+      mainHeaders[7].style.background = "#fef3c7"; // Further Surrender Pending
     }
 
     const subHeaders = clone.querySelectorAll("thead tr:last-child th");

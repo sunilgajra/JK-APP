@@ -145,9 +145,6 @@ export function dashboardView() {
               <th rowspan="2" style="background:var(--card-bg); text-align:left">PARTY NAME</th>
               <th rowspan="2">TOTAL FCL</th>
               <th rowspan="2">QTY (MT)</th>
-              <th rowspan="2">TOTAL (AED)</th>
-              <th rowspan="2">RECED (AED)</th>
-              <th rowspan="2">BALANCE (AED)</th>
               <th rowspan="2">PURCHASE TOTAL (AED)</th>
               <th rowspan="2">PAID SUPP (AED)</th>
               <th rowspan="2">PURCHASE BAL (AED)</th>
@@ -233,9 +230,6 @@ export function dashboardView() {
                     <td style="font-weight:700; text-align:left">${esc(name)}</td>
                     <td class="center">${v.fcl}</td>
                     <td class="right">${v.qty.toFixed(2)}</td>
-                    <td class="right">${fmtMoney(v.total)}</td>
-                    <td class="right" style="color:var(--success)">${fmtMoney(v.rec)}</td>
-                    <td class="right" style="font-weight:700">${fmtMoney(v.bal)}</td>
                     
                     <td class="right" style="background:rgba(255,255,255,0.02)">${fmtMoney(v.pTotal)}</td>
                     <td class="right" style="background:rgba(255,255,255,0.02); color:var(--danger)">${fmtMoney(v.pPaid)}</td>
@@ -250,16 +244,13 @@ export function dashboardView() {
                 `;
               }).join("");
 
-              if (!rows) return `<tr><td colspan="14" class="empty">No deals found for the selected filters.</td></tr>`;
+              if (!rows) return `<tr><td colspan="11" class="empty">No deals found for the selected filters.</td></tr>`;
 
               return rows + `
                 <tr style="background:rgba(255,255,255,0.05); font-weight:800; border-top: 2px solid var(--border)">
                   <td style="text-align:left">TOTAL</td>
                   <td class="center">${tFcl}</td>
                   <td class="right">${tQty.toFixed(2)}</td>
-                  <td class="right">${fmtMoney(tTot)}</td>
-                  <td class="right">${fmtMoney(tRec)}</td>
-                  <td class="right">${fmtMoney(tBal)}</td>
                   
                   <td class="right">${fmtMoney(tpTot)}</td>
                   <td class="right">${fmtMoney(tpPaid)}</td>
