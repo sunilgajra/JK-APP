@@ -242,19 +242,19 @@ function previewScript() {
         
         const title = document.title || "document";
         const element = document.body;
+        const isLandscape = title.includes("SETTLEMENT") || title.includes("SUMMARY");
 
         const opt = {
           margin: 0,
           filename: title + ".pdf",
           image: { type: "jpeg", quality: 1.0 },
           html2canvas: { 
-            scale: 4, 
+            scale: 3, 
             useCORS: true, 
-            windowWidth: 1100,
-            logging: false,
-            letterRendering: true
+            windowWidth: isLandscape ? 1200 : 800,
+            logging: false
           },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+          jsPDF: { unit: "mm", format: "a4", orientation: isLandscape ? "landscape" : "portrait" }
         };
 
         try {
@@ -279,7 +279,7 @@ function previewScript() {
   `;
 }
 
-function commonStyle() {
+export function commonStyle(docClass = "") {
   return `
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -290,16 +290,7 @@ function commonStyle() {
       margin: 0mm !important; 
     }
     @media print {
-      html, body { 
-        margin: 0 !important; 
-        padding: 0 !important; 
-        background: white !important;
-        width: 210mm !important;
-        height: 297mm !important;
-        -webkit-print-color-adjust: exact;
-      }
-    @media print {
-      body { background: white; }
+      body { background: white !important; -webkit-print-color-adjust: exact; }
       .previewActions { display: none !important; }
       .doc { 
         box-shadow: none !important; 
@@ -331,6 +322,11 @@ function commonStyle() {
       border-radius: 8px;
       position: relative;
       overflow: hidden;
+    }
+
+    .doc.landscape {
+      width: 297mm;
+      min-width: 297mm;
     }
 
     .docTitle {
@@ -585,7 +581,7 @@ function commonStyle() {
       }
     }
   </style>
-  <div class="doc">
+  <div class="doc ${docClass}">
   `;
 }
 
@@ -1423,7 +1419,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
   <html>
   <head>
     <title>${esc(suggestFilename("BUYER-SETTLEMENT", deal, buyer, supplier, company))}</title>
-    ${commonStyle()}
+    ${commonStyle("landscape")}
     ${previewScript()}
     <style>
       .statement-table th { background: #3b9da2; color: #fff; border: 1.5px solid #2a7a7d; font-size: 11px; padding: 10px 5px; }
@@ -1583,7 +1579,7 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
   <html>
   <head>
     <title>${esc(suggestFilename("SUPPLIER-MASTER-SETTLEMENT", { dealCount: deals.length }, supplier, company, { partyName: buyerStr }))}</title>
-    ${commonStyle()}
+    ${commonStyle("landscape")}
     ${previewScript()}
     <style>
       .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -1596,7 +1592,7 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
   </head>
   <body>
     ${previewActions()}
-    <div class="doc">
+
       <div style="margin-bottom: 25px; font-size: 18px; font-weight: bold; border-bottom: 4px solid #3b9da2; padding-bottom: 10px; display:flex; justify-content:space-between; align-items: flex-end;">
         <span style="color:#2a7a7d">MASTER SETTLEMENT REPORT</span>
         <div style="text-align: right">
@@ -1762,7 +1758,7 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
   <html>
   <head>
     <title>${esc(suggestFilename("BUYER-MASTER-SETTLEMENT", { dealCount: deals.length }, buyer, company, { partyName: supplierStr }))}</title>
-    ${commonStyle()}
+    ${commonStyle("landscape")}
     ${previewScript()}
     <style>
       .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -1775,7 +1771,7 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
   </head>
   <body>
     ${previewActions()}
-    <div class="doc">
+
       <div style="margin-bottom: 25px; font-size: 18px; font-weight: bold; border-bottom: 4px solid #3b9da2; padding-bottom: 10px; display:flex; justify-content:space-between; align-items: flex-end;">
         <span style="color:#2a7a7d">MASTER SETTLEMENT REPORT</span>
         <div style="text-align: right">
