@@ -1594,9 +1594,9 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
     ${commonStyle("landscape")}
     ${previewScript()}
     <style>
-      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-      .statement-table th { background: #3b9da2; color: white; border: 1.5px solid #2a7a7d; font-size: 10px; padding: 10px 5px; text-transform: uppercase; }
-      .statement-table td { border: 1px solid #ccc; padding: 8px 5px; font-size: 11px; word-break: break-word; }
+      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
+      .statement-table th { background: #3b9da2; color: white; border: 1.5px solid #2a7a7d; font-size: 9px; padding: 10px 4px; text-transform: uppercase; word-wrap: break-word; }
+      .statement-table td { border: 1px solid #ccc; padding: 8px 4px; font-size: 10px; word-wrap: break-word; overflow: hidden; }
       .summary-box { border: 2px solid #3b9da2; padding: 20px; margin-top: 40px; background:#f9fdfe; border-radius: 12px; box-shadow: 0 4px 12px rgba(59,157,162,0.1); }
       .bal-to-pay { background: #ffff00; font-weight: 800; padding: 4px 10px; border: 2px solid #000; border-radius: 6px; font-size: 16px; }
       .excel-header { background: #2a7a7d; color:white; font-weight: 800; text-align: center; padding: 12px; border: 1px solid #333; text-transform: uppercase; margin-top: 30px; border-radius: 8px 8px 0 0; font-size: 16px; letter-spacing: 0.5px; }
@@ -1617,15 +1617,15 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
       <table class="statement-table">
         <thead>
           <tr>
-            <th style="width: 50px;">DEAL NO</th>
-            <th style="width: 55px;">DATE</th>
-            <th style="width: 65px;">BL NO</th>
-            <th>BUYER</th>
-            <th style="width: 80px;">MATERIAL</th>
-            <th style="width: 45px;">QTY</th>
-            <th style="width: 45px;">RATE</th>
-            <th style="width: 70px;">AMOUNT USD</th>
-            <th style="width: 75px;">AMOUNT AED</th>
+            <th style="width: 8%;">DEAL NO</th>
+            <th style="width: 8%;">DATE</th>
+            <th style="width: 14%;">BL NO</th>
+            <th style="width: 22%;">BUYER</th>
+            <th style="width: 13%;">MATERIAL</th>
+            <th style="width: 7%;">QTY</th>
+            <th style="width: 7%;">RATE</th>
+            <th style="width: 10%;">AMOUNT USD</th>
+            <th style="width: 11%;">AMOUNT AED</th>
           </tr>
         </thead>
         <tbody>
@@ -1773,9 +1773,9 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
     ${commonStyle("landscape")}
     ${previewScript()}
     <style>
-      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-      .statement-table th { background: #3b9da2; color: white; border: 1.5px solid #2a7a7d; font-size: 10px; padding: 10px 5px; text-transform: uppercase; }
-      .statement-table td { border: 1px solid #ccc; padding: 8px 5px; font-size: 11px; word-break: break-word; }
+      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
+      .statement-table th { background: #3b9da2; color: white; border: 1.5px solid #2a7a7d; font-size: 9px; padding: 10px 4px; text-transform: uppercase; word-wrap: break-word; }
+      .statement-table td { border: 1px solid #ccc; padding: 8px 4px; font-size: 10px; word-wrap: break-word; overflow: hidden; }
       .summary-box { border: 2px solid #3b9da2; padding: 20px; margin-top: 40px; background:#f9fdfe; border-radius: 12px; box-shadow: 0 4px 12px rgba(59,157,162,0.1); }
       .bal-to-rec { background: #ffff00; font-weight: 800; padding: 4px 10px; border: 2px solid #000; border-radius: 6px; font-size: 16px; }
       .excel-header { background: #2a7a7d; color:white; font-weight: 800; text-align: center; padding: 12px; border: 1px solid #333; text-transform: uppercase; margin-top: 30px; border-radius: 8px 8px 0 0; font-size: 16px; letter-spacing: 0.5px; }
@@ -1796,15 +1796,15 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
       <table class="statement-table">
         <thead>
           <tr>
-            <th style="width: 50px;">DEAL NO</th>
-            <th style="width: 55px;">DATE</th>
-            <th style="width: 65px;">BL NO</th>
-            <th>SUPPLIER</th>
-            <th style="width: 80px;">MATERIAL</th>
-            <th style="width: 45px;">QTY</th>
-            <th style="width: 45px;">RATE</th>
-            <th style="width: 70px;">AMOUNT USD</th>
-            <th style="width: 75px;">AMOUNT AED</th>
+            <th style="width: 8%;">DEAL NO</th>
+            <th style="width: 8%;">DATE</th>
+            <th style="width: 14%;">BL NO</th>
+            <th style="width: 22%;">SUPPLIER</th>
+            <th style="width: 13%;">MATERIAL</th>
+            <th style="width: 7%;">QTY</th>
+            <th style="width: 7%;">RATE</th>
+            <th style="width: 10%;">AMOUNT USD</th>
+            <th style="width: 11%;">AMOUNT AED</th>
           </tr>
         </thead>
         <tbody>
