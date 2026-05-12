@@ -298,21 +298,16 @@ function commonStyle() {
         height: 297mm !important;
         -webkit-print-color-adjust: exact;
       }
-      .doc { 
-        padding: 10mm !important; 
-        width: 210mm !important; 
-        height: 297mm !important;
-        max-width: none !important;
-        margin: 0 !important; 
-        border: none !important; 
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        transform: none !important;
-        background: white !important;
-        page-break-after: avoid;
-        box-sizing: border-box;
-      }
+    @media print {
+      body { background: white; }
       .previewActions { display: none !important; }
+      .doc { 
+        box-shadow: none !important; 
+        border: none !important; 
+        margin: 0 !important; 
+        padding: 10mm !important; 
+        width: 100% !important;
+      }
     }
 
     * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
@@ -322,105 +317,92 @@ function commonStyle() {
       padding: 0;
       background: #f0f2f5;
       color: #111;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      font-size: 11px;
-    }
-
-    body {
-      overflow-x: auto;
+      font-family: 'Outfit', 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
     }
 
     .doc {
       width: 210mm;
-      min-width: 210mm;
+      min-height: 297mm;
       margin: 30px auto;
-      padding: 10mm;
+      padding: 15mm;
       background: white;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      overflow: visible !important;
-      box-sizing: border-box;
-      transform-origin: top center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
     }
 
-    @media (max-width: 215mm) {
-      body {
-        padding: 0;
-        background: #f0f2f5;
-        overflow-x: hidden;
-      }
-      .doc {
-        /* JS handles exact scaling */
-        min-width: 210mm;
-      }
-      .previewActions {
-        width: 100%;
-        left: 0;
-        position: fixed;
-        top: 0;
-        padding: 8px;
-        justify-content: center;
-        background: #fff;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        flex-wrap: nowrap;
-      }
-      .previewActions button {
-        padding: 8px 12px;
-        font-size: 14px;
-        flex: 1;
-      }
+    .docTitle {
+      font-size: 24px;
+      font-weight: 800;
+      color: #1a1a1a;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+      margin-top: 5px;
+      text-align: right;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .bar {
+      background: #3b9da2;
+      color: white;
+      font-weight: bold;
+      padding: 8px 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      border-radius: 4px 4px 0 0;
     }
 
-    /* PDF Generation Fix */
-    .is-generating-pdf {
-      background: white !important;
+    .panel {
+      border: 1.5px solid #3b9da2;
+      border-radius: 6px;
+      margin-bottom: 15px;
     }
-    .is-generating-pdf .doc {
-      width: 100% !important;
-      max-width: none !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      height: auto !important;
-      overflow: visible !important;
+
+    .panelBody {
+      padding: 12px;
+      line-height: 1.5;
     }
-    .is-generating-pdf table {
-      width: 100% !important;
-      min-width: auto !important;
-    }
-    .is-generating-pdf .previewActions {
-      display: none !important;
-    }
+
+    .panelBody.tight { padding: 8px 12px; font-size: 11px; }
+
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th { background: #f8fafc; color: #475569; font-weight: bold; font-size: 10px; text-transform: uppercase; padding: 10px 8px; border: 1px solid #e2e8f0; }
+    td { padding: 10px 8px; border: 1px solid #e2e8f0; vertical-align: top; }
+    
+    .right { text-align: right; }
+    .center { text-align: center; }
+    
+    .box { border: 2px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-top: 20px; }
+    .boxHead { background: #f8fafc; padding: 10px 15px; font-weight: bold; border-bottom: 2px solid #e2e8f0; }
+    .boxBody { padding: 15px; }
 
     .previewActions {
       position: sticky;
       top: 0;
       z-index: 9999;
       display: flex;
-      gap: 8px;
-      padding: 10px;
+      gap: 12px;
+      padding: 15px;
       background: #fff;
-      border-bottom: 1px solid #ddd;
+      border-bottom: 2px solid #3b9da2;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      justify-content: center;
     }
 
     .previewActions button {
-      padding: 12px 18px;
+      padding: 12px 24px;
       border: none;
-      background: #2f9aa0;
+      background: #3b9da2;
       color: #fff;
       border-radius: 8px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      transition: all 0.2s;
     }
+    .previewActions button:hover { background: #2a7a7d; transform: translateY(-1px); }
+    .previewActions button.btn-back { background: #64748b; }
 
     .top {
       display: grid;
@@ -610,9 +592,9 @@ function commonStyle() {
 function previewActions() {
   return `
     <div class="previewActions">
-      <button onclick="downloadExactPdf(event)" style="background:#2f9aa0">Download Clean PDF</button>
-      <button onclick="triggerPrint()" style="background:#555">Browser Print</button>
-      <button onclick="window.close()" style="background:#888">Back</button>
+      <button onclick="downloadExactPdf(event)">Download Clean PDF</button>
+      <button onclick="triggerPrint()" style="background:#475569">Browser Print</button>
+      <button onclick="window.close()" class="btn-back">Back</button>
     </div>
   `;
 }
@@ -1444,12 +1426,11 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
     ${commonStyle()}
     ${previewScript()}
     <style>
-      .doc { width: 210mm; padding: 10mm; }
-      .statement-table th { background: #dce6f1; color: #333; border: 1px solid #999; font-size: 10px; }
-      .statement-table td { border: 1px solid #ccc; padding: 4px; }
-      .summary-box { border: 1px solid #3b9da2; padding: 10px; margin-top: 20px; background:#f9f9f9; }
-      .bal-to-rec { background: #ffff00; font-weight: 800; padding: 4px; border: 1px solid #000; }
-      .excel-header { background: #dce6f1; font-weight: bold; text-align: center; padding: 5px; border: 1px solid #999; text-transform: uppercase; }
+      .statement-table th { background: #3b9da2; color: #fff; border: 1.5px solid #2a7a7d; font-size: 11px; padding: 10px 5px; }
+      .statement-table td { border: 1px solid #ccc; padding: 8px 5px; font-size: 11px; }
+      .summary-box { border: 2px solid #3b9da2; padding: 20px; margin-top: 30px; background:#f9fdfe; border-radius: 12px; }
+      .bal-to-rec { background: #ffff00; font-weight: 800; padding: 6px 12px; border: 2px solid #000; border-radius: 6px; font-size: 16px; }
+      .excel-header { background: #2a7a7d; color: #fff; font-weight: 800; text-align: center; padding: 12px; border: 1px solid #333; text-transform: uppercase; margin-top: 25px; border-radius: 8px 8px 0 0; font-size: 16px; letter-spacing: 0.5px; }
     </style>
   </head>
   <body>
@@ -1605,12 +1586,12 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
     ${commonStyle()}
     ${previewScript()}
     <style>
-      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: auto; }
-      .statement-table th { background: #3b9da2; color: white; border: 1px solid #2a7a7d; font-size: 8px; padding: 4px 2px; text-transform: uppercase; }
-      .statement-table td { border: 1px solid #ccc; padding: 3px 2px; font-size: 8px; word-break: break-word; }
-      .summary-box { border: 2px solid #3b9da2; padding: 15px; margin-top: 30px; background:#f9fdfe; border-radius: 8px; }
-      .bal-to-pay { background: #ffff00; font-weight: 800; padding: 2px 6px; border: 1px solid #000; border-radius: 4px; }
-      .excel-header { background: #2a7a7d; color:white; font-weight: bold; text-align: center; padding: 8px; border: 1px solid #333; text-transform: uppercase; margin-top: 20px; border-radius: 4px 4px 0 0; font-size: 14px; }
+      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+      .statement-table th { background: #3b9da2; color: white; border: 1.5px solid #2a7a7d; font-size: 10px; padding: 10px 5px; text-transform: uppercase; }
+      .statement-table td { border: 1px solid #ccc; padding: 8px 5px; font-size: 11px; word-break: break-word; }
+      .summary-box { border: 2px solid #3b9da2; padding: 20px; margin-top: 40px; background:#f9fdfe; border-radius: 12px; box-shadow: 0 4px 12px rgba(59,157,162,0.1); }
+      .bal-to-pay { background: #ffff00; font-weight: 800; padding: 4px 10px; border: 2px solid #000; border-radius: 6px; font-size: 16px; }
+      .excel-header { background: #2a7a7d; color:white; font-weight: 800; text-align: center; padding: 12px; border: 1px solid #333; text-transform: uppercase; margin-top: 30px; border-radius: 8px 8px 0 0; font-size: 16px; letter-spacing: 0.5px; }
     </style>
   </head>
   <body>
@@ -1784,12 +1765,12 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
     ${commonStyle()}
     ${previewScript()}
     <style>
-      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: auto; }
-      .statement-table th { background: #3b9da2; color: white; border: 1px solid #2a7a7d; font-size: 8px; padding: 4px 2px; text-transform: uppercase; }
-      .statement-table td { border: 1px solid #ccc; padding: 3px 2px; font-size: 8px; word-break: break-word; }
-      .summary-box { border: 2px solid #3b9da2; padding: 15px; margin-top: 30px; background:#f9fdfe; border-radius: 8px; }
-      .bal-to-rec { background: #ffff00; font-weight: 800; padding: 2px 6px; border: 1px solid #000; border-radius: 4px; }
-      .excel-header { background: #2a7a7d; color:white; font-weight: bold; text-align: center; padding: 8px; border: 1px solid #333; text-transform: uppercase; margin-top: 20px; border-radius: 4px 4px 0 0; font-size: 14px; }
+      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+      .statement-table th { background: #3b9da2; color: white; border: 1.5px solid #2a7a7d; font-size: 10px; padding: 10px 5px; text-transform: uppercase; }
+      .statement-table td { border: 1px solid #ccc; padding: 8px 5px; font-size: 11px; word-break: break-word; }
+      .summary-box { border: 2px solid #3b9da2; padding: 20px; margin-top: 40px; background:#f9fdfe; border-radius: 12px; box-shadow: 0 4px 12px rgba(59,157,162,0.1); }
+      .bal-to-rec { background: #ffff00; font-weight: 800; padding: 4px 10px; border: 2px solid #000; border-radius: 6px; font-size: 16px; }
+      .excel-header { background: #2a7a7d; color:white; font-weight: 800; text-align: center; padding: 12px; border: 1px solid #333; text-transform: uppercase; margin-top: 30px; border-radius: 8px 8px 0 0; font-size: 16px; letter-spacing: 0.5px; }
     </style>
   </head>
   <body>
