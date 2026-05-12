@@ -808,10 +808,11 @@ function suggestFilename(type, deal, buyer, company, extra = {}) {
 
   if (type.includes("STATEMENT") || type.includes("SETTLEMENT")) {
     const date = new Date().toISOString().split("T")[0].replace(/-/g, "");
-    // For Master Settlements, include the Entity Name and Party (Shipper) name as requested
+    // For Master Settlements, include the Entity Name and Party (Shipper or Buyer/Supplier) name as requested
     if (type.includes("MASTER")) {
       const entityName = (buyer?.name || "ENTITY").split(/\s+/).filter(Boolean).slice(0, 5).join("-").toUpperCase();
-      return `${docType}-${entityName}-${shipper}-${date}`;
+      const partyName = (extra.partyName || shipper).split(/\s+/).filter(Boolean).slice(0, 3).join("-").toUpperCase();
+      return `${docType}-${entityName}-${partyName}-${date}`;
     }
     return `${docType}-${consignee}-${date}`;
   }
@@ -1592,11 +1593,15 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
   const balAed = totalDueAed - totalPaidAed;
   const balUsd = totalDueUsd - totalPaidUsd;
 
+  const buyerIds = [...new Set(deals.map(d => d.is_high_seas ? d.high_seas_buyer_id : d.buyer_id).filter(Boolean))];
+  const buyerNames = buyerIds.map(id => state.buyers.find(b => String(b.id) === String(id))?.name || "UNKNOWN");
+  const buyerStr = buyerNames.length === 1 ? buyerNames[0] : (buyerNames.length > 1 ? "VARIOUS" : "JK");
+
   return `
   <!DOCTYPE html>
   <html>
   <head>
-    <title>${esc(suggestFilename("SUPPLIER-MASTER-SETTLEMENT", { dealCount: deals.length }, supplier, company))}</title>
+    <title>${esc(suggestFilename("SUPPLIER-MASTER-SETTLEMENT", { dealCount: deals.length }, supplier, company, { partyName: buyerStr }))}</title>
     ${commonStyle()}
     ${previewScript()}
     <style>
@@ -1613,7 +1618,10 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
     <div class="doc">
       <div style="margin-bottom: 25px; font-size: 18px; font-weight: bold; border-bottom: 4px solid #3b9da2; padding-bottom: 10px; display:flex; justify-content:space-between; align-items: flex-end;">
         <span style="color:#2a7a7d">MASTER SETTLEMENT REPORT</span>
-        <span style="font-size: 14px; color: #666;">SUPPLIER: ${esc(supplier.name)}</span>
+        <div style="text-align: right">
+          <div style="font-size: 14px; color: #666;">SUPPLIER: ${esc(supplier.name)}</div>
+          <div style="font-size: 12px; color: #888; margin-top: 4px;">BUYER: ${esc(buyerStr)}</div>
+        </div>
       </div>
 
       <div class="excel-header">PURCHASE TRANSACTIONS (ALL DEALS)</div>
@@ -1764,11 +1772,15 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
   const balAed = totalDueAed - totalRecAed;
   const balUsd = totalDueUsd - totalRecUsd;
 
+  const supplierIds = [...new Set(deals.map(d => d.supplier_id).filter(Boolean))];
+  const supplierNames = supplierIds.map(id => state.suppliers.find(s => String(s.id) === String(id))?.name || "UNKNOWN");
+  const supplierStr = supplierNames.length === 1 ? supplierNames[0] : (supplierNames.length > 1 ? "VARIOUS" : "JK");
+
   return `
   <!DOCTYPE html>
   <html>
   <head>
-    <title>${esc(suggestFilename("BUYER-MASTER-SETTLEMENT", { dealCount: deals.length }, buyer, company))}</title>
+    <title>${esc(suggestFilename("BUYER-MASTER-SETTLEMENT", { dealCount: deals.length }, buyer, company, { partyName: supplierStr }))}</title>
     ${commonStyle()}
     ${previewScript()}
     <style>
@@ -1785,7 +1797,10 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
     <div class="doc">
       <div style="margin-bottom: 25px; font-size: 18px; font-weight: bold; border-bottom: 4px solid #3b9da2; padding-bottom: 10px; display:flex; justify-content:space-between; align-items: flex-end;">
         <span style="color:#2a7a7d">MASTER SETTLEMENT REPORT</span>
-        <span style="font-size: 14px; color: #666;">BUYER: ${esc(buyer.name)}</span>
+        <div style="text-align: right">
+          <div style="font-size: 14px; color: #666;">BUYER: ${esc(buyer.name)}</div>
+          <div style="font-size: 12px; color: #888; margin-top: 4px;">SUPPLIER: ${esc(supplierStr)}</div>
+        </div>
       </div>
 
       <div class="excel-header">SALE TRANSACTIONS (ALL DEALS)</div>
