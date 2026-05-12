@@ -28,31 +28,25 @@ const STAMP_URL = assetUrl("stamp.png");
 const SIGN_URL = assetUrl("signature.png");
 
 export function openPrintWindow(html) {
-  try {
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const w = window.open(url, "_blank");
-    
-    if (!w) {
-      alert("Please allow pop-ups to view the document preview.");
-      return false;
-    }
-    
-    // We don't revoke immediately to allow images/assets to load
-    // Browser will clean up the blob when tab is closed or session ends
-    return true;
-  } catch (e) {
-    console.error("Error opening print window:", e);
-    // Fallback to old method if Blob fails
-    const w = window.open("about:blank", "_blank");
-    if (w) {
-      w.document.open();
-      w.document.write(html);
-      w.document.close();
-      w.focus();
-    }
-    return true;
+  const w = window.open("", "_blank");
+  if (!w) {
+    alert("Please allow pop-ups to view the document preview.");
+    return false;
   }
+
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+
+  // Explicitly set the title again after a short delay to ensure the browser picks it up for the print dialog
+  setTimeout(() => {
+    const titleMatch = html.match(/<title>(.*?)<\/title>/i);
+    if (titleMatch && titleMatch[1]) {
+      w.document.title = titleMatch[1];
+    }
+  }, 100);
+
+  return true;
 }
 
 function amountWords(n) {
@@ -210,7 +204,7 @@ function previewScript() {
           doc.style.marginTop = "0";
         }
         if (actions) actions.style.display = "none";
-        document.title = " "; // Clear title to suppress browser header
+        // document.title = " "; // REMOVED: This was causing the filename to be lost in the print dialog
         
         window.print();
         
