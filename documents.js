@@ -241,8 +241,16 @@ function previewScript() {
         window.scrollTo(0,0);
         
         const title = document.title || "document";
-        const element = document.body;
+        const docEl = document.querySelector(".doc");
+        if (!docEl) return;
+
         const isLandscape = title.includes("SETTLEMENT") || title.includes("SUMMARY");
+        
+        // TEMPORARILY REMOVE STYLES THAT INTERFERE WITH CAPTURE
+        const oldShadow = docEl.style.boxShadow;
+        const oldMargin = docEl.style.margin;
+        docEl.style.boxShadow = "none";
+        docEl.style.margin = "0";
 
         const opt = {
           margin: 0,
@@ -252,17 +260,21 @@ function previewScript() {
             scale: 3, 
             useCORS: true, 
             windowWidth: isLandscape ? 1200 : 800,
-            logging: false
+            logging: false,
+            x: 0,
+            y: 0
           },
           jsPDF: { unit: "mm", format: "a4", orientation: isLandscape ? "landscape" : "portrait" }
         };
 
         try {
-          await html2pdf().from(element).set(opt).save();
+          await html2pdf().from(docEl).set(opt).save();
         } catch (err) {
           console.error(err);
           alert("Download failed. Please use 'Print / PDF' instead.");
         } finally {
+          docEl.style.boxShadow = oldShadow;
+          docEl.style.margin = oldMargin;
           if (btn) {
             btn.innerText = oldText;
             btn.disabled = false;
