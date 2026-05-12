@@ -650,16 +650,25 @@ function bindDashboardUI() {
     
     // Create a styled container for the PDF
     const container = document.createElement("div");
-    container.style.padding = "10px";
+    // Standard A4 Landscape is ~297mm. We'll use a large pixel width for high quality rendering.
+    container.style.width = "1050px"; 
+    container.style.padding = "40px";
     container.style.background = "#fff";
     container.style.color = "#000";
-    container.style.fontFamily = "'Outfit', sans-serif";
+    container.style.fontFamily = "'Outfit', 'Segoe UI', Tahoma, sans-serif";
 
-    // Add Professional Header (Without company name)
+    // Add Professional Header
     container.innerHTML = `
-      <div style="text-align:center; margin-bottom:15px; border-bottom:2px solid #333; padding-bottom:10px">
-        <p style="margin:5px 0; font-size:16px; font-weight:700; color:#1a1a1a">SURRENDER & PAYMENT SUMMARY REPORT</p>
-        <p style="margin:0; font-size:11px; color:#666">Generated on: ${new Date().toLocaleString()}</p>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:3px solid #3b9da2; padding-bottom:15px">
+        <div style="text-align:left">
+          <h2 style="margin:0; font-size:28px; color:#1a1a1a; letter-spacing:-0.5px">SURRENDER & PAYMENT SUMMARY</h2>
+          <p style="margin:5px 0 0 0; font-size:14px; color:#666">Trade Reconciliation & Document Release Report</p>
+        </div>
+        <div style="text-align:right">
+          <p style="margin:0; font-size:12px; color:#444; font-weight:bold">REPORT DATE</p>
+          <p style="margin:2px 0 0 0; font-size:14px; color:#1a1a1a">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+          <p style="margin:4px 0 0 0; font-size:11px; color:#888">${new Date().toLocaleTimeString()}</p>
+        </div>
       </div>
     `;
 
@@ -667,51 +676,82 @@ function bindDashboardUI() {
     const clone = table.cloneNode(true);
     clone.style.width = "100%";
     clone.style.borderCollapse = "collapse";
-    clone.style.fontSize = "10px";
+    clone.style.fontSize = "13px"; // Larger font for readability
+    clone.style.marginTop = "10px";
     
+    // Reset all internal styles for a clean print
     const cells = clone.querySelectorAll("th, td");
     cells.forEach(c => {
-      c.style.border = "1px solid #000";
-      c.style.padding = "6px 4px";
+      c.style.border = "1.5px solid #222"; // Stronger borders
+      c.style.padding = "10px 8px";
       c.style.color = "#000";
+      c.style.textAlign = "center";
+    });
+    
+    clone.querySelectorAll("td:first-child").forEach(td => {
+      td.style.textAlign = "left";
+      td.style.fontWeight = "bold";
     });
 
-    // Re-apply specific backgrounds that match the UI but are print-friendly
-    clone.querySelectorAll("thead th").forEach((th, idx) => {
-      th.style.background = "#e5e7eb";
-      th.style.fontWeight = "bold";
+    // Style the Header Rows
+    const headerRows = clone.querySelectorAll("thead tr");
+    headerRows.forEach((row, rIdx) => {
+      row.querySelectorAll("th").forEach(th => {
+        th.style.background = "#f1f5f9";
+        th.style.fontWeight = "bold";
+        th.style.fontSize = "11px";
+        th.style.textTransform = "uppercase";
+        th.style.padding = "12px 8px";
+      });
     });
 
-    // Style the grouped headers
+    // Color code the Surrender sections
     const mainHeaders = clone.querySelectorAll("thead tr:first-child th");
-    if (mainHeaders.length >= 9) {
-      mainHeaders[6].style.background = "#ccf2f4"; // Surrender Given
-      mainHeaders[7].style.background = "#fef3c7"; // Further Surrender Pending
+    // Adjust indices based on actual column count
+    if (mainHeaders.length >= 6) {
+      // Find "SURRENDER GIVEN" and "FURTHER SURRENDER PENDING" by text
+      mainHeaders.forEach(th => {
+        if (th.innerText.includes("SURRENDER GIVEN")) {
+          th.style.background = "#3b9da2";
+          th.style.color = "#fff";
+          th.style.border = "1.5px solid #2a7a7d";
+        }
+        if (th.innerText.includes("PENDING")) {
+          th.style.background = "#f1c40f";
+          th.style.color = "#000";
+          th.style.border = "1.5px solid #d4ac0d";
+        }
+      });
     }
 
-    const subHeaders = clone.querySelectorAll("thead tr:last-child th");
-    subHeaders.forEach(th => {
-      if (th.innerText.includes("MT") || th.innerText.includes("FCL") || th.innerText.includes("BAL")) {
-        // Find the index of this th in its row
-        const row = th.parentElement;
-        const index = Array.from(row.children).indexOf(th);
-        
-        // If it's one of the last 3 sub-columns (under Further Surrender Pending)
-        if (index >= 2) { 
-           th.style.background = "#fffbeb";
-        }
-      }
-    });
+    // High contrast for totals row
+    const footerRow = clone.querySelector("tbody tr:last-child");
+    if (footerRow && footerRow.innerText.includes("TOTAL")) {
+      footerRow.style.background = "#e2e8f0";
+      footerRow.style.fontWeight = "bold";
+      footerRow.style.fontSize = "14px";
+      footerRow.querySelectorAll("td").forEach(td => td.style.borderTop = "3px double #000");
+    }
 
     container.appendChild(clone);
     
-    // Footer
+    // Add Summary Legend / Footer
     const footer = document.createElement("div");
-    footer.style.marginTop = "15px";
-    footer.style.fontSize = "9px";
-    footer.style.textAlign = "right";
-    footer.style.color = "#999";
-    footer.innerText = "JK Trade Manager - Automated Business Intelligence Report";
+    footer.style.marginTop = "30px";
+    footer.style.borderTop = "1px solid #ccc";
+    footer.style.paddingTop = "15px";
+    footer.style.display = "flex";
+    footer.style.justifyContent = "space-between";
+    footer.style.fontSize = "11px";
+    footer.style.color = "#666";
+    footer.innerHTML = `
+      <div>
+        <strong>Notes:</strong> All amounts are in AED. Conversion rate applied: 3.6725 (unless specified otherwise).
+      </div>
+      <div style="text-align:right">
+        Page 1 of 1 · JK Trade Manager
+      </div>
+    `;
     container.appendChild(footer);
 
     html2pdf().set(opt).from(container).save();
