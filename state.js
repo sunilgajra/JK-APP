@@ -32,6 +32,7 @@ export const state = {
   },
   dashboardPartyFilter: "",
   dashboardSupplierFilter: "",
+  highSeasGrouping: "original", // 'original' or 'highseas'
   error: "",
   ready: false
 };

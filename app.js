@@ -619,6 +619,11 @@ function bindDashboardUI() {
     render();
   });
 
+  document.getElementById("dashboard-high-seas-grouping")?.addEventListener("change", (e) => {
+    state.highSeasGrouping = e.target.value;
+    render();
+  });
+
   // Export CSV
   document.getElementById("export-surrender-csv")?.addEventListener("click", () => {
     const table = document.getElementById("surrender-summary-table");

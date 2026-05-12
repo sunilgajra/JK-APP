@@ -146,6 +146,10 @@ export function dashboardView() {
             <option value="">Filter Supplier</option>
             ${state.suppliers.map(s => `<option value="${s.id}" ${String(state.dashboardSupplierFilter) === String(s.id) ? "selected" : ""}>${esc(s.name)}</option>`).join("")}
           </select>
+          <select id="dashboard-high-seas-grouping" style="width:160px; padding:6px 10px; font-size:12px">
+            <option value="original" ${state.highSeasGrouping === "original" ? "selected" : ""}>Group: Original Buyer</option>
+            <option value="highseas" ${state.highSeasGrouping === "highseas" ? "selected" : ""}>Group: High Seas Buyer</option>
+          </select>
           <button id="export-surrender-csv" class="btn-small">Export CSV</button>
           <button id="export-surrender-pdf" class="btn-small btn-info">Export PDF</button>
         </div>
@@ -178,14 +182,18 @@ export function dashboardView() {
               let filteredDeals = state.deals;
 
               if (state.dashboardPartyFilter) {
-                filteredDeals = filteredDeals.filter(d => String(d.buyer_id) === String(state.dashboardPartyFilter));
+                filteredDeals = filteredDeals.filter(d => {
+                  const partyId = (state.highSeasGrouping === "highseas" && d.is_high_seas) ? d.high_seas_buyer_id : d.buyer_id;
+                  return String(partyId) === String(state.dashboardPartyFilter);
+                });
               }
               if (state.dashboardSupplierFilter) {
                 filteredDeals = filteredDeals.filter(d => String(d.supplier_id) === String(state.dashboardSupplierFilter));
               }
 
               filteredDeals.forEach(d => {
-                const b = state.buyers.find(x => String(x.id) === String(d.buyer_id));
+                const partyId = (state.highSeasGrouping === "highseas" && d.is_high_seas) ? d.high_seas_buyer_id : d.buyer_id;
+                const b = state.buyers.find(x => String(x.id) === String(partyId));
                 const name = b?.name || "Unknown Buyer";
                 if (!summary[name]) {
                   summary[name] = { fcl:0, qty:0, total:0, rec:0, bal:0, pTotal:0, pPaid:0, pBal:0, sQty:0, sFcl:0 };
