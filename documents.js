@@ -223,7 +223,7 @@ function previewScript() {
         const actions = document.querySelector(".previewActions");
         const doc = document.querySelector(".doc");
         const oldTransform = doc ? doc.style.transform : "";
-        const oldMargin = doc ? doc.style.marginTop : "";
+        const oldBodyMarginTop = doc ? doc.style.marginTop : "";
         const btn = event.target;
         const oldText = btn.innerText;
 
@@ -248,7 +248,7 @@ function previewScript() {
         
         // TEMPORARILY REMOVE STYLES THAT INTERFERE WITH CAPTURE
         const oldShadow = docEl.style.boxShadow;
-        const oldMargin = docEl.style.margin;
+        const oldDocMargin = docEl.style.margin;
         docEl.style.boxShadow = "none";
         docEl.style.margin = "0";
 
@@ -274,7 +274,7 @@ function previewScript() {
           alert("Download failed. Please use 'Print / PDF' instead.");
         } finally {
           docEl.style.boxShadow = oldShadow;
-          docEl.style.margin = oldMargin;
+          docEl.style.margin = oldDocMargin;
           if (btn) {
             btn.innerText = oldText;
             btn.disabled = false;
@@ -282,7 +282,7 @@ function previewScript() {
           if (actions) actions.style.display = "flex";
           if (doc) {
             doc.style.transform = oldTransform;
-            doc.style.marginTop = oldMargin;
+            doc.style.marginTop = oldBodyMarginTop;
           }
         }
       }
