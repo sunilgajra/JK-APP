@@ -148,6 +148,9 @@ export function dashboardView() {
               <th rowspan="2">TOTAL (AED)</th>
               <th rowspan="2">RECED (AED)</th>
               <th rowspan="2">BALANCE (AED)</th>
+              <th rowspan="2">PURCHASE TOTAL (AED)</th>
+              <th rowspan="2">PAID SUPP (AED)</th>
+              <th rowspan="2">PURCHASE BAL (AED)</th>
               <th colspan="2" style="background:rgba(59,157,162,0.2)">SURRENDER GIVEN</th>
               <th colspan="3" style="background:rgba(241,196,15,0.2); color:#000">FURTHER SURRENDER PENDING</th>
             </tr>
@@ -175,26 +178,36 @@ export function dashboardView() {
                 const b = state.buyers.find(x => String(x.id) === String(d.buyer_id));
                 const name = b?.name || "Unknown Buyer";
                 if (!summary[name]) {
-                  summary[name] = { fcl:0, qty:0, total:0, rec:0, bal:0, sQty:0, sFcl:0 };
+                  summary[name] = { fcl:0, qty:0, total:0, rec:0, bal:0, pTotal:0, pPaid:0, pBal:0, sQty:0, sFcl:0 };
                 }
                 
                 const curr = d.document_currency || d.currency || "AED";
                 const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.6725);
+                const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.6725);
                 
                 const s = paymentSummary(d.id, d.total_amount_usd, d.purchase_total_usd, "USD");
                 
                 // Use fcl_count if available, otherwise fall back to container numbers count
                 const fcl = Number(d.fcl_count) || (Array.isArray(d.container_numbers) ? d.container_numbers.length : 0);
                 const qty = Number(d.quantity || 0);
+                
                 const totalAed = s.sale * sConv;
                 const recAed = s.received * sConv;
                 const balAed = s.receivable * sConv;
+                
+                const pTotalAed = s.purchase * pConv;
+                const pPaidAed = s.sent * pConv;
+                const pBalAed = s.payable * pConv;
                 
                 summary[name].fcl += fcl;
                 summary[name].qty += qty;
                 summary[name].total += totalAed;
                 summary[name].rec += recAed;
                 summary[name].bal += balAed;
+                
+                summary[name].pTotal += pTotalAed;
+                summary[name].pPaid += pPaidAed;
+                summary[name].pBal += pBalAed;
                 
                 // If BL is surrendered, all qty and containers are "Given"
                 if (d.is_bl_surrendered) {
@@ -205,13 +218,14 @@ export function dashboardView() {
               
               const sorted = Object.entries(summary).sort((a,b) => b[1].total - a[1].total);
               
-              let tFcl=0, tQty=0, tTot=0, tRec=0, tBal=0, tsQty=0, tsFcl=0;
+              let tFcl=0, tQty=0, tTot=0, tRec=0, tBal=0, tpTot=0, tpPaid=0, tpBal=0, tsQty=0, tsFcl=0;
               
               const rows = sorted.map(([name, v]) => {
                 const pQty = v.qty - v.sQty;
                 const pFcl = v.fcl - v.sFcl;
                 
                 tFcl += v.fcl; tQty += v.qty; tTot += v.total; tRec += v.rec; tBal += v.bal;
+                tpTot += v.pTotal; tpPaid += v.pPaid; tpBal += v.pBal;
                 tsQty += v.sQty; tsFcl += v.sFcl;
                 
                 return `
@@ -222,6 +236,11 @@ export function dashboardView() {
                     <td class="right">${fmtMoney(v.total)}</td>
                     <td class="right" style="color:var(--success)">${fmtMoney(v.rec)}</td>
                     <td class="right" style="font-weight:700">${fmtMoney(v.bal)}</td>
+                    
+                    <td class="right" style="background:rgba(255,255,255,0.02)">${fmtMoney(v.pTotal)}</td>
+                    <td class="right" style="background:rgba(255,255,255,0.02); color:var(--danger)">${fmtMoney(v.pPaid)}</td>
+                    <td class="right" style="background:rgba(255,255,255,0.02); font-weight:700">${fmtMoney(v.pBal)}</td>
+
                     <td class="right" style="background:rgba(255,255,255,0.02)">${v.sQty.toFixed(2)}</td>
                     <td class="center" style="background:rgba(255,255,255,0.02)">${v.sFcl}</td>
                     <td class="right" style="background:rgba(241,196,15,0.05)">${pQty.toFixed(2)}</td>
@@ -231,7 +250,7 @@ export function dashboardView() {
                 `;
               }).join("");
 
-              if (!rows) return `<tr><td colspan="11" class="empty">No deals found for the selected party.</td></tr>`;
+              if (!rows) return `<tr><td colspan="14" class="empty">No deals found for the selected filters.</td></tr>`;
 
               return rows + `
                 <tr style="background:rgba(255,255,255,0.05); font-weight:800; border-top: 2px solid var(--border)">
@@ -241,6 +260,11 @@ export function dashboardView() {
                   <td class="right">${fmtMoney(tTot)}</td>
                   <td class="right">${fmtMoney(tRec)}</td>
                   <td class="right">${fmtMoney(tBal)}</td>
+                  
+                  <td class="right">${fmtMoney(tpTot)}</td>
+                  <td class="right">${fmtMoney(tpPaid)}</td>
+                  <td class="right">${fmtMoney(tpBal)}</td>
+
                   <td class="right">${tsQty.toFixed(2)}</td>
                   <td class="center">${tsFcl}</td>
                   <td class="right">${(tQty - tsQty).toFixed(2)}</td>

@@ -685,16 +685,20 @@ function bindDashboardUI() {
 
     // Style the grouped headers
     const mainHeaders = clone.querySelectorAll("thead tr:first-child th");
-    if (mainHeaders.length >= 9) {
-      mainHeaders[6].style.background = "#ccf2f4"; // Surrender Given
-      mainHeaders[7].style.background = "#fef3c7"; // Further Surrender Pending
+    if (mainHeaders.length >= 12) {
+      mainHeaders[9].style.background = "#ccf2f4"; // Surrender Given
+      mainHeaders[10].style.background = "#fef3c7"; // Further Surrender Pending
     }
 
     const subHeaders = clone.querySelectorAll("thead tr:last-child th");
     subHeaders.forEach(th => {
       if (th.innerText.includes("MT") || th.innerText.includes("FCL") || th.innerText.includes("BAL")) {
-        // If it's under the yellow section
-        if (th.parentElement.parentElement.parentElement.querySelector("th[colspan='3']")) {
+        // Find the index of this th in its row
+        const row = th.parentElement;
+        const index = Array.from(row.children).indexOf(th);
+        
+        // If it's one of the last 3 sub-columns (under Further Surrender Pending)
+        if (index >= 2) { 
            th.style.background = "#fffbeb";
         }
       }
