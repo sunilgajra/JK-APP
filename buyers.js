@@ -36,6 +36,7 @@ export function buyersView() {
             <div class="mt-8 flex gap-8 flex-wrap">
               <button data-edit-buyer="${b.id}">Edit</button>
               <button data-delete-buyer="${b.id}">Delete</button>
+              /* --- LOCKED - DO NOT MODIFY --- */
               <button data-show-buyer-master-deals="${b.id}" class="btn-info">Master Settlement</button>
             </div>
             <div id="buyer-master-deals-wrap-${b.id}" class="mt-10" style="display:none; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; border:1px solid rgba(59,157,162,0.3)">

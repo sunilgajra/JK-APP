@@ -1,3 +1,4 @@
+/* --- LOCKED - DO NOT MODIFY (Documents & Format) --- */
 import { state } from "./state.js";
 
 function esc(s) {
@@ -83,6 +84,7 @@ function numberToWords(n) {
   return out.join(" ").trim();
 }
 
+/* --- LOCKED - DO NOT MODIFY --- */
 function amountWords(n, currency = "USD") {
   const rounded = Math.floor(n || 0);
   const decimals = Math.round((n - rounded) * 100);
@@ -104,6 +106,7 @@ function amountWords(n, currency = "USD") {
   return words + " ONLY";
 }
 
+/* --- LOCKED - DO NOT MODIFY --- */
 export function buildShippingInstruction(si, buyer, supplier, deal, company = {}) {
   const date = new Date().toISOString();
   const shipper = company.shippers?.[si.shipper_index] || company;
@@ -308,6 +311,7 @@ function previewScript() {
   `;
 }
 
+/* --- LOCKED - DO NOT MODIFY --- */
 export function commonStyle(docClass = "") {
   return `
     <meta charset="UTF-8">
@@ -815,6 +819,7 @@ function footer(company = {}, date = "", showSignatory = false) {
   `;
 }
 
+/* --- LOCKED - DO NOT MODIFY --- */
 export function buildPI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.created_at || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
@@ -1023,6 +1028,7 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
   `;
 }
 
+/* --- LOCKED - DO NOT MODIFY --- */
 export function buildCI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
   const currency = docCurrency(deal);
@@ -1080,6 +1086,7 @@ function innerPL(deal, buyer, supplier, company, date) {
   `;
 }
 
+/* --- LOCKED - DO NOT MODIFY --- */
 export function buildPL(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
   const filename = suggestFilename("PL", deal, buyer, company);
@@ -1130,6 +1137,7 @@ function innerCOO(deal, buyer, supplier, company, date) {
   `;
 }
 
+/* --- LOCKED - DO NOT MODIFY --- */
 export function buildCOO(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
   const filename = suggestFilename("COO", deal, buyer, company);
@@ -1149,6 +1157,7 @@ export function buildCOO(deal, buyer, supplier, company = {}) {
   </html>`;
 }
 
+/* --- LOCKED - DO NOT MODIFY --- */
 export function buildDocumentSet(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
   const currency = docCurrency(deal);
@@ -1454,6 +1463,7 @@ export function buildBuyerStatement(deal, buyer, supplier, payments, company = {
   </html>`;
 }
 
+/* --- LOCKED - DO NOT MODIFY --- */
 export function buildSupplierMasterStatement(supplier, deals, allPayments, company = {}) {
   const date = new Date().toISOString();
 
@@ -1633,6 +1643,7 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
   </html>`;
 }
 
+/* --- LOCKED - DO NOT MODIFY --- */
 export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {}) {
   const date = new Date().toISOString();
 
@@ -2058,6 +2069,7 @@ export function buildCOA(coa, deal, company = {}) {
   </html>`;
 }
 
+/* --- LOCKED - DO NOT MODIFY --- */
 export function buildPO(po, supplier, company = {}) {
   const date = po.po_date;
   const specs = Array.isArray(po.specifications) ? po.specifications : [];

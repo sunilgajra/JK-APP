@@ -129,6 +129,7 @@ export function dealsView() {
                 <button data-delete-deal="${d.id}">Delete</button>
               </div>
 
+              /* --- LOCKED - DO NOT MODIFY --- */
               <div class="mt-8 flex gap-8 flex-wrap">
                 <button data-print-ci="${d.id}">Print CI</button>
                 <button data-print-coa="${d.id}">Print COA</button>
