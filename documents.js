@@ -387,7 +387,7 @@ export function commonStyle(docClass = "") {
       font-weight: 800;
       text-align: right;
       line-height: 1;
-      margin: 0 0 10px 0;
+      margin: 0 0 5px 0;
       letter-spacing: .2px;
       text-transform: uppercase;
     }
@@ -404,7 +404,7 @@ export function commonStyle(docClass = "") {
 
     .panel {
       border: 2px solid #222;
-      min-height: 110px;
+      min-height: 100px;
     }
 
     .panelBody {
@@ -425,7 +425,7 @@ export function commonStyle(docClass = "") {
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 15px;
+      margin-bottom: 8px;
     }
 
     th, td {
@@ -473,7 +473,7 @@ export function commonStyle(docClass = "") {
 
     .boxBody {
       padding: 5px 6px;
-      min-height: 40px;
+      min-height: 30px;
       font-size: 10px;
       font-weight: 700;
     }
@@ -960,9 +960,9 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
         </tr>
       </thead>
       <tbody>
-        <tr style="height:145px">
+        <tr style="height:130px">
           <td style="padding:0">
-            <div style="display:flex; flex-direction:column; justify-content:space-between; height:145px; padding:4px 6px">
+            <div style="display:flex; flex-direction:column; justify-content:space-between; height:130px; padding:4px 6px">
               <div>
                 <b>${esc(deal.productName || "")}</b><br>
                 HS CODE : ${esc(deal.hsn_code || "—")}
@@ -1005,7 +1005,7 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
 
       ${containerBlock(deal)}
 
-      <table class="meta thin" style="margin-top:10px">
+      <table class="meta thin" style="margin-top:5px">
         <tr><td>Subtotal</td><td class="right">${fmt(total)}</td></tr>
         <tr><td>Taxable</td><td class="right">-</td></tr>
         <tr><td>Tax rate</td><td class="right">-</td></tr>
@@ -1020,7 +1020,7 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
       </table>
     </div>
 
-    <div style="margin-top:10px">
+    <div style="margin-top:5px">
        ${additionalDetailsBlock(deal, supplier, "Invoice No. Date:", "", false)}
     </div>
 
