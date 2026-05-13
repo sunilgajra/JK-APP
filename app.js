@@ -650,7 +650,7 @@ function bindDashboardUI() {
       filename: `Surrender_Summary_${new Date().toISOString().split('T')[0]}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
       html2canvas: { 
-        scale: 2, 
+        scale: 2.5, 
         useCORS: true, 
         logging: false,
         windowWidth: 1200,
@@ -669,7 +669,9 @@ function bindDashboardUI() {
     container.style.position = "absolute";
     container.style.left = "0";
     container.style.top = "0";
-    container.style.zIndex = "-9999";
+    container.style.zIndex = "1"; // Above body bg, but below main #content (z-index 10)
+    container.style.opacity = "1";
+    container.style.visibility = "visible";
     container.style.fontFamily = "'Outfit', 'Segoe UI', Tahoma, sans-serif";
 
     // Add Professional Header
@@ -771,7 +773,7 @@ function bindDashboardUI() {
 
     document.body.appendChild(container);
     
-    html2pdf().from(container).set(opt).save().then(() => {
+    html2pdf().set(opt).from(container).save().then(() => {
       document.body.removeChild(container);
     });
   });
