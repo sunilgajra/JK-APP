@@ -1188,8 +1188,15 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
   <body>
     ${previewActions()}
     ${innerCI(deal, buyer, supplier, company, date, currency)}
-    ${innerPL(deal, buyer, supplier, company, date)}
-    ${innerCOO(deal, buyer, supplier, company, date)}
+    </div>
+
+    <div class="doc">
+      ${innerPL(deal, buyer, supplier, company, date)}
+    </div>
+
+    <div class="doc">
+      ${innerCOO(deal, buyer, supplier, company, date)}
+    </div>
   </body>
   </html>`;
 }
