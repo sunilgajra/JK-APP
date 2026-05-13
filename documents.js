@@ -329,7 +329,7 @@ export function commonStyle(docClass = "") {
         box-shadow: none !important; 
         border: none !important; 
         margin: 0 !important; 
-        padding: 10mm !important; 
+        padding: 8mm !important; 
         width: 100% !important;
       }
     }
@@ -404,7 +404,7 @@ export function commonStyle(docClass = "") {
 
     .panel {
       border: 2px solid #222;
-      min-height: 100px;
+      min-height: 90px;
     }
 
     .panelBody {
@@ -418,7 +418,7 @@ export function commonStyle(docClass = "") {
       display: grid;
       grid-template-columns: 1fr .95fr 1fr;
       gap: 10px;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
       align-items: start;
     }
 
@@ -430,7 +430,7 @@ export function commonStyle(docClass = "") {
 
     th, td {
       border: 2px solid #222;
-      padding: 4px 6px;
+      padding: 3px 5px;
       vertical-align: top;
     }
 
@@ -479,7 +479,7 @@ export function commonStyle(docClass = "") {
     }
 
     .footer {
-      margin-top: 15px;
+      margin-top: 10px;
       display: grid;
       grid-template-columns: 1.2fr .8fr 1fr;
       gap: 20px;
@@ -960,9 +960,9 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
         </tr>
       </thead>
       <tbody>
-        <tr style="height:130px">
+        <tr style="height:120px">
           <td style="padding:0">
-            <div style="display:flex; flex-direction:column; justify-content:space-between; height:130px; padding:4px 6px">
+            <div style="display:flex; flex-direction:column; justify-content:space-between; height:120px; padding:4px 6px">
               <div>
                 <b>${esc(deal.productName || "")}</b><br>
                 HS CODE : ${esc(deal.hsn_code || "—")}
