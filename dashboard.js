@@ -48,9 +48,14 @@ export function dashboardView() {
     totalReceivedAed += receivedAed;
     totalSentAed += sentAed;
 
+    const partyId = (state.highSeasGrouping === "highseas" && d.is_high_seas && d.high_seas_buyer_id) ? d.high_seas_buyer_id : d.buyer_id;
+    const bName = state.buyers.find(x => String(x.id) === String(partyId))?.name || "—";
+    const sName = state.suppliers.find(x => String(x.id) === String(d.supplier_id))?.name || "—";
+
     if (receivableAed !== 0) {
       receivablesBreakdown.push({
         deal_no: d.deal_no,
+        party: bName,
         product: d.product_name,
         total_usd: Number(d.total_amount_usd || 0),
         received_usd: receivedAed / sConv,
@@ -63,6 +68,7 @@ export function dashboardView() {
     if (payableAed !== 0) {
       payablesBreakdown.push({
         deal_no: d.deal_no,
+        party: sName,
         product: d.product_name,
         total_usd: Number(d.purchase_total_usd || 0),
         sent_usd: sentAed / pConv,
@@ -183,7 +189,7 @@ export function dashboardView() {
 
       if (state.dashboardPartyFilter) {
         filteredDeals = filteredDeals.filter(d => {
-          const partyId = (state.highSeasGrouping === "highseas" && d.is_high_seas) ? d.high_seas_buyer_id : d.buyer_id;
+          const partyId = (state.highSeasGrouping === "highseas" && d.is_high_seas && d.high_seas_buyer_id) ? d.high_seas_buyer_id : d.buyer_id;
           return String(partyId) === String(state.dashboardPartyFilter);
         });
       }
@@ -192,7 +198,7 @@ export function dashboardView() {
       }
 
       filteredDeals.forEach(d => {
-        const partyId = (state.highSeasGrouping === "highseas" && d.is_high_seas) ? d.high_seas_buyer_id : d.buyer_id;
+        const partyId = (state.highSeasGrouping === "highseas" && d.is_high_seas && d.high_seas_buyer_id) ? d.high_seas_buyer_id : d.buyer_id;
         const b = state.buyers.find(x => String(x.id) === String(partyId));
         const name = b?.name || "Unknown Buyer";
         if (!summary[name]) {

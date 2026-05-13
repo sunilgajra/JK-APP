@@ -509,6 +509,7 @@ function bindDashboardUI() {
             <thead>
               <tr>
                 <th>Deal No</th>
+                <th>Party</th>
                 <th>Sale (USD)</th>
                 <th>Received (USD)</th>
                 <th>Balance (USD)</th>
@@ -520,6 +521,7 @@ function bindDashboardUI() {
               ${data.map(item => `
                 <tr>
                   <td style="font-weight:700">${esc(item.deal_no)}</td>
+                  <td style="font-size:11px; opacity:0.8">${esc(item.party)}</td>
                   <td>${fmt(item.total_usd)}</td>
                   <td style="color:var(--success)">${fmt(item.received_usd)}</td>
                   <td style="font-weight:700">${fmt(item.balance_usd)}</td>
@@ -540,6 +542,7 @@ function bindDashboardUI() {
             <thead>
               <tr>
                 <th>Deal No</th>
+                <th>Party</th>
                 <th>Purchase (USD)</th>
                 <th>Sent (USD)</th>
                 <th>Balance (USD)</th>
@@ -551,6 +554,7 @@ function bindDashboardUI() {
               ${data.map(item => `
                 <tr>
                   <td style="font-weight:700">${esc(item.deal_no)}</td>
+                  <td style="font-size:11px; opacity:0.8">${esc(item.party)}</td>
                   <td>${fmt(item.total_usd)}</td>
                   <td style="color:var(--danger)">${fmt(item.sent_usd)}</td>
                   <td style="font-weight:700">${fmt(item.balance_usd)}</td>
