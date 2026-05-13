@@ -180,10 +180,67 @@ function docCurrency(deal = {}) {
   return deal.document_currency || deal.currency || deal.base_currency || "AED";
 }
 
+/* --- MOBILE ONLY - SAFE TO MODIFY --- */
+/* --- MOBILE ONLY - SAFE TO MODIFY --- */
+function mobileScripts() {
+  return `
+      function adjustScale() {
+        const doc = document.querySelector(".doc");
+        if (!doc) return;
+        const vw = window.innerWidth;
+        const dw = doc.offsetWidth;
+        if (vw < dw + 40) {
+          const scale = (vw - 20) / dw;
+          doc.style.transform = "scale(" + scale + ")";
+          doc.style.transformOrigin = "top center";
+          doc.style.marginTop = "10px";
+        } else {
+          doc.style.transform = "none";
+          doc.style.marginTop = "30px";
+        }
+      }
+
+      window.addEventListener("resize", adjustScale);
+      window.addEventListener("load", () => {
+        adjustScale();
+        setTimeout(adjustScale, 500);
+      });
+
+      async function downloadExactPdf(event) {
+        if (event) event.preventDefault();
+        const btn = event?.currentTarget;
+        const oldText = btn ? btn.innerText : "";
+        if (btn) { btn.innerText = "Generating PDF..."; btn.disabled = true; }
+        
+        const element = document.querySelector(".doc");
+        await waitForImages(element);
+        
+        const opt = {
+          margin: 0,
+          filename: document.title + ".pdf",
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+        };
+
+        try {
+          await html2pdf().set(opt).from(element).save();
+        } catch (err) {
+          console.error("PDF Error:", err);
+          alert("Failed to generate PDF. Please use Browser Print.");
+        } finally {
+          if (btn) { btn.innerText = oldText; btn.disabled = false; }
+        }
+      }
+  `;
+}
+
 function previewScript() {
   return `
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
+      ${mobileScripts()}
+
       async function waitForImages(root) {
         const images = Array.from(root.querySelectorAll("img"));
         await Promise.all(images.map((img) => {
@@ -195,119 +252,36 @@ function previewScript() {
         }));
       }
 
-      function adjustScale() {
-        const doc = document.querySelector(".doc");
-        if (!doc) return;
-        const vw = window.innerWidth;
-        const dw = doc.offsetWidth;
-        if (vw < dw + 40) {
-          const scale = (vw - 20) / dw;
-          doc.style.transform = "scale(" + scale + ")";
-          doc.style.marginTop = "60px";
-        } else {
-          doc.style.transform = "none";
-          doc.style.marginTop = "30px";
-        }
-      }
-
-      window.addEventListener("resize", adjustScale);
-      window.addEventListener("DOMContentLoaded", () => {
-        adjustScale();
-      });
-
       function triggerPrint() {
-        const doc = document.querySelector(".doc");
-        const actions = document.querySelector(".previewActions");
-        const oldTransform = doc ? doc.style.transform : "";
-        const oldMargin = doc ? doc.style.marginTop : "";
-        const oldTitle = document.title;
-        
-        if (doc) {
-          doc.style.transform = "none";
-          doc.style.marginTop = "0";
-        }
-        if (actions) actions.style.display = "none";
-        
         window.print();
-        
-        setTimeout(() => {
-          document.title = oldTitle;
-          if (doc) {
-            doc.style.transform = oldTransform;
-            doc.style.marginTop = oldMargin;
-          }
-          if (actions) actions.style.display = "flex";
-        }, 1000);
       }
-
-      async function downloadExactPdf() {
-        const actions = document.querySelector(".previewActions");
-        const doc = document.querySelector(".doc");
-        const oldTransform = doc ? doc.style.transform : "";
-        const oldBodyMarginTop = doc ? doc.style.marginTop : "";
-        const btn = event.target;
-        const oldText = btn.innerText;
-
-        if (btn) {
-          btn.innerText = "Generating...";
-          btn.disabled = true;
-        }
-
-        if (actions) actions.style.display = "none";
-        if (doc) {
-          doc.style.transform = "none";
-          doc.style.marginTop = "0";
-        }
-
-        window.scrollTo(0,0);
-        
-        const title = document.title || "document";
-        const docEl = document.querySelector(".doc");
-        if (!docEl) return;
-
-        const isLandscape = title.includes("SETTLEMENT") || title.includes("SUMMARY");
-        
-        const oldShadow = docEl.style.boxShadow;
-        const oldDocMargin = docEl.style.margin;
-        docEl.style.boxShadow = "none";
-        docEl.style.margin = "0";
-
-        const opt = {
-          margin: 0,
-          filename: title + ".pdf",
-          image: { type: "jpeg", quality: 1.0 },
-          html2canvas: { 
-            scale: 3, 
-            useCORS: true, 
-            windowWidth: isLandscape ? 1200 : 800,
-            logging: false,
-            x: 0,
-            y: 0
-          },
-          jsPDF: { unit: "mm", format: "a4", orientation: isLandscape ? "landscape" : "portrait" }
-        };
-
-        try {
-          await html2pdf().from(docEl).set(opt).save();
-        } catch (err) {
-          console.error(err);
-          alert("Download failed. Please use 'Print / PDF' instead.");
-        } finally {
-          docEl.style.boxShadow = oldShadow;
-          docEl.style.margin = oldDocMargin;
-          if (btn) {
-            btn.innerText = oldText;
-            btn.disabled = false;
-          }
-          if (actions) actions.style.display = "flex";
-          if (doc) {
-            doc.style.transform = oldTransform;
-            doc.style.marginTop = oldBodyMarginTop;
-          }
-        }
-      }
-
     </script>
+  `;
+}
+
+/* --- MOBILE ONLY - SAFE TO MODIFY --- */
+function mobileStyles() {
+  return `
+    @media screen and (max-width: 1024px) {
+      body { padding: 0; background: #fff; }
+      .doc { 
+        margin: 0 auto !important; 
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        width: 210mm !important; /* Keep internal width constant for scaling */
+      }
+      .previewActions { 
+        padding: 10px; 
+        gap: 8px; 
+        position: fixed; 
+        bottom: 0; 
+        top: auto; 
+        width: 100%; 
+        border-top: 2px solid #3b9da2;
+        border-bottom: none;
+      }
+      .previewActions button { padding: 10px 15px; font-size: 13px; flex: 1; }
+    }
   `;
 }
 
@@ -527,6 +501,8 @@ export function commonStyle(docClass = "") {
     .previewActions button.btn-back { background: #64748b; }
     
     .plainTable td { border: none !important; padding: 1px 0 !important; font-size: 10px; font-weight: 700; }
+    
+    ${mobileStyles()}
   </style>
   <div class="doc ${docClass}">
   `;
