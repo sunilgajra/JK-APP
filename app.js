@@ -676,8 +676,8 @@ function bindDashboardUI() {
         <!-- Table -->
         <style>
           .pdf-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; table-layout: fixed; border: 1.5px solid #000; }
-          .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 10px 4px; text-align: center; color: #000; background: #fff !important; word-wrap: break-word; }
-          .pdf-table th { background: #f1f5f9 !important; font-weight: 800; text-transform: uppercase; font-size: 8.5px; height: 35px; }
+          .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 10px 4px; text-align: center; color: #000; background: #fff; word-wrap: break-word; }
+          .pdf-table th { background: #f1f5f9; font-weight: 800; text-transform: uppercase; font-size: 8.5px; height: 35px; }
           .pdf-table td.left { text-align: left; font-weight: 800; padding-left: 8px; font-size: 11px; }
           .pdf-table tr.total-row { background: #e2e8f0 !important; font-weight: 900; font-size: 12px; }
           .pdf-table tr.total-row td { background: #e2e8f0 !important; border-top: 2.5px solid #000; }
@@ -686,8 +686,8 @@ function bindDashboardUI() {
         <table class="pdf-table">
           <thead>
             ${table.querySelector("thead").innerHTML
-              .replace(/background:rgba\(59,157,162,.*?\)/g, 'background:#3b9da2; color:#fff')
-              .replace(/background:rgba\(241,196,15,.*?\)/g, 'background:#f1c40f; color:#000')
+              .replace(/background:rgba\(59,157,162,.*?\)/g, 'background:#3b9da2 !important; color:#fff !important')
+              .replace(/background:rgba\(241,196,15,.*?\)/g, 'background:#f1c40f !important; color:#000 !important')
               .replace(/rgba\(.*?\)/g, '#f1f5f9')
               .replace(/var\(--card-bg\)/g, '#f1f5f9')
               .replace(/var\(.*?\)/g, '#000')
