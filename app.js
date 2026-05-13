@@ -685,7 +685,13 @@ function bindDashboardUI() {
         
         <table class="pdf-table">
           <thead>
-            ${table.querySelector("thead").innerHTML.replace(/rgba\(.*?\)/g, '#f1f5f9').replace(/var\(--card-bg\)/g, '#f1f5f9').replace(/var\(.*?\)/g, '#000')}
+            ${table.querySelector("thead").innerHTML
+              .replace(/background:rgba\(59,157,162,.*?\)/g, 'background:#3b9da2; color:#fff')
+              .replace(/background:rgba\(241,196,15,.*?\)/g, 'background:#f1c40f; color:#000')
+              .replace(/rgba\(.*?\)/g, '#f1f5f9')
+              .replace(/var\(--card-bg\)/g, '#f1f5f9')
+              .replace(/var\(.*?\)/g, '#000')
+            }
           </thead>
           <tbody>
             ${table.querySelector("tbody").innerHTML.replace(/rgba\(.*?\)/g, 'transparent').replace(/var\(.*?\)/g, '#000')}
