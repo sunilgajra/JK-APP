@@ -649,7 +649,14 @@ function bindDashboardUI() {
     const opt = {
       filename: `Surrender_Summary_${new Date().toISOString().split('T')[0]}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { scale: 3, useCORS: true, logging: false },
+      html2canvas: { 
+        scale: 3, 
+        useCORS: true, 
+        logging: false,
+        windowWidth: 1050,
+        scrollX: 0,
+        scrollY: 0
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
     };
     
@@ -660,6 +667,9 @@ function bindDashboardUI() {
     container.style.padding = "40px";
     container.style.background = "#fff";
     container.style.color = "#000";
+    container.style.position = "fixed";
+    container.style.left = "-9999px";
+    container.style.top = "0";
     container.style.fontFamily = "'Outfit', 'Segoe UI', Tahoma, sans-serif";
 
     // Add Professional Header
@@ -691,6 +701,7 @@ function bindDashboardUI() {
       c.style.padding = "10px 8px";
       c.style.color = "#000";
       c.style.textAlign = "center";
+      c.style.background = "transparent"; // Ensure no background from theme
     });
     
     clone.querySelectorAll("td:first-child").forEach(td => {
@@ -707,6 +718,7 @@ function bindDashboardUI() {
         th.style.fontSize = "11px";
         th.style.textTransform = "uppercase";
         th.style.padding = "12px 8px";
+        th.style.color = "#000";
       });
     });
 
@@ -735,7 +747,10 @@ function bindDashboardUI() {
       footerRow.style.background = "#e2e8f0";
       footerRow.style.fontWeight = "bold";
       footerRow.style.fontSize = "14px";
-      footerRow.querySelectorAll("td").forEach(td => td.style.borderTop = "3px double #000");
+      footerRow.querySelectorAll("td").forEach(td => {
+        td.style.borderTop = "3px double #000";
+        td.style.color = "#000";
+      });
     }
 
     container.appendChild(clone);
@@ -759,7 +774,10 @@ function bindDashboardUI() {
     `;
     container.appendChild(footer);
 
-    html2pdf().set(opt).from(container).save();
+    document.body.appendChild(container);
+    html2pdf().set(opt).from(container).save().then(() => {
+      document.body.removeChild(container);
+    });
   });
 }
 
