@@ -196,7 +196,7 @@ export function dashboardView() {
         const b = state.buyers.find(x => String(x.id) === String(partyId));
         const name = b?.name || "Unknown Buyer";
         if (!summary[name]) {
-          summary[name] = { fcl: 0, qty: 0, total: 0, rec: 0, bal: 0, pTotal: 0, pPaid: 0, pBal: 0, sQty: 0, sFcl: 0, ppBal: 0 };
+          summary[name] = { fcl: 0, qty: 0, total: 0, rec: 0, bal: 0, pTotal: 0, pPaid: 0, pBal: 0, sQty: 0, sFcl: 0 };
         }
 
         const curr = d.document_currency || d.currency || "AED";
@@ -243,14 +243,12 @@ export function dashboardView() {
         if (d.is_bl_surrendered) {
           summary[name].sQty += qty;
           summary[name].sFcl += fcl;
-        } else {
-          summary[name].ppBal += (pTotalAed - pPaidAed);
         }
       });
 
       const sorted = Object.entries(summary).sort((a, b) => b[1].total - a[1].total);
 
-      let tFcl = 0, tQty = 0, tTot = 0, tRec = 0, tBal = 0, tpTot = 0, tpPaid = 0, tpBal = 0, tsQty = 0, tsFcl = 0, tpPBal = 0;
+      let tFcl = 0, tQty = 0, tTot = 0, tRec = 0, tBal = 0, tpTot = 0, tpPaid = 0, tpBal = 0, tsQty = 0, tsFcl = 0;
 
       const rows = sorted.map(([name, v]) => {
         const pQty = v.qty - v.sQty;
@@ -258,7 +256,7 @@ export function dashboardView() {
 
         tFcl += v.fcl; tQty += v.qty; tTot += v.total; tRec += v.rec; tBal += v.bal;
         tpTot += v.pTotal; tpPaid += v.pPaid; tpBal += v.pBal;
-        tsQty += v.sQty; tsFcl += v.sFcl; tpPBal += v.ppBal;
+        tsQty += v.sQty; tsFcl += v.sFcl;
 
         return `
                   <tr>
@@ -274,7 +272,7 @@ export function dashboardView() {
                     <td class="center" style="background:rgba(255,255,255,0.02)">${v.sFcl}</td>
                     <td class="right" style="background:rgba(241,196,15,0.05)">${pQty.toFixed(2)}</td>
                     <td class="center" style="background:rgba(241,196,15,0.05)">${pFcl}</td>
-                    <td class="right" style="background:rgba(241,196,15,0.05); font-weight:700">${fmtMoney(v.ppBal)}</td>
+                    <td class="right" style="background:rgba(241,196,15,0.05); font-weight:700">${fmtMoney(v.pBal)}</td>
                   </tr>
                 `;
       }).join("");
@@ -295,7 +293,7 @@ export function dashboardView() {
                   <td class="center">${tsFcl}</td>
                   <td class="right">${(tQty - tsQty).toFixed(2)}</td>
                   <td class="center">${tFcl - tsFcl}</td>
-                  <td class="right">${fmtMoney(tpPBal)}</td>
+                  <td class="right">${fmtMoney(tpBal)}</td>
                 </tr>
               `;
     })()}
