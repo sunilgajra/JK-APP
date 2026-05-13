@@ -649,17 +649,26 @@ function bindDashboardUI() {
     const opt = {
       filename: `Surrender_Summary_${new Date().toISOString().split('T')[0]}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { scale: 3, useCORS: true, logging: false, windowWidth: 1050 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false,
+        windowWidth: 1120,
+        scrollX: 0,
+        scrollY: 0
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
     };
 
     // Create a styled container for the PDF
     const container = document.createElement("div");
-    // Standard A4 Landscape is ~297mm. We'll use a large pixel width for high quality rendering.
-    container.style.width = "1050px";
+    container.style.width = "1120px";
     container.style.padding = "40px";
     container.style.background = "#fff";
     container.style.color = "#000";
+    container.style.position = "absolute";
+    container.style.left = "-9999px";
+    container.style.top = "0";
     container.style.fontFamily = "'Outfit', 'Segoe UI', Tahoma, sans-serif";
 
     // Add Professional Header
@@ -681,16 +690,17 @@ function bindDashboardUI() {
     const clone = table.cloneNode(true);
     clone.style.width = "100%";
     clone.style.borderCollapse = "collapse";
-    clone.style.fontSize = "13px"; // Larger font for readability
+    clone.style.fontSize = "13px";
     clone.style.marginTop = "10px";
 
     // Reset all internal styles for a clean print
     const cells = clone.querySelectorAll("th, td");
     cells.forEach(c => {
-      c.style.border = "1.5px solid #222"; // Stronger borders
+      c.style.border = "1.5px solid #222";
       c.style.padding = "10px 8px";
       c.style.color = "#000";
       c.style.textAlign = "center";
+      c.style.background = "#fff";
     });
 
     clone.querySelectorAll("td:first-child").forEach(td => {
@@ -700,21 +710,20 @@ function bindDashboardUI() {
 
     // Style the Header Rows
     const headerRows = clone.querySelectorAll("thead tr");
-    headerRows.forEach((row, rIdx) => {
+    headerRows.forEach((row) => {
       row.querySelectorAll("th").forEach(th => {
         th.style.background = "#f1f5f9";
         th.style.fontWeight = "bold";
         th.style.fontSize = "11px";
         th.style.textTransform = "uppercase";
         th.style.padding = "12px 8px";
+        th.style.color = "#000";
       });
     });
 
     // Color code the Surrender sections
     const mainHeaders = clone.querySelectorAll("thead tr:first-child th");
-    // Adjust indices based on actual column count
     if (mainHeaders.length >= 6) {
-      // Find "SURRENDER GIVEN" and "FURTHER SURRENDER PENDING" by text
       mainHeaders.forEach(th => {
         if (th.innerText.includes("SURRENDER GIVEN")) {
           th.style.background = "#3b9da2";
@@ -735,7 +744,11 @@ function bindDashboardUI() {
       footerRow.style.background = "#e2e8f0";
       footerRow.style.fontWeight = "bold";
       footerRow.style.fontSize = "14px";
-      footerRow.querySelectorAll("td").forEach(td => td.style.borderTop = "3px double #000");
+      footerRow.querySelectorAll("td").forEach(td => {
+        td.style.borderTop = "3px double #000";
+        td.style.color = "#000";
+        td.style.background = "#e2e8f0";
+      });
     }
 
     container.appendChild(clone);
@@ -759,7 +772,10 @@ function bindDashboardUI() {
     `;
     container.appendChild(footer);
 
-    html2pdf().set(opt).from(container).save();
+    document.body.appendChild(container);
+    html2pdf().set(opt).from(container).save().then(() => {
+      document.body.removeChild(container);
+    });
   });
 }
 
