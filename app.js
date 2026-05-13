@@ -649,133 +649,60 @@ function bindDashboardUI() {
     const opt = {
       filename: `Surrender_Summary_${new Date().toISOString().split('T')[0]}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true, 
-        logging: false,
-        windowWidth: 1120,
-        scrollX: 0,
-        scrollY: 0
-      },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
     };
 
-    // Create a styled container for the PDF
-    const container = document.createElement("div");
-    container.style.width = "1120px";
-    container.style.padding = "40px";
-    container.style.background = "#fff";
-    container.style.color = "#000";
-    container.style.position = "absolute";
-    container.style.left = "-9999px";
-    container.style.top = "0";
-    container.style.fontFamily = "'Outfit', 'Segoe UI', Tahoma, sans-serif";
-
-    // Add Professional Header
-    container.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:3px solid #3b9da2; padding-bottom:15px">
-        <div style="text-align:left">
-          <h2 style="margin:0; font-size:28px; color:#1a1a1a; letter-spacing:-0.5px">SURRENDER & PAYMENT SUMMARY</h2>
-          <p style="margin:5px 0 0 0; font-size:14px; color:#666">Trade Reconciliation & Document Release Report</p>
+    // Build the full HTML string for the PDF
+    const reportHtml = `
+      <div style="width: 1050px; padding: 40px; background: white; color: black; font-family: 'Outfit', 'Segoe UI', sans-serif; margin: 0 auto;">
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:3px solid #3b9da2; padding-bottom:15px">
+          <div style="text-align:left">
+            <h2 style="margin:0; font-size:28px; color:#1a1a1a; letter-spacing:-0.5px">SURRENDER & PAYMENT SUMMARY</h2>
+            <p style="margin:5px 0 0 0; font-size:14px; color:#666">Trade Reconciliation & Document Release Report</p>
+          </div>
+          <div style="text-align:right">
+            <p style="margin:0; font-size:12px; color:#444; font-weight:bold">REPORT DATE</p>
+            <p style="margin:2px 0 0 0; font-size:14px; color:#1a1a1a">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+            <p style="margin:4px 0 0 0; font-size:11px; color:#888">${new Date().toLocaleTimeString()}</p>
+          </div>
         </div>
-        <div style="text-align:right">
-          <p style="margin:0; font-size:12px; color:#444; font-weight:bold">REPORT DATE</p>
-          <p style="margin:2px 0 0 0; font-size:14px; color:#1a1a1a">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-          <p style="margin:4px 0 0 0; font-size:11px; color:#888">${new Date().toLocaleTimeString()}</p>
+
+        <!-- Table -->
+        <style>
+          .pdf-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; table-layout: fixed; }
+          .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 8px 4px; text-align: center; color: #000; background: #fff; word-wrap: break-word; }
+          .pdf-table th { background: #f1f5f9; font-weight: bold; text-transform: uppercase; font-size: 9px; height: 30px; }
+          .pdf-table td.left { text-align: left; font-weight: bold; }
+          .pdf-table tr:last-child { background: #e2e8f0 !important; font-weight: bold; font-size: 12px; }
+          .pdf-table tr:last-child td { border-top: 2px solid #000; background: #e2e8f0 !important; }
+        </style>
+        
+        <table class="pdf-table">
+          <thead>
+            ${table.querySelector("thead").innerHTML.replace(/rgba\(.*?\)/g, '#f1f5f9').replace(/var\(.*?\)/g, '#000')}
+          </thead>
+          <tbody>
+            ${table.querySelector("tbody").innerHTML.replace(/rgba\(.*?\)/g, 'transparent').replace(/var\(.*?\)/g, '#000')}
+          </tbody>
+        </table>
+
+        <!-- Footer -->
+        <div style="margin-top: 30px; border-top: 1px solid #ccc; padding-top: 15px; display: flex; justify-content: space-between; font-size: 10px; color: #444;">
+          <div>
+            <strong>Notes:</strong> All amounts are in AED. Conversion rate applied: 3.6725 (unless specified otherwise).
+          </div>
+          <div style="text-align:right">
+            Page 1 of 1 · JK Trade Manager
+          </div>
         </div>
       </div>
     `;
 
-    // Clone and style the table specifically for PDF
-    const clone = table.cloneNode(true);
-    clone.style.width = "100%";
-    clone.style.borderCollapse = "collapse";
-    clone.style.fontSize = "13px";
-    clone.style.marginTop = "10px";
-
-    // Reset all internal styles for a clean print
-    const cells = clone.querySelectorAll("th, td");
-    cells.forEach(c => {
-      c.style.border = "1.5px solid #222";
-      c.style.padding = "10px 8px";
-      c.style.color = "#000";
-      c.style.textAlign = "center";
-      c.style.background = "#fff";
-    });
-
-    clone.querySelectorAll("td:first-child").forEach(td => {
-      td.style.textAlign = "left";
-      td.style.fontWeight = "bold";
-    });
-
-    // Style the Header Rows
-    const headerRows = clone.querySelectorAll("thead tr");
-    headerRows.forEach((row) => {
-      row.querySelectorAll("th").forEach(th => {
-        th.style.background = "#f1f5f9";
-        th.style.fontWeight = "bold";
-        th.style.fontSize = "11px";
-        th.style.textTransform = "uppercase";
-        th.style.padding = "12px 8px";
-        th.style.color = "#000";
-      });
-    });
-
-    // Color code the Surrender sections
-    const mainHeaders = clone.querySelectorAll("thead tr:first-child th");
-    if (mainHeaders.length >= 6) {
-      mainHeaders.forEach(th => {
-        if (th.innerText.includes("SURRENDER GIVEN")) {
-          th.style.background = "#3b9da2";
-          th.style.color = "#fff";
-          th.style.border = "1.5px solid #2a7a7d";
-        }
-        if (th.innerText.includes("PENDING")) {
-          th.style.background = "#f1c40f";
-          th.style.color = "#000";
-          th.style.border = "1.5px solid #d4ac0d";
-        }
-      });
-    }
-
-    // High contrast for totals row
-    const footerRow = clone.querySelector("tbody tr:last-child");
-    if (footerRow && footerRow.innerText.includes("TOTAL")) {
-      footerRow.style.background = "#e2e8f0";
-      footerRow.style.fontWeight = "bold";
-      footerRow.style.fontSize = "14px";
-      footerRow.querySelectorAll("td").forEach(td => {
-        td.style.borderTop = "3px double #000";
-        td.style.color = "#000";
-        td.style.background = "#e2e8f0";
-      });
-    }
-
-    container.appendChild(clone);
-
-    // Add Summary Legend / Footer
-    const footer = document.createElement("div");
-    footer.style.marginTop = "30px";
-    footer.style.borderTop = "1px solid #ccc";
-    footer.style.paddingTop = "15px";
-    footer.style.display = "flex";
-    footer.style.justifyContent = "space-between";
-    footer.style.fontSize = "11px";
-    footer.style.color = "#666";
-    footer.innerHTML = `
-      <div>
-        <strong>Notes:</strong> All amounts are in AED. Conversion rate applied: 3.6725 (unless specified otherwise).
-      </div>
-      <div style="text-align:right">
-        Page 1 of 1 · JK Trade Manager
-      </div>
-    `;
-    container.appendChild(footer);
-
-    document.body.appendChild(container);
-    html2pdf().set(opt).from(container).save().then(() => {
-      document.body.removeChild(container);
-    });
+    // Generate PDF from the HTML string
+    html2pdf().from(reportHtml).set(opt).save();
+  });
   });
 }
 
