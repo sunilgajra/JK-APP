@@ -649,90 +649,52 @@ function bindDashboardUI() {
     const opt = {
       filename: `Surrender_Summary_${new Date().toISOString().split('T')[0]}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { scale: 3, useCORS: true, logging: false, windowWidth: 1200 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
     };
 
-    // Clean up the table HTML for the PDF
-    let cleanThead = table.querySelector("thead").innerHTML
-      .replace(/style=".*?"/g, '') // Strip all inline styles
-      .replace(/<th/g, '<th class="pdf-th"') 
-    
-    let cleanTbody = table.querySelector("tbody").innerHTML
-      .replace(/style=".*?"/g, '') // Strip all inline styles
-      .replace(/<tr>/g, '<tr class="pdf-tr">')
-      .replace(/<td/g, '<td class="pdf-td">')
-
-    // Add special classes to the cleaned HTML
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = `<table><tbody>${cleanTbody}</tbody></table>`;
-    const rows = tempDiv.querySelectorAll("tr");
-    if (rows.length > 0) {
-      // Last row is TOTAL
-      rows[rows.length - 1].classList.add("total-row");
-      // First column should be left aligned
-      rows.forEach(r => {
-        const firstTd = r.querySelector("td");
-        if (firstTd) firstTd.classList.add("left-align");
-      });
-      cleanTbody = tempDiv.querySelector("tbody").innerHTML;
-    }
-
     // Build the full HTML string for the PDF
     const reportHtml = `
-      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-      <div style="width: 1100px; padding: 40px; background: white; color: black; font-family: 'Outfit', sans-serif; margin: 0 auto;">
+      <div style="width: 1050px; padding: 40px; background: white; color: black; font-family: 'Outfit', 'Segoe UI', sans-serif; margin: 0 auto;">
         <!-- Header -->
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px; border-bottom:4px solid #3b9da2; padding-bottom:15px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:3px solid #3b9da2; padding-bottom:15px">
           <div style="text-align:left">
-            <h1 style="margin:0; font-size:32px; font-weight:800; color:#1a1a1a; letter-spacing:-1px; text-transform:uppercase">SURRENDER & PAYMENT SUMMARY</h1>
-            <p style="margin:5px 0 0 0; font-size:16px; color:#475569; font-weight:600">Trade Reconciliation & Document Release Statement</p>
+            <h2 style="margin:0; font-size:28px; color:#1a1a1a; letter-spacing:-0.5px">SURRENDER & PAYMENT SUMMARY</h2>
+            <p style="margin:5px 0 0 0; font-size:14px; color:#666">Trade Reconciliation & Document Release Report</p>
           </div>
           <div style="text-align:right">
-            <p style="margin:0; font-size:12px; color:#64748b; font-weight:800; text-transform:uppercase">Report Generated On</p>
-            <p style="margin:2px 0 0 0; font-size:16px; color:#1e293b; font-weight:800">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-            <p style="margin:4px 0 0 0; font-size:12px; color:#94a3b8">${new Date().toLocaleTimeString()}</p>
+            <p style="margin:0; font-size:12px; color:#444; font-weight:bold">REPORT DATE</p>
+            <p style="margin:2px 0 0 0; font-size:14px; color:#1a1a1a">${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+            <p style="margin:4px 0 0 0; font-size:11px; color:#888">${new Date().toLocaleTimeString()}</p>
           </div>
         </div>
 
+        <!-- Table -->
         <style>
-          .pdf-table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; border: 2px solid #1e293b; }
-          .pdf-th { background: #3b9da2 !important; color: white !important; font-weight: 800; text-transform: uppercase; font-size: 10px; padding: 12px 6px; border: 1.5px solid #2a7a7d; height: auto; vertical-align: middle; }
-          .pdf-td { border: 1px solid #cbd5e1; padding: 10px 6px; text-align: center; color: #1e293b; font-size: 11px; word-wrap: break-word; }
-          .left-align { text-align: left !important; font-weight: 800; color: #0f172a; background: #f8fafc !important; }
-          .total-row { background: #1e293b !important; color: white !important; font-weight: 800; font-size: 13px; }
-          .total-row td { background: #1e293b !important; color: white !important; border: 1px solid #334155; padding: 12px 6px; }
-          
-          /* Column widths */
-          .pdf-table th:nth-child(1) { width: 18%; }
-          .pdf-table th:nth-child(2) { width: 8%; }
-          .pdf-table th:nth-child(3) { width: 8%; }
-          .pdf-table th:nth-child(4) { width: 12%; }
-          .pdf-table th:nth-child(5) { width: 12%; }
-          .pdf-table th:nth-child(6) { width: 10%; }
+          .pdf-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; table-layout: fixed; }
+          .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 8px 4px; text-align: center; color: #000; background: #fff; word-wrap: break-word; }
+          .pdf-table th { background: #f1f5f9; font-weight: bold; text-transform: uppercase; font-size: 9px; height: 30px; }
+          .pdf-table td.left { text-align: left; font-weight: bold; }
+          .pdf-table tr:last-child { background: #e2e8f0 !important; font-weight: bold; font-size: 12px; }
+          .pdf-table tr:last-child td { border-top: 2px solid #000; background: #e2e8f0 !important; }
         </style>
         
         <table class="pdf-table">
           <thead>
-            ${cleanThead}
+            ${table.querySelector("thead").innerHTML.replace(/rgba\(.*?\)/g, '#f1f5f9').replace(/var\(.*?\)/g, '#000')}
           </thead>
           <tbody>
-            ${cleanTbody}
+            ${table.querySelector("tbody").innerHTML.replace(/rgba\(.*?\)/g, 'transparent').replace(/var\(.*?\)/g, '#000')}
           </tbody>
         </table>
 
         <!-- Footer -->
-        <div style="margin-top: 40px; border-top: 2px solid #e2e8f0; padding-top: 20px; display: flex; justify-content: space-between; align-items: flex-start;">
-          <div style="flex: 1">
-            <p style="margin:0; font-size:12px; font-weight:800; color:#1e293b; text-transform:uppercase">Financial Notes</p>
-            <p style="margin:5px 0 0 0; font-size:11px; color:#64748b; line-height:1.4">
-              All amounts are denominated in AED. For USD conversions, a unified rate of 3.6725 has been applied unless explicitly overridden by bank transaction rates.
-              This report is for internal reconciliation and audit purposes only.
-            </p>
+        <div style="margin-top: 30px; border-top: 1px solid #ccc; padding-top: 15px; display: flex; justify-content: space-between; font-size: 10px; color: #444;">
+          <div>
+            <strong>Notes:</strong> All amounts are in AED. Conversion rate applied: 3.6725 (unless specified otherwise).
           </div>
-          <div style="text-align:right; margin-left: 50px;">
-            <p style="margin:0; font-size:12px; font-weight:800; color:#3b9da2">JK PETROCHEM INTERNATIONAL FZE</p>
-            <p style="margin:4px 0 0 0; font-size:10px; color:#94a3b8">Confidential Business Document</p>
+          <div style="text-align:right">
+            Page 1 of 1 · JK Trade Manager
           </div>
         </div>
       </div>
