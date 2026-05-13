@@ -703,7 +703,6 @@ function bindDashboardUI() {
     // Generate PDF from the HTML string
     html2pdf().from(reportHtml).set(opt).save();
   });
-  });
 }
 
 /**
