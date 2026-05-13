@@ -621,13 +621,7 @@ function notifyBlock(buyer = {}) {
   `;
 }
 
-function logoBlock() {
-  return `
-    <div class="logoBox">
-      <img src="${LOGO_URL}" alt="JK Petrochem logo">
-    </div>
-  `;
-}
+
 
 function containerBlock(deal = {}) {
   const list = Array.isArray(deal.container_numbers)
