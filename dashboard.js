@@ -17,18 +17,18 @@ export function dashboardView() {
     // Determine conversion rates with fallbacks
     const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.6725);
     const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.6725);
-
+    
     const saleAed = Number(d.total_amount_aed || (d.total_amount_usd * sConv) || 0);
     const purchaseAed = Number(d.purchase_total_aed || (d.purchase_total_usd * pConv) || 0);
 
     const payments = paymentsForDeal(d.id);
     let receivedAed = 0, sentAed = 0;
-
+    
     payments.forEach(p => {
       const pAmt = Number(p.amount || 0);
       const pCurr = p.currency || "AED";
       const pConvUsed = Number(p.conversion_rate && p.conversion_rate !== 1 ? p.conversion_rate : pConv);
-
+      
       let valAed = 0;
       if (pCurr === "AED") valAed = pAmt;
       else if (pCurr === "USD") valAed = pAmt * pConvUsed;
@@ -59,7 +59,7 @@ export function dashboardView() {
         balance_aed: receivableAed
       });
     }
-
+    
     if (payableAed !== 0) {
       payablesBreakdown.push({
         deal_no: d.deal_no,
@@ -178,87 +178,89 @@ export function dashboardView() {
           </thead>
           <tbody>
             ${(() => {
-      const summary = {};
-      let filteredDeals = state.deals;
+              const summary = {};
+              let filteredDeals = state.deals;
 
-      if (state.dashboardPartyFilter) {
-        filteredDeals = filteredDeals.filter(d => {
-          const partyId = (state.highSeasGrouping === "highseas" && d.is_high_seas) ? d.high_seas_buyer_id : d.buyer_id;
-          return String(partyId) === String(state.dashboardPartyFilter);
-        });
-      }
-      if (state.dashboardSupplierFilter) {
-        filteredDeals = filteredDeals.filter(d => String(d.supplier_id) === String(state.dashboardSupplierFilter));
-      }
+              if (state.dashboardPartyFilter) {
+                filteredDeals = filteredDeals.filter(d => {
+                  const partyId = (state.highSeasGrouping === "highseas" && d.is_high_seas) ? d.high_seas_buyer_id : d.buyer_id;
+                  return String(partyId) === String(state.dashboardPartyFilter);
+                });
+              }
+              if (state.dashboardSupplierFilter) {
+                filteredDeals = filteredDeals.filter(d => String(d.supplier_id) === String(state.dashboardSupplierFilter));
+              }
 
-      filteredDeals.forEach(d => {
-        const partyId = (state.highSeasGrouping === "highseas" && d.is_high_seas) ? d.high_seas_buyer_id : d.buyer_id;
-        const b = state.buyers.find(x => String(x.id) === String(partyId));
-        const name = b?.name || "Unknown Buyer";
-        if (!summary[name]) {
-          summary[name] = { fcl: 0, qty: 0, total: 0, rec: 0, bal: 0, pTotal: 0, pPaid: 0, pBal: 0, sQty: 0, sFcl: 0 };
-        }
+              filteredDeals.forEach(d => {
+                const partyId = (state.highSeasGrouping === "highseas" && d.is_high_seas) ? d.high_seas_buyer_id : d.buyer_id;
+                const b = state.buyers.find(x => String(x.id) === String(partyId));
+                const name = b?.name || "Unknown Buyer";
+                if (!summary[name]) {
+                  summary[name] = { fcl:0, qty:0, total:0, rec:0, bal:0, pTotal:0, pPaid:0, pBal:0, sQty:0, sFcl:0, ppBal:0 };
+                }
+                
+                const curr = d.document_currency || d.currency || "AED";
+                const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.6725);
+                const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.6725);
+                
+                const payments = paymentsForDeal(d.id);
+                let recAed = 0, pPaidAed = 0;
+                
+                payments.forEach(p => {
+                  const pAmt = Number(p.amount || 0);
+                  const pCurr = p.currency || "AED";
+                  const pConvUsed = Number(p.conversion_rate && p.conversion_rate !== 1 ? p.conversion_rate : pConv);
+                  
+                  let valAed = 0;
+                  if (pCurr === "AED") {
+                    valAed = pAmt;
+                  } else if (pCurr === "USD") {
+                    valAed = pAmt * pConvUsed;
+                  } else {
+                    valAed = pAmt; // Fallback
+                  }
 
-        const curr = d.document_currency || d.currency || "AED";
-        const sConv = Number(d.sale_conversion_rate || d.conversion_rate || 3.6725);
-        const pConv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.6725);
+                  if (p.direction === "out") pPaidAed += valAed;
+                  else recAed += valAed;
+                });
 
-        const payments = paymentsForDeal(d.id);
-        let recAed = 0, pPaidAed = 0;
-
-        payments.forEach(p => {
-          const pAmt = Number(p.amount || 0);
-          const pCurr = p.currency || "AED";
-          const pConvUsed = Number(p.conversion_rate && p.conversion_rate !== 1 ? p.conversion_rate : pConv);
-
-          let valAed = 0;
-          if (pCurr === "AED") {
-            valAed = pAmt;
-          } else if (pCurr === "USD") {
-            valAed = pAmt * pConvUsed;
-          } else {
-            valAed = pAmt; // Fallback
-          }
-
-          if (p.direction === "out") pPaidAed += valAed;
-          else recAed += valAed;
-        });
-
-        const qty = Number(d.quantity || 0);
-        const totalAed = Number(d.total_amount_aed || (d.total_amount_usd * sConv) || 0);
-        const pTotalAed = Number(d.purchase_total_aed || (d.purchase_total_usd * pConv) || 0);
-
-        const fcl = Number(d.fcl_count) || (Array.isArray(d.container_numbers) ? d.container_numbers.length : 0);
-
-        summary[name].fcl += fcl;
-        summary[name].qty += qty;
-        summary[name].total += totalAed;
-        summary[name].rec += recAed;
-        summary[name].bal += (totalAed - recAed);
-
-        summary[name].pTotal += pTotalAed;
-        summary[name].pPaid += pPaidAed;
-        summary[name].pBal += (pTotalAed - pPaidAed);
-
-        if (d.is_bl_surrendered) {
-          summary[name].sQty += qty;
-          summary[name].sFcl += fcl;
-        }
-      });
-
-      const sorted = Object.entries(summary).sort((a, b) => b[1].total - a[1].total);
-
-      let tFcl = 0, tQty = 0, tTot = 0, tRec = 0, tBal = 0, tpTot = 0, tpPaid = 0, tpBal = 0, tsQty = 0, tsFcl = 0;
-
-      const rows = sorted.map(([name, v]) => {
-        const pQty = v.qty - v.sQty;
-        const pFcl = v.fcl - v.sFcl;
-
-        tFcl += v.fcl; tQty += v.qty; tTot += v.total; tRec += v.rec; tBal += v.bal;
-        tpTot += v.pTotal; tpPaid += v.pPaid; tpBal += v.pBal;
-        tsQty += v.sQty; tsFcl += v.sFcl;
-
-        return `
+                const qty = Number(d.quantity || 0);
+                const totalAed = Number(d.total_amount_aed || (d.total_amount_usd * sConv) || 0);
+                const pTotalAed = Number(d.purchase_total_aed || (d.purchase_total_usd * pConv) || 0);
+                
+                const fcl = Number(d.fcl_count) || (Array.isArray(d.container_numbers) ? d.container_numbers.length : 0);
+                
+                summary[name].fcl += fcl;
+                summary[name].qty += qty;
+                summary[name].total += totalAed;
+                summary[name].rec += recAed;
+                summary[name].bal += (totalAed - recAed);
+                
+                summary[name].pTotal += pTotalAed;
+                summary[name].pPaid += pPaidAed;
+                summary[name].pBal += (pTotalAed - pPaidAed);
+                
+                if (d.is_bl_surrendered) {
+                  summary[name].sQty += qty;
+                  summary[name].sFcl += fcl;
+                } else {
+                  summary[name].ppBal += (pTotalAed - pPaidAed);
+                }
+              });
+              
+              const sorted = Object.entries(summary).sort((a,b) => b[1].total - a[1].total);
+              
+              let tFcl=0, tQty=0, tTot=0, tRec=0, tBal=0, tpTot=0, tpPaid=0, tpBal=0, tsQty=0, tsFcl=0, tpPBal=0;
+              
+              const rows = sorted.map(([name, v]) => {
+                const pQty = v.qty - v.sQty;
+                const pFcl = v.fcl - v.sFcl;
+                
+                tFcl += v.fcl; tQty += v.qty; tTot += v.total; tRec += v.rec; tBal += v.bal;
+                tpTot += v.pTotal; tpPaid += v.pPaid; tpBal += v.pBal;
+                tsQty += v.sQty; tsFcl += v.sFcl; tpPBal += v.ppBal;
+                
+                return `
                   <tr>
                     <td style="font-weight:700; text-align:left">${esc(name)}</td>
                     <td class="center">${v.fcl}</td>
@@ -272,14 +274,14 @@ export function dashboardView() {
                     <td class="center" style="background:rgba(255,255,255,0.02)">${v.sFcl}</td>
                     <td class="right" style="background:rgba(241,196,15,0.05)">${pQty.toFixed(2)}</td>
                     <td class="center" style="background:rgba(241,196,15,0.05)">${pFcl}</td>
-                    <td class="right" style="background:rgba(241,196,15,0.05); font-weight:700">${fmtMoney(v.pBal)}</td>
+                    <td class="right" style="background:rgba(241,196,15,0.05); font-weight:700">${fmtMoney(v.ppBal)}</td>
                   </tr>
                 `;
-      }).join("");
+              }).join("");
 
-      if (!rows) return `<tr><td colspan="11" class="empty">No deals found for the selected filters.</td></tr>`;
+              if (!rows) return `<tr><td colspan="11" class="empty">No deals found for the selected filters.</td></tr>`;
 
-      return rows + `
+              return rows + `
                 <tr style="background:rgba(255,255,255,0.05); font-weight:800; border-top: 2px solid var(--border)">
                   <td style="text-align:left">TOTAL</td>
                   <td class="center">${tFcl}</td>
@@ -293,10 +295,10 @@ export function dashboardView() {
                   <td class="center">${tsFcl}</td>
                   <td class="right">${(tQty - tsQty).toFixed(2)}</td>
                   <td class="center">${tFcl - tsFcl}</td>
-                  <td class="right">${fmtMoney(tpBal)}</td>
+                  <td class="right">${fmtMoney(tpPBal)}</td>
                 </tr>
               `;
-    })()}
+            })()}
           </tbody>
         </table>
       </div>
@@ -309,41 +311,42 @@ export function dashboardView() {
       </div>
 
       <div class="list mt-14">
-        ${recentDeals.length
-      ? recentDeals.map((d) => {
-        const dealCurrency = d.document_currency || d.currency || d.base_currency || "AED";
-        const displayTotal =
-          dealCurrency === "USD"
-            ? Number(d.total_amount_usd || d.total_amount || 0)
-            : Number(d.total_amount_aed || d.total_amount || 0);
+        ${
+          recentDeals.length
+            ? recentDeals.map((d) => {
+                const dealCurrency = d.document_currency || d.currency || d.base_currency || "AED";
+                const displayTotal =
+                  dealCurrency === "USD"
+                    ? Number(d.total_amount_usd || d.total_amount || 0)
+                    : Number(d.total_amount_aed || d.total_amount || 0);
 
-        const payments = paymentsForDeal(d.id);
-        const dealConv = Number(d.conversion_rate || 3.67);
+                const payments = paymentsForDeal(d.id);
+                const dealConv = Number(d.conversion_rate || 3.67);
 
-        const received = payments.reduce((acc, p) => {
-          if (p.direction !== "in") return acc;
+                const received = payments.reduce((acc, p) => {
+                  if (p.direction !== "in") return acc;
+                  
+                  const hasConverted = p.converted_amount !== null && p.converted_amount !== undefined;
+                  const pAmt = Number(p.amount || 0);
+                  const pCurr = p.currency || "AED";
+                  
+                  // SELF-HEALING
+                  const isSuspicious = hasConverted && Number(p.converted_amount) === pAmt && pCurr !== dealCurrency;
+                  
+                  let val = 0;
+                  if (hasConverted && !isSuspicious) {
+                    val = Number(p.converted_amount);
+                  } else {
+                    if (pCurr === dealCurrency) val = pAmt;
+                    else if (pCurr === "AED" && dealCurrency === "USD") val = pAmt / dealConv;
+                    else if (pCurr === "USD" && dealCurrency === "AED") val = pAmt * dealConv;
+                    else val = pAmt;
+                  }
+                  return acc + val;
+                }, 0);
+                
 
-          const hasConverted = p.converted_amount !== null && p.converted_amount !== undefined;
-          const pAmt = Number(p.amount || 0);
-          const pCurr = p.currency || "AED";
-
-          // SELF-HEALING
-          const isSuspicious = hasConverted && Number(p.converted_amount) === pAmt && pCurr !== dealCurrency;
-
-          let val = 0;
-          if (hasConverted && !isSuspicious) {
-            val = Number(p.converted_amount);
-          } else {
-            if (pCurr === dealCurrency) val = pAmt;
-            else if (pCurr === "AED" && dealCurrency === "USD") val = pAmt / dealConv;
-            else if (pCurr === "USD" && dealCurrency === "AED") val = pAmt * dealConv;
-            else val = pAmt;
-          }
-          return acc + val;
-        }, 0);
-
-
-        return `
+                return `
               <div class="item" style="padding:14px">
                 <div class="flex flex-between gap-12 flex-wrap" style="align-items:flex-start">
                   <div style="min-width:0;flex:1">
@@ -359,9 +362,9 @@ export function dashboardView() {
                 </div>
               </div>
             `;
-      }).join("")
-      : `<div class="empty">No deals available.</div>`
-    }
+              }).join("")
+            : `<div class="empty">No deals available.</div>`
+        }
       </div>
     </div>
   `;

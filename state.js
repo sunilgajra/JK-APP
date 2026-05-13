@@ -28,7 +28,7 @@ export const state = {
     mobile: "+971524396170",
     email: "info@jkpetrochem.com",
     gemini_api_key: "",
-    gemini_model: "gemini-2.5-flash"
+    gemini_model: "gemini-2.0-flash"
   },
   dashboardPartyFilter: "",
   dashboardSupplierFilter: "",
@@ -60,7 +60,7 @@ export function paymentSummary(dealId, saleTotal, purchaseTotal, targetCurrency 
 
   const deal = state.deals.find(d => String(d.id) === String(dealId));
   const dealCurrency = targetCurrency || deal?.document_currency || deal?.currency || deal?.base_currency || "AED";
-  const dealConv = Number(deal?.conversion_rate || 3.67);
+  const dealConv = Number(deal?.conversion_rate || 3.6725);
 
   list.forEach((p) => {
     let val = 0;

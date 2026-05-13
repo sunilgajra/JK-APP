@@ -167,14 +167,14 @@ body {
   border-radius: var(--radius-md);
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
-  transition: background 0.1s ease;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
   backface-visibility: hidden;
   transform: translateZ(0);
-  will-change: background;
 }
 
 .card:hover {
   background: var(--surface-hover);
+  box-shadow: var(--shadow-lg);
 }
 
 .title {
@@ -215,10 +215,9 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 1.25rem;
-  transition: background 0.1s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
   backface-visibility: hidden;
   transform: translateZ(0);
-  will-change: background;
 }
 
 .item:hover {
