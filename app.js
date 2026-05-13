@@ -650,7 +650,7 @@ function bindDashboardUI() {
       filename: `Surrender_Summary_${new Date().toISOString().split('T')[0]}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
       html2canvas: { 
-        scale: 2.5, 
+        scale: 2, 
         useCORS: true, 
         logging: false,
         windowWidth: 1200,
@@ -660,23 +660,24 @@ function bindDashboardUI() {
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
     };
     
-    // Create a styled container for the PDF
     const container = document.createElement("div");
-    container.style.width = "1200px"; 
-    container.style.padding = "40px";
-    container.style.background = "#fff";
-    container.style.color = "#000";
-    container.style.position = "absolute";
-    container.style.left = "0";
-    container.style.top = "0";
-    container.style.zIndex = "1"; // Above body bg, but below main #content (z-index 10)
-    container.style.opacity = "1";
-    container.style.visibility = "visible";
-    container.style.fontFamily = "'Outfit', 'Segoe UI', Tahoma, sans-serif";
+    container.id = "temp-pdf-container";
+    container.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 1200px;
+      padding: 40px;
+      background: white !important;
+      color: black !important;
+      z-index: 999999;
+      font-family: 'Outfit', sans-serif;
+      visibility: visible;
+      opacity: 1;
+    `;
 
-    // Add Professional Header
     container.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:3px solid #3b9da2; padding-bottom:15px">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:3px solid #3b9da2; padding-bottom:15px; background:white;">
         <div style="text-align:left">
           <h2 style="margin:0; font-size:28px; color:#1a1a1a; letter-spacing:-0.5px">SURRENDER & PAYMENT SUMMARY</h2>
           <p style="margin:5px 0 0 0; font-size:14px; color:#666">Trade Reconciliation & Document Release Report</p>
@@ -689,91 +690,65 @@ function bindDashboardUI() {
       </div>
     `;
 
-    // Clone and style the table specifically for PDF
     const clone = table.cloneNode(true);
     clone.style.width = "100%";
     clone.style.borderCollapse = "collapse";
-    clone.style.fontSize = "13px";
-    clone.style.marginTop = "10px";
+    clone.style.fontSize = "12px";
+    clone.style.background = "white";
     
-    // Reset all internal styles for a clean print
-    const cells = clone.querySelectorAll("th, td");
-    cells.forEach(c => {
-      c.style.border = "1.5px solid #222";
-      c.style.padding = "10px 8px";
+    clone.querySelectorAll("th, td").forEach(c => {
+      c.style.border = "1px solid #000";
+      c.style.padding = "8px 5px";
       c.style.color = "#000";
+      c.style.background = "white";
       c.style.textAlign = "center";
-      c.style.background = "#fff"; 
     });
     
-    clone.querySelectorAll("td:first-child").forEach(td => {
-      td.style.textAlign = "left";
-      td.style.fontWeight = "bold";
-    });
+    clone.querySelectorAll("td:first-child").forEach(td => td.style.textAlign = "left");
 
-    const headerRows = clone.querySelectorAll("thead tr");
-    headerRows.forEach((row) => {
-      row.querySelectorAll("th").forEach(th => {
-        th.style.background = "#f1f5f9";
-        th.style.fontWeight = "bold";
-        th.style.fontSize = "11px";
-        th.style.textTransform = "uppercase";
-        th.style.padding = "12px 8px";
-        th.style.color = "#000";
-      });
+    clone.querySelectorAll("thead th").forEach(th => {
+      th.style.background = "#f2f2f2";
+      th.style.fontWeight = "bold";
     });
 
     const mainHeaders = clone.querySelectorAll("thead tr:first-child th");
-    if (mainHeaders.length >= 6) {
-      mainHeaders.forEach(th => {
-        if (th.innerText.includes("SURRENDER GIVEN")) {
-          th.style.background = "#3b9da2";
-          th.style.color = "#fff";
-          th.style.border = "1.5px solid #2a7a7d";
-        }
-        if (th.innerText.includes("PENDING")) {
-          th.style.background = "#f1c40f";
-          th.style.color = "#000";
-          th.style.border = "1.5px solid #d4ac0d";
-        }
-      });
-    }
+    mainHeaders.forEach(th => {
+      if (th.innerText.includes("SURRENDER GIVEN")) {
+        th.style.background = "#3b9da2";
+        th.style.color = "white";
+      }
+      if (th.innerText.includes("PENDING")) {
+        th.style.background = "#f1c40f";
+        th.style.color = "black";
+      }
+    });
 
     const footerRow = clone.querySelector("tbody tr:last-child");
     if (footerRow && footerRow.innerText.includes("TOTAL")) {
-      footerRow.style.background = "#e2e8f0";
-      footerRow.style.fontWeight = "bold";
-      footerRow.style.fontSize = "14px";
+      footerRow.style.background = "#eee";
       footerRow.querySelectorAll("td").forEach(td => {
-        td.style.borderTop = "3px double #000";
-        td.style.color = "#000";
-        td.style.background = "#e2e8f0";
+        td.style.fontWeight = "bold";
+        td.style.borderTop = "2px solid #000";
+        td.style.background = "#eee";
       });
     }
 
     container.appendChild(clone);
     
     const footer = document.createElement("div");
-    footer.style.marginTop = "30px";
-    footer.style.borderTop = "1px solid #ccc";
-    footer.style.paddingTop = "15px";
-    footer.style.display = "flex";
-    footer.style.justifyContent = "space-between";
+    footer.style.marginTop = "20px";
     footer.style.fontSize = "11px";
-    footer.style.color = "#666";
-    footer.innerHTML = `
-      <div>
-        <strong>Notes:</strong> All amounts are in AED. Conversion rate applied: 3.6725 (unless specified otherwise).
-      </div>
-      <div style="text-align:right">
-        Page 1 of 1 · JK Trade Manager
-      </div>
-    `;
+    footer.style.color = "#444";
+    footer.style.textAlign = "center";
+    footer.innerHTML = `<strong>Notes:</strong> All amounts are in AED. Conversion rate applied: 3.6725. | Page 1 of 1 · JK Trade Manager`;
     container.appendChild(footer);
 
     document.body.appendChild(container);
     
     html2pdf().set(opt).from(container).save().then(() => {
+      document.body.removeChild(container);
+    }).catch(err => {
+      console.error("PDF Error:", err);
       document.body.removeChild(container);
     });
   });
