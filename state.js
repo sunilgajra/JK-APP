@@ -67,7 +67,7 @@ export function paymentSummary(dealId, saleTotal, purchaseTotal, targetCurrency 
     const hasConverted = p.converted_amount !== null && p.converted_amount !== undefined;
     const pAmt = Number(p.amount || 0);
     const pCurr = p.currency || "AED";
-    
+
     // SELF-HEALING: If converted_amount is exactly same as amount BUT currencies differ, 
     // it's likely a remnant of the previous bug. We should force a re-calculation.
     const isSuspicious = hasConverted && Number(p.converted_amount) === pAmt && pCurr !== dealCurrency;
@@ -86,14 +86,14 @@ export function paymentSummary(dealId, saleTotal, purchaseTotal, targetCurrency 
         val = pAmt;
       }
     }
-    
+
     if (p.direction === "out") sent += val;
     else received += val;
   });
 
   const sale = Number(saleTotal || 0);
   const purchase = Number(purchaseTotal || 0);
-  
+
   const receivable = sale - received;
   const payable = purchase - sent;
 
