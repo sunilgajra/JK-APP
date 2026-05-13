@@ -165,7 +165,7 @@ export function dashboardView() {
         <table id="surrender-summary-table" class="report-table" style="font-size:12px; width:100%">
           <thead>
             <tr>
-              <th rowspan="2" style="background:var(--card-bg); text-align:left">PARTY NAME</th>
+              <th rowspan="2" class="left">PARTY NAME</th>
               <th rowspan="2">TOTAL FCL</th>
               <th rowspan="2">QTY (MT)</th>
               <th rowspan="2">PURCHASE TOTAL (AED)</th>
@@ -266,19 +266,19 @@ export function dashboardView() {
 
         return `
                   <tr>
-                    <td style="font-weight:700; text-align:left">${esc(name)}</td>
+                    <td class="left">${esc(name)}</td>
                     <td class="center">${v.fcl}</td>
                     <td class="right">${v.qty.toFixed(2)}</td>
                     
-                    <td class="right" style="background:rgba(255,255,255,0.02)">${fmtMoney(v.pTotal)}</td>
-                    <td class="right" style="background:rgba(255,255,255,0.02); color:var(--danger)">${fmtMoney(v.pPaid)}</td>
-                    <td class="right" style="background:rgba(255,255,255,0.02); font-weight:700">${fmtMoney(v.pBal)}</td>
+                    <td class="right">${fmtMoney(v.pTotal)}</td>
+                    <td class="right">${fmtMoney(v.pPaid)}</td>
+                    <td class="right">${fmtMoney(v.pBal)}</td>
 
-                    <td class="right" style="background:rgba(255,255,255,0.02)">${v.sQty.toFixed(2)}</td>
-                    <td class="center" style="background:rgba(255,255,255,0.02)">${v.sFcl}</td>
-                    <td class="right" style="background:rgba(241,196,15,0.05)">${pQty.toFixed(2)}</td>
-                    <td class="center" style="background:rgba(241,196,15,0.05)">${pFcl}</td>
-                    <td class="right" style="background:rgba(241,196,15,0.05); font-weight:700">${fmtMoney(v.pBal)}</td>
+                    <td class="right">${v.sQty.toFixed(2)}</td>
+                    <td class="center">${v.sFcl}</td>
+                    <td class="right">${pQty.toFixed(2)}</td>
+                    <td class="center">${pFcl}</td>
+                    <td class="right">${fmtMoney(v.pBal)}</td>
                   </tr>
                 `;
       }).join("");
@@ -286,8 +286,8 @@ export function dashboardView() {
       if (!rows) return `<tr><td colspan="11" class="empty">No deals found for the selected filters.</td></tr>`;
 
       return rows + `
-                <tr style="background:rgba(255,255,255,0.05); font-weight:800; border-top: 2px solid var(--border)">
-                  <td style="text-align:left">TOTAL</td>
+                <tr class="total-row">
+                  <td class="left">TOTAL</td>
                   <td class="center">${tFcl}</td>
                   <td class="right">${tQty.toFixed(2)}</td>
                   

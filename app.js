@@ -675,17 +675,17 @@ function bindDashboardUI() {
 
         <!-- Table -->
         <style>
-          .pdf-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; table-layout: fixed; }
-          .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 8px 4px; text-align: center; color: #000; background: #fff; word-wrap: break-word; }
-          .pdf-table th { background: #f1f5f9; font-weight: bold; text-transform: uppercase; font-size: 9px; height: 30px; }
-          .pdf-table td.left { text-align: left; font-weight: bold; }
-          .pdf-table tr:last-child { background: #e2e8f0 !important; font-weight: bold; font-size: 12px; }
-          .pdf-table tr:last-child td { border-top: 2px solid #000; background: #e2e8f0 !important; }
+          .pdf-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; table-layout: fixed; border: 1.5px solid #000; }
+          .pdf-table th, .pdf-table td { border: 1px solid #333; padding: 10px 4px; text-align: center; color: #000; background: #fff !important; word-wrap: break-word; }
+          .pdf-table th { background: #f1f5f9 !important; font-weight: 800; text-transform: uppercase; font-size: 8.5px; height: 35px; }
+          .pdf-table td.left { text-align: left; font-weight: 800; padding-left: 8px; font-size: 11px; }
+          .pdf-table tr.total-row { background: #e2e8f0 !important; font-weight: 900; font-size: 12px; }
+          .pdf-table tr.total-row td { background: #e2e8f0 !important; border-top: 2.5px solid #000; }
         </style>
         
         <table class="pdf-table">
           <thead>
-            ${table.querySelector("thead").innerHTML.replace(/rgba\(.*?\)/g, '#f1f5f9').replace(/var\(.*?\)/g, '#000')}
+            ${table.querySelector("thead").innerHTML.replace(/rgba\(.*?\)/g, '#f1f5f9').replace(/var\(--card-bg\)/g, '#f1f5f9').replace(/var\(.*?\)/g, '#000')}
           </thead>
           <tbody>
             ${table.querySelector("tbody").innerHTML.replace(/rgba\(.*?\)/g, 'transparent').replace(/var\(.*?\)/g, '#000')}
