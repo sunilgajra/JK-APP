@@ -49,7 +49,7 @@ export function openPrintWindow(html) {
   return true;
 }
 
-function amountWords(n) {
+function numberToWords(n) {
   n = Math.round(Number(n || 0));
   if (!n) return "ZERO";
 
@@ -81,6 +81,27 @@ function amountWords(n) {
   }
   if (n > 0) out.push(three(n));
   return out.join(" ").trim();
+}
+
+function amountWords(n, currency = "USD") {
+  const rounded = Math.floor(n || 0);
+  const decimals = Math.round((n - rounded) * 100);
+  
+  let words = numberToWords(rounded).toUpperCase();
+  
+  if (currency === "USD") {
+    words += " US DOLLARS";
+    if (decimals > 0) {
+      words += " AND " + numberToWords(decimals).toUpperCase() + " CENTS";
+    }
+  } else {
+    words += " UAE DIRHAMS";
+    if (decimals > 0) {
+      words += " AND " + numberToWords(decimals).toUpperCase() + " FILS";
+    }
+  }
+  
+  return words + " ONLY";
 }
 
 export function buildShippingInstruction(si, buyer, supplier, deal, company = {}) {
@@ -198,17 +219,14 @@ function previewScript() {
         const oldMargin = doc ? doc.style.marginTop : "";
         const oldTitle = document.title;
         
-        // TEMPORARILY REMOVE SCALING AND TITLE FOR PRINT ENGINE
         if (doc) {
           doc.style.transform = "none";
           doc.style.marginTop = "0";
         }
         if (actions) actions.style.display = "none";
-        // document.title = " "; // REMOVED: This was causing the filename to be lost in the print dialog
         
         window.print();
         
-        // RESTORE AFTER DELAY
         setTimeout(() => {
           document.title = oldTitle;
           if (doc) {
@@ -246,7 +264,6 @@ function previewScript() {
 
         const isLandscape = title.includes("SETTLEMENT") || title.includes("SUMMARY");
         
-        // TEMPORARILY REMOVE STYLES THAT INTERFERE WITH CAPTURE
         const oldShadow = docEl.style.boxShadow;
         const oldDocMargin = docEl.style.margin;
         docEl.style.boxShadow = "none";
@@ -341,49 +358,46 @@ export function commonStyle(docClass = "") {
       min-width: 297mm;
     }
 
-    .docTitle {
-      font-size: 24px;
-      font-weight: 800;
-      color: #1a1a1a;
-      text-transform: uppercase;
-      letter-spacing: -0.5px;
-      margin-top: 5px;
-      text-align: right;
-    }
-
     .bar {
       background: #3b9da2;
       color: white;
       font-weight: bold;
-      padding: 8px 12px;
+      padding: 4px 10px;
       font-size: 11px;
       text-transform: uppercase;
-      border-radius: 4px 4px 0 0;
     }
 
     .panel {
-      border: 1.5px solid #3b9da2;
-      border-radius: 6px;
-      margin-bottom: 15px;
+      border: 1.5px solid #222;
+      margin-bottom: 10px;
     }
 
     .panelBody {
-      padding: 12px;
-      line-height: 1.5;
+      padding: 4px 6px;
+      line-height: 1.4;
     }
 
-    .panelBody.tight { padding: 8px 12px; font-size: 11px; }
+    .panelBody.tight { padding: 4px 6px; font-size: 10px; }
 
-    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    th { background: #f8fafc; color: #475569; font-weight: bold; font-size: 10px; text-transform: uppercase; padding: 10px 8px; border: 1px solid #e2e8f0; }
-    td { padding: 10px 8px; border: 1px solid #e2e8f0; vertical-align: top; }
+    .triple {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    th { background: #3b9da2; color: white; font-weight: bold; font-size: 11px; text-transform: uppercase; padding: 6px 8px; border: 1.5px solid #222; }
+    td { padding: 6px 8px; border: 1.5px solid #222; vertical-align: top; }
+    
+    .thin td, .thin th { border-width: 1px; }
     
     .right { text-align: right; }
     .center { text-align: center; }
     
-    .box { border: 2px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-top: 20px; }
-    .boxHead { background: #f8fafc; padding: 10px 15px; font-weight: bold; border-bottom: 2px solid #e2e8f0; }
-    .boxBody { padding: 15px; }
+    .box { border: 1.5px solid #222; margin-top: 15px; }
+    .boxHead { background: #3b9da2; color: white; padding: 4px 10px; font-weight: bold; border-bottom: 1.5px solid #222; text-transform: uppercase; font-size: 11px; }
+    .boxBody { padding: 8px 12px; }
 
     .previewActions {
       position: sticky;
@@ -411,187 +425,11 @@ export function commonStyle(docClass = "") {
     }
     .previewActions button:hover { background: #2a7a7d; transform: translateY(-1px); }
     .previewActions button.btn-back { background: #64748b; }
-
-    .top {
-      display: grid;
-      grid-template-columns: 1fr 0.62fr 1fr;
-      gap: 8px;
-      align-items: start;
-      margin-bottom: 10px;
-    }
-
-    .logoBox {
-      text-align: center;
-      padding-top: 10px;
-    }
-
-    .logoBox img {
-      width: 100px;
-      max-width: 100px;
-      object-fit: contain;
-    }
-
-    .docTitle {
-      color: #3b9da2;
-      font-size: 22px;
-      font-weight: 800;
-      text-align: right;
-      line-height: 1;
-      margin: 0 0 8px 0;
-      letter-spacing: .2px;
-    }
-
-    .bar {
-      background: #3b9da2;
-      color: #fff;
-      font-weight: 700;
-      padding: 2px 5px;
-      font-size: 11px;
-      text-transform: uppercase;
-      line-height: 1.1;
-    }
-
-    .panel {
-      min-height: 118px;
-    }
-
-    .panelBody {
-      padding: 4px 2px 0;
-      line-height: 1.35;
-      font-size: 10px;
-      font-weight: 700;
-    }
-
-    .smallGrid {
-      display: grid;
-      gap: 12px;
-    }
-
-    .triple {
-      display: grid;
-      grid-template-columns: 1fr .95fr 1fr;
-      gap: 8px;
-      margin-bottom: 0;
-      align-items: start;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      border: 2px solid #222;
-      padding: 3px 5px;
-      vertical-align: top;
-    }
-
-    th {
-      background: #3b9da2;
-      color: #fff;
-      font-weight: 700;
-      font-size: 10px;
-      text-transform: uppercase;
-      text-align: center;
-    }
-
-    .thin td, .thin th {
-      border-width: 1.5px;
-    }
-
-    .meta td {
-      padding: 3px 6px;
-      font-size: 10px;
-      font-weight: 700;
-    }
-
-    .meta td:first-child {
-      width: 54%;
-    }
-
-    .right { text-align: right; }
-    .center { text-align: center; }
-    .tight { line-height: 1.35; }
-
-    .box {
-      border: 2px solid #222;
-      margin-top: 0;
-    }
-
-    .boxHead {
-      background: #3b9da2;
-      color: #fff;
-      padding: 2px 6px;
-      font-weight: 700;
-      text-transform: uppercase;
-      line-height: 1.1;
-      font-size: 11px;
-    }
-
-    .boxBody {
-      padding: 4px 6px;
-      min-height: 40px;
-      font-size: 10px;
-      font-weight: 700;
-    }
-
-    .footer {
-      margin-top: 8px;
-      display: grid;
-      grid-template-columns: 1.2fr .8fr .8fr;
-      gap: 16px;
-      align-items: end;
-    }
-
-    .signLine {
-      border-top: 2px solid #222;
-      padding-top: 3px;
-      font-size: 10px;
-      font-weight: 700;
-      min-height: 22px;
-    }
-
-    .stamp {
-      text-align: center;
-      transform: translateY(6px);
-    }
-
-    .stamp img {
-      width: 100px;
-      opacity: .9;
-    }
-
-    .note {
-      text-align: center;
-      font-size: 11px;
-      font-weight: 700;
-      margin-top: 6px;
-    }
-
-    .red {
-      color: #c62828;
-      font-weight: 700;
-    }
-
-    .plainTable td {
-      border: none !important;
-      padding: 1px 0 !important;
-      font-size: 10px;
-      font-weight: 700;
-    }
-
-    .descTable td {
-      height: 90px;
-    }
-
-    @media print {
-      .previewActions { display: none !important; }
-      body { overflow: visible; }
-      .doc {
-        width: 190mm;
-        min-width: 190mm;
-      }
-    }
+    
+    .plainTable td { border: none !important; padding: 1px 0 !important; font-size: 10px; }
+    .footer { margin-top: 20px; display: grid; grid-template-columns: 1.2fr 0.8fr 1fr; gap: 20px; align-items: end; }
+    .note { text-align: center; font-size: 11px; font-weight: 700; margin-top: 15px; color: #666; }
+    .red { color: #d32f2f; font-weight: bold; }
   </style>
   <div class="doc ${docClass}">
   `;
@@ -607,45 +445,61 @@ function previewActions() {
   `;
 }
 
-function shipperBlock(company = {}) {
+function officialHeader(title, docNo, date, company = {}) {
   return `
-    <div class="panel">
-      <div class="bar">Shipper</div>
-      <div class="panelBody tight">
-        <div><b>${esc(company.name || "")}</b></div>
-        <div>${esc(company.address || "")}</div>
-        <div>Mobil ${esc(company.mobile || "+971524396170")}</div>
-        <div>Email: ${esc(company.email || "info@jkpetrochem.com")}</div>
+    <div style="display:flex; align-items:center; gap:15px; border-bottom:2.5px solid #000; padding-bottom:12px; margin-bottom:20px;">
+      <div style="width:15%">
+        <img src="${LOGO_URL}" style="width:100%; max-width:130px;">
+      </div>
+      <div style="width:85%; text-align:center;">
+        <div style="font-size:28px; font-weight:bold; color:#00529b; margin-bottom:2px; white-space:nowrap;">\u062C\u064A\u0647 \u0643\u064A\u0647 \u0628\u062A\u0631\u0648\u0643\u064A\u0645 \u0627\u0646\u062A\u0631\u0646\u0627\u0634\u064A\u0648\u0646\u0627\u0644 \u0645 \u0645 \u062D</div>
+        <div style="font-size:24px; font-weight:800; color:#00529b; margin-bottom:5px; white-space:nowrap;">JK Petrochem International FZE</div>
+        <div style="font-size:11px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
+        <div style="font-size:11px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
+      </div>
+    </div>
+    
+    <div style="text-align:center; font-size:22px; font-weight:800; text-decoration:underline; margin:15px 0; text-transform:uppercase;">${title}</div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; font-weight:bold; font-size:14px;">
+      <div>
+        ${title === "PACKING LIST" ? "Packing List No." : "Invoice No."}: ${esc(docNo)}
+      </div>
+      <div>
+        Date: ${esc(fmtDate(date))}
       </div>
     </div>
   `;
 }
 
-function rightHeader(title, docNo, customerId, date) {
-  const label =
-    title === "PRO FORMA INVOICE"
-      ? "Proforma Invoice #"
-      : title === "PACKING LIST"
-        ? "P.L.Invoice #"
-        : "Invoice #";
-
+function shipperBlock(company = {}) {
   return `
-    <div>
-      <div class="docTitle">${title}</div>
-      <table class="meta thin">
-        <tr>
-          <td><b>Date</b></td>
-          <td class="center">${esc(fmtDate(date) || "")}</td>
-        </tr>
-        <tr>
-          <td><b>${label}</b></td>
-          <td class="center">${esc(String(docNo || "").replace(/\s+/g, " ").trim())}</td>
-        </tr>
-        <tr>
-          <td><b>Customer ID</b></td>
-          <td class="center">${esc(customerId || "")}</td>
-        </tr>
-      </table>
+    <div style="margin-bottom: 20px; line-height: 1.4; color: #000;">
+      <div style="font-size: 15px; font-weight: 800; text-decoration: underline; margin-bottom:4px">Shipper:</div>
+      <div style="font-size: 14px; font-weight: bold;">${esc(company.name || "JK Petrochem International FZE")}</div>
+      <div style="font-size: 13px; white-space:pre-wrap;">${esc(company.address || "")}</div>
+    </div>
+  `;
+}
+
+function consigneeBlock(buyer = {}) {
+  return `
+    <div style="margin-bottom: 20px; line-height: 1.4; color: #000;">
+      <div style="font-size: 15px; font-weight: 800; text-decoration: underline; margin-bottom:4px">Consignee:</div>
+      <div style="font-size: 14px; font-weight: bold;">${esc(buyer.name || "—")}</div>
+      <div style="font-size: 13px; white-space:pre-wrap;">${esc(buyer.address || "—")}</div>
+      ${buyer.gst ? `<div style="font-size: 13px;">GST: ${esc(buyer.gst)}</div>` : ""}
+      ${buyer.iec ? `<div style="font-size: 13px;">IEC: ${esc(buyer.iec)}</div>` : ""}
+    </div>
+  `;
+}
+
+function notifyBlock(buyer = {}) {
+  return `
+    <div style="margin-bottom: 20px; line-height: 1.4; color: #000;">
+      <div style="font-size: 15px; font-weight: 800; text-decoration: underline; margin-bottom:4px">Notify Party:</div>
+      <div style="font-size: 14px; font-weight: bold;">${esc(buyer.name || "—")}</div>
+      <div style="font-size: 13px; white-space:pre-wrap;">${esc(buyer.address || "—")}</div>
     </div>
   `;
 }
@@ -654,38 +508,6 @@ function logoBlock() {
   return `
     <div class="logoBox">
       <img src="${LOGO_URL}" alt="JK Petrochem logo">
-    </div>
-  `;
-}
-
-function consigneeBlock(buyer = {}) {
-  return `
-    <div class="panel">
-      <div class="bar">Consignee</div>
-      <div class="panelBody tight">
-        <div><b>${esc(buyer?.name || "—")}</b></div>
-        <div>${esc(buyer?.address || "")}</div>
-        <div>GST NO: ${esc(buyer?.gst || "—")}</div>
-        <div>IEC NO: ${esc(buyer?.iec || "—")}</div>
-        <div>PAN: ${esc(buyer?.pan || "—")}</div>
-        ${buyer?.email ? `<div>Email:${esc(buyer.email)}</div>` : ``}
-      </div>
-    </div>
-  `;
-}
-
-function notifyBlock(buyer = {}) {
-  return `
-    <div class="panel">
-      <div class="bar">Notify Party</div>
-      <div class="panelBody tight">
-        <div><b>${esc(buyer?.name || "—")}</b></div>
-        <div>${esc(buyer?.address || "")}</div>
-        <div>GST NO: ${esc(buyer?.gst || "—")}</div>
-        <div>IEC NO: ${esc(buyer?.iec || "—")}</div>
-        <div>PAN: ${esc(buyer?.pan || "—")}</div>
-        ${buyer?.email ? `<div>Email:${esc(buyer.email)}</div>` : ``}
-      </div>
     </div>
   `;
 }
@@ -765,9 +587,8 @@ function suggestFilename(type, deal, buyer, company, extra = {}) {
   const docType = type.toUpperCase();
   const shipper = (company.name || "JK").split(/\s+/)[0].toUpperCase();
   
-  // If we have a PO object instead of a deal
   if (type === "PO") {
-    const po = deal; // first arg is po
+    const po = deal;
     const poNo = String(po.po_no || "NOPO").replace(/[^A-Z0-9]/gi, "-");
     const supp = (extra.supplier?.name || "SUPP").split(/\s+/)[0].toUpperCase();
     return `PO-${poNo}-${shipper}-${supp}`;
@@ -783,7 +604,6 @@ function suggestFilename(type, deal, buyer, company, extra = {}) {
 
   const consignee = (buyer?.name || "BUYER").split(/\s+/).filter(Boolean).slice(0, 2).join("-").toUpperCase();
 
-  // Prioritize the number based on the document type
   let dNo = "";
   if (docType === "CI") dNo = deal?.ci_no;
   else if (docType === "PI") dNo = deal?.pi_no;
@@ -791,14 +611,12 @@ function suggestFilename(type, deal, buyer, company, extra = {}) {
   else if (docType === "COO") dNo = deal?.coo_no || deal?.ci_no;
   else if (docType === "COA") dNo = extra.coa?.cert_no || deal?.bl_no;
 
-  // Fallback if the specific type number is missing
   const docNo = String(dNo || deal?.ci_no || deal?.pi_no || deal?.pl_no || deal?.dealNo || deal?.deal_no || "000").replace(/[^A-Z0-9\-\/]/gi, "").replace(/\//g, "-");
 
   const count = deal?.dealCount || 1;
 
   if (type.includes("STATEMENT") || type.includes("SETTLEMENT")) {
     const date = new Date().toISOString().split("T")[0].replace(/-/g, "");
-    // For Master Settlements, include the Entity Name and Party (Shipper or Buyer/Supplier) name as requested
     if (type.includes("MASTER")) {
       const entityName = (buyer?.name || "ENTITY").split(/\s+/).filter(Boolean).slice(0, 5).join("-").toUpperCase();
       const partyName = (extra.partyName || shipper).split(/\s+/).filter(Boolean).slice(0, 3).join("-").toUpperCase();
@@ -904,12 +722,40 @@ export function buildPI(deal, buyer, supplier, company = {}) {
   </head>
   <body>
     ${previewActions()}
-
-    <div class="top">
+    <div class="doc">
+    ${officialHeader("PRO FORMA INVOICE", String(deal.pi_no || deal.dealNo || "").replace(/^PI\s*/i, ""), date, company)}
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
       ${shipperBlock(company)}
-      ${logoBlock()}
-      ${rightHeader("PRO FORMA INVOICE", String(deal.pi_no || deal.dealNo || "").replace(/^PI\s*/i, ""), buyer?.customer_id || "", date)}
+      <div style="text-align:right">
+        ${consigneeBlock(buyer)}
+      </div>
     </div>
+    <table class="descTable" style="width:100%; border:1px solid #000; border-collapse:collapse;">
+      <tr style="background:#eee">
+        <th style="border:1px solid #000; padding:8px;">DESCRIPTION</th>
+        <th style="border:1px solid #000; padding:8px;">UNIT</th>
+        <th style="border:1px solid #000; padding:8px;">QTY</th>
+        <th style="border:1px solid #000; padding:8px;">RATE</th>
+        <th style="border:1px solid #000; padding:8px;">TOTAL</th>
+      </tr>
+      <tr>
+        <td style="border:1px solid #000; padding:8px;"><b>${esc(deal.productName || "")}</b><br>HS CODE : ${esc(deal.hsn_code || "—")}</td>
+        <td style="border:1px solid #000; padding:8px;" class="center">${esc(deal.unit || "MTON")}</td>
+        <td style="border:1px solid #000; padding:8px;" class="center">${esc(deal.quantity || "")}</td>
+        <td style="border:1px solid #000; padding:8px;" class="center">${fmt(deal.docRate || deal.rate || 0)}</td>
+        <td style="border:1px solid #000; padding:8px;" class="right">${fmt(total)}</td>
+      </tr>
+    </table>
+    <div style="margin-top:20px; font-weight:bold;">Amount in words: ${esc(amountWords(total, currency))}</div>
+    </div>
+  </body>
+  </html>`;
+}
+
+function innerCI(deal, buyer, supplier, company, date, currency) {
+  const total = Number(deal.totalAmount || 0);
+  return `
+    ${officialHeader("COMMERCIAL INVOICE", deal.ci_no || deal.dealNo || "", date, company)}
 
     <div class="triple">
       ${consigneeBlock(buyer)}
@@ -918,299 +764,134 @@ export function buildPI(deal, buyer, supplier, company = {}) {
     </div>
 
     <table class="descTable" style="margin-top:0;">
-      <tr>
-        <th style="width:45%">DESCRIPTION</th>
-        <th style="width:10%">UNIT</th>
-        <th style="width:8%">QTY</th>
-        <th style="width:10%">(${esc(currency)})</th>
-        <th style="width:5%">TAX</th>
-        <th style="width:22%">TOTAL AMOUNT (${esc(currency)})</th>
-      </tr>
-      <tr style="height:138px">
-        <td style="padding:0">
-          <div style="display:flex; flex-direction:column; justify-content:space-between; height:138px; padding:4px 5px">
-            <div>
-              <b>${esc(deal.productName || "")}</b><br>
-              HS CODE : : ${esc(deal.hsn_code || "—")}
-            </div>
-            <div style="margin-top:auto">
-              ${esc(currency)} : ${esc(amountWords(total))} ONLY
-            </div>
-          </div>
-        </td>
-        <td class="center">${esc(deal.unit || "MTON")}</td>
-        <td class="center">${esc(deal.quantity || "")}</td>
-        <td class="center">${fmt(deal.docRate || deal.rate || 0)}</td>
-        <td class="center">-</td>
-        <td class="right">${fmt(total)}</td>
-      </tr>
+      <thead>
+        <tr>
+          <th style="width:45%">DESCRIPTION</th>
+          <th style="width:15%">UNIT</th>
+          <th style="width:10%">QTY</th>
+          <th style="width:15%">RATE<br>(${esc(currency)})</th>
+          <th style="width:15%">AMOUNT<br>(${esc(currency)})</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="height:140px">
+          <td>
+            <b>${esc(deal.productName || "")}</b><br>
+            HS CODE : ${esc(deal.hsn_code || "—")}
+          </td>
+          <td class="center">${esc(deal.unit || "MTON")}</td>
+          <td class="center">${esc(deal.quantity || "")}</td>
+          <td class="right">${fmt(deal.docRate || deal.rate || 0)}</td>
+          <td class="right">${fmt(total)}</td>
+        </tr>
+        <tr style="background:#f2f2f2; font-weight:bold">
+          <td colspan="4" class="right">TOTAL</td>
+          <td class="right">${fmt(total)}</td>
+        </tr>
+      </tbody>
     </table>
 
-    <div class="smallGrid" style="margin-top:0; align-items:stretch; grid-template-columns: 1.35fr .75fr;">
-      <div class="box" style="height:100%">
-        <div class="boxHead">Terms of Sale and Other Comments</div>
-        <div class="boxBody tight" style="display:flex; flex-direction:column; justify-content:space-between; height:calc(100% - 20px)">
-          <div>
-            <div><b>Terms of Delivery / Payment :</b></div>
-            <div style="margin-top:3px">
-              ${esc(deal.terms_delivery || (deal.discharge_port ? `CFR ${deal.discharge_port},INDIA` : "CFR MUNDRA PORT,INDIA"))}
-              / <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span>
-            </div>
-          </div>
-
-          <div>
-            <div style="margin-top:8px"><b>Our Bank Details:-</b></div>
-            <div>Account Name: ${esc(company.name || "")}</div>
-            <div>Account Number (${esc(currency)}): ${esc(company.bankAccount || "")}</div>
-            <div>IBAN: ${esc(company.bankIBAN || "")}</div>
-            <div>SWIFT ID: ${esc(company.bankSWIFT || "")}</div>
-            <div>Bank Name: ${esc(company.bankName || "")}${company.branchName ? ` / Branch: ${esc(company.branchName)}` : ""}</div>
-          </div>
-
-          <div><b>BANK TERMS:</b> ${esc(deal.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}</div>
-        </div>
-      </div>
-
-      <table class="thin">
-        <tr><td>Subtotal</td><td class="right">${fmt(total)}</td></tr>
-        <tr><td>Taxable</td><td class="right">-</td></tr>
-        <tr><td>Tax rate</td><td class="right">-</td></tr>
-        <tr><td>Tax</td><td class="right">-</td></tr>
-        <tr><td>Freight</td><td class="right">-</td></tr>
-        <tr><td>Insurance</td><td class="right">-</td></tr>
-        <tr><td>Legal/Consular</td><td class="right">-</td></tr>
-        <tr><td>Inspection/Cert.</td><td class="right">-</td></tr>
-        <tr><td>Round off (+/-)</td><td class="right">${roundOff !== 0 ? fmt(roundOff) : "-"}</td></tr>
-        <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(roundedTotal)}</b></td></tr>
-        <tr><td>Currency</td><td class="right">${esc(currency)}</td></tr>
-      </table>
+    <div style="margin-bottom:15px; font-weight:bold; font-size:12px;">
+      AMOUNT IN WORDS: ${esc(amountWords(total, currency))}
     </div>
 
-    <div style="margin-top:10px; width:60%">
-      <table class="plainTable">
-        <tr>
-          <td style="width:140px;">Country of Origin</td>
-          <td>: ${esc(deal.country_of_origin || supplier?.country || "UAE")}</td>
-        </tr>
-        <tr>
-          <td>Port of Loading</td>
-          <td>: ${esc(deal.loading_port || "—")}</td>
-        </tr>
-        <tr>
-          <td>Port of Discharge</td>
-          <td>: ${esc(deal.discharge_port || "—")}</td>
-        </tr>
-      </table>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+      ${containerBlock(deal)}
+      ${additionalDetailsBlock(deal, supplier, "Invoice No. Date:", "", false)}
     </div>
 
     ${footer(company, date, true)}
-  </body>
-  </html>`;
-}
-
-function innerCI(deal, buyer, supplier, company, date, currency) {
-  const roundedTotal = Math.round(deal.totalAmount || 0);
-  const roundOff = roundedTotal - (deal.totalAmount || 0);
-
-  return `
-    <div class="top">
-      ${shipperBlock(company)}
-      ${logoBlock()}
-      ${rightHeader("COMMERCIAL INVOICE", deal.ci_no || deal.dealNo || "", buyer?.customer_id || "", date)}
-    </div>
-
-    <div class="triple">
-      ${consigneeBlock(buyer)}
-      ${notifyBlock(buyer)}
-      ${shippingBlock(deal)}
-    </div>
-
-    <table>
-      <tr>
-        <th style="width:45%">DESCRIPTION</th>
-        <th style="width:14%">UNIT</th>
-        <th style="width:8%">QTY</th>
-        <th style="width:10%">RATE<br>(${esc(currency)})</th>
-        <th style="width:6%">TAX</th>
-        <th style="width:17%">TOTAL AMOUNT (${esc(currency)})</th>
-      </tr>
-      <tr style="height:145px">
-        <td style="padding:0">
-          <div style="display:flex; flex-direction:column; justify-content:space-between; height:145px; padding:4px 5px">
-            <div>
-              <b>${esc(deal.productName || "")}</b><br>
-              HS CODE : : ${esc(deal.hsn_code || "—")}
-            </div>
-            <div style="margin-top:auto">
-              ${esc(currency)} : ${esc(amountWords(deal.totalAmount))} ONLY
-            </div>
-          </div>
-        </td>
-        <td class="center">${esc(deal.unit || "MTON")}</td>
-        <td class="center">${esc(deal.quantity || "")}</td>
-        <td class="center">${fmt(deal.docRate || deal.rate || 0)}</td>
-        <td class="center">-</td>
-        <td class="right">${fmt(deal.totalAmount)}</td>
-      </tr>
-    </table>
-
-    <div style="display:grid;grid-template-columns:1.18fr .88fr .64fr;gap:4px;align-items:stretch;margin-top:6px;">
-      <div class="box" style="height:100%">
-        <div class="boxHead">Terms of Sale and Other Comments</div>
-        <div class="boxBody tight" style="display:flex; flex-direction:column; justify-content:space-between; height:calc(100% - 20px)">
-          <div>
-            <div><b>Terms of Delivery / Payment :</b></div>
-            <div>${esc(deal.terms_delivery || `CFR ${deal.discharge_port || "MUNDRA PORT"}`)} / <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span></div>
-          </div>
-
-          <div>
-            <div style="margin-top:8px"><b>Our Bank Details:-</b></div>
-            <div>Account Name: ${esc(company.name || "")}</div>
-            <div>Account Number (${esc(currency)}): ${esc(company.bankAccount || "")}</div>
-            <div>IBAN: ${esc(company.bankIBAN || "")}</div>
-            <div>SWIFT ID: ${esc(company.bankSWIFT || "")}</div>
-            <div>Bank Name: ${esc(company.bankName || "")}</div>
-          </div>
-
-          <div><b>BANK TERMS:</b> ${esc(deal.bank_terms || "ALL BANKS ON BUYERS ACC. ONLY")}</div>
-        </div>
-      </div>
-
-      ${containerBlock(deal)}
-
-      <table class="thin" style="font-size:10px;">
-        <tr><td>Subtotal</td><td class="right">${fmt(deal.totalAmount)}</td></tr>
-        <tr><td>Taxable</td><td class="right">-</td></tr>
-        <tr><td>Tax rate</td><td class="right">-</td></tr>
-        <tr><td>Tax</td><td class="right">-</td></tr>
-        <tr><td>Insurance</td><td class="right">-</td></tr>
-        <tr><td>Legal/Consular</td><td class="right">-</td></tr>
-        <tr><td>Inspection/Cert.</td><td class="right">-</td></tr>
-        <tr><td>Round off (+/-)</td><td class="right">${roundOff !== 0 ? fmt(roundOff) : "-"}</td></tr>
-        <tr><td>Other (specify)</td><td class="right">-</td></tr>
-        <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(roundedTotal)}</b></td></tr>
-        <tr><td>Currency</td><td class="right">${esc(currency)}</td></tr>
-      </table>
-    </div>
-
-    ${additionalDetailsBlock(deal, supplier, "", "", false)}
-
-    ${footer(company, date)}`;
+  `;
 }
 
 export function buildCI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
   const currency = docCurrency(deal);
   const filename = suggestFilename("CI", deal, buyer, company);
-
-  return `
-  <!DOCTYPE html><html><head><title>${esc(filename)}</title>${commonStyle()}${previewScript()}</head><body>
-    ${previewActions()}
-    <div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div>
-  </body></html>`;
+  return `<!DOCTYPE html><html><head><title>${esc(filename)}</title>${commonStyle()}${previewScript()}</head><body>${previewActions()}<div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div></body></html>`;
 }
 
 function innerPL(deal, buyer, supplier, company, date) {
   return `
-    <div class="top">
-      ${shipperBlock(company)}
-      ${logoBlock()}
-      ${rightHeader("PACKING LIST", deal.pl_no || deal.dealNo || "", buyer?.customer_id || "", date)}
-    </div>
+    ${officialHeader("PACKING LIST", deal.pl_no || deal.dealNo || "", date, company)}
 
     <div class="triple">
       ${consigneeBlock(buyer)}
-      ${containerBlock(deal)}
+      ${notifyBlock(buyer)}
       ${shippingBlock(deal)}
     </div>
 
     <table class="descTable" style="margin-top:0;">
-      <tr>
-        <th style="width:60%">DESCRIPTION</th>
-        <th style="width:14%">UNIT</th>
-        <th style="width:26%">QTY</th>
-      </tr>
-      <tr style="height:122px">
-        <td>
-          <b>${esc(deal.productName || "")}</b><br>
-          HS CODE : : ${esc(deal.hsn_code || "—")}
-        </td>
-        <td class="center">${esc(deal.unit || "MTON")}</td>
-        <td class="center">${esc(deal.quantity || "")}</td>
-      </tr>
+      <thead>
+        <tr>
+          <th style="width:60%">DESCRIPTION</th>
+          <th style="width:15%">UNIT</th>
+          <th style="width:25%">QTY</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="height:120px">
+          <td>
+            <b>${esc(deal.productName || "")}</b><br>
+            HS CODE : ${esc(deal.hsn_code || "—")}
+          </td>
+          <td class="center">${esc(deal.unit || "MTON")}</td>
+          <td class="center">${esc(deal.quantity || "")}</td>
+        </tr>
+      </tbody>
     </table>
 
-    <div class="box" style="margin-top:0;">
-      <div class="boxHead">Terms of Sale and Other Comments</div>
-      <div class="boxBody tight">
-        <div><b>Terms of Delivery</b></div>
-        <div style="margin-top:4px">${esc(deal.terms_delivery || `CFR ${deal.dischargePort || "MUNDRA PORT"}`)}</div>
-      </div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+      ${containerBlock(deal)}
+      ${additionalDetailsBlock(deal, supplier, "Packing List No. Date:", "", false)}
     </div>
 
-    ${additionalDetailsBlock(deal, supplier, "", "", false)}
-
-    ${footer(company, date, false)}`;
+    ${footer(company, date, false)}
+  `;
 }
 
 export function buildPL(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
   const filename = suggestFilename("PL", deal, buyer, company);
-
-  return `
-  <!DOCTYPE html>
-  <html>
-  <head>
-    <title>${esc(filename)}</title>
-    ${commonStyle()}
-    ${previewScript()}
-  </head>
-  <body>
-    ${previewActions()}
-    <div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div>
-  </body>
-  </html>`;
+  return `<!DOCTYPE html><html><head><title>${esc(filename)}</title>${commonStyle()}${previewScript()}</head><body>${previewActions()}<div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div></body></html>`;
 }
 
 function innerCOO(deal, buyer, supplier, company, date) {
   return `
-    <div class="top">
-      ${shipperBlock(company)}
-      ${logoBlock()}
-      ${rightHeader("CERTIFICATE OF ORIGIN", deal.coo_no || deal.dealNo || "", buyer?.customer_id || "", date)}
-    </div>
+    ${officialHeader("CERTIFICATE OF ORIGIN", deal.coo_no || deal.dealNo || "", date, company)}
 
     <div class="triple">
       ${consigneeBlock(buyer)}
-      ${containerBlock(deal)}
+      ${notifyBlock(buyer)}
       ${shippingBlock(deal)}
     </div>
 
     <div class="box" style="margin-top:0;">
-      <div class="boxBody center" style="font-weight:700; min-height:auto; padding:18px 12px;">
+      <div class="boxBody center" style="font-weight:700; min-height:auto; padding:18px 12px; font-size:12px;">
         CERTIFY THAT THE GOODS SHIPPED ARE UNDER NON-NEGATIVE LIST OF IMPORT AND EXPORT POLICY 2015-2020.
       </div>
     </div>
 
-    <div class="box" style="margin-top:0;">
-      <div class="boxBody center" style="font-weight:700; min-height:auto; padding:14px 12px;">
+    <div class="box" style="margin-top:10px;">
+      <div class="boxBody center" style="font-weight:700; min-height:auto; padding:12px; font-size:13px;">
         DESCRIPTION OF GOODS : ${esc(deal.productName || "—")}
       </div>
     </div>
 
-    <div class="box" style="margin-top:0;">
+    <div class="box" style="margin-top:10px;">
       <div class="boxBody center" style="font-weight:800; font-size:18px; min-height:auto; padding:14px 12px;">
-        QUANTITY (MTONS): ${esc(deal.quantity || "—")}
+        QUANTITY (${esc(deal.unit || "MTONS")}): ${esc(deal.quantity || "—")}
       </div>
     </div>
 
-    ${additionalDetailsBlock(deal, supplier, "", `
-        <div style="margin-top:14px">
+    ${additionalDetailsBlock(deal, supplier, "C.O.O No. Date:", `
+        <div style="margin-top:10px; font-size:11px;">
           <b>DECLARATION:</b> GOODS PACKED IN EXPORT SEAWORTHY ${esc(deal.loaded_on || "ISO TANKS")}
         </div>
     `, false)}
 
-    ${footer(company, date, false)}`;
+    ${footer(company, date, false)}
+  `;
 }
 
 export function buildCOO(deal, buyer, supplier, company = {}) {
