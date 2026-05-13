@@ -309,7 +309,6 @@ function previewScript() {
 }
 
 export function commonStyle(docClass = "") {
-  return `
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="format-detection" content="telephone=no">
@@ -337,7 +336,7 @@ export function commonStyle(docClass = "") {
       padding: 0;
       background: #f0f2f5;
       color: #111;
-      font-family: 'Outfit', 'Segoe UI', Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       font-size: 13px;
     }
 
@@ -358,46 +357,142 @@ export function commonStyle(docClass = "") {
       min-width: 297mm;
     }
 
-    .bar {
-      background: #3b9da2;
-      color: white;
-      font-weight: bold;
-      padding: 4px 10px;
-      font-size: 11px;
+    .top {
+      display: grid;
+      grid-template-columns: 1fr 0.62fr 1fr;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .logoBox {
+      text-align: center;
+      padding-top: 10px;
+    }
+
+    .logoBox img {
+      width: 110px;
+      max-width: 110px;
+      object-fit: contain;
+    }
+
+    .docTitle {
+      color: #3b9da2;
+      font-size: 24px;
+      font-weight: 800;
+      text-align: right;
+      line-height: 1;
+      margin: 0 0 10px 0;
+      letter-spacing: .2px;
       text-transform: uppercase;
     }
 
+    .bar {
+      background: #3b9da2;
+      color: #fff;
+      font-weight: 700;
+      padding: 3px 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
     .panel {
-      border: 1.5px solid #222;
-      margin-bottom: 10px;
+      border: 2px solid #222;
+      min-height: 110px;
     }
 
     .panelBody {
-      padding: 4px 6px;
+      padding: 5px 6px;
       line-height: 1.4;
+      font-size: 10px;
+      font-weight: 700;
     }
-
-    .panelBody.tight { padding: 4px 6px; font-size: 10px; }
 
     .triple {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr .95fr 1fr;
       gap: 10px;
+      margin-bottom: 15px;
+      align-items: start;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
       margin-bottom: 15px;
     }
 
-    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    th { background: #3b9da2; color: white; font-weight: bold; font-size: 11px; text-transform: uppercase; padding: 6px 8px; border: 1.5px solid #222; }
-    td { padding: 6px 8px; border: 1.5px solid #222; vertical-align: top; }
-    
-    .thin td, .thin th { border-width: 1px; }
-    
+    th, td {
+      border: 2px solid #222;
+      padding: 4px 6px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #3b9da2;
+      color: #fff;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .meta td {
+      padding: 3px 6px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .meta td:first-child {
+      width: 50%;
+    }
+
     .right { text-align: right; }
     .center { text-align: center; }
     
-    .box { border: 1.5px solid #222; margin-top: 15px; }
-    .boxHead { background: #3b9da2; color: white; padding: 4px 10px; font-weight: bold; border-bottom: 1.5px solid #222; text-transform: uppercase; font-size: 11px; }
-    .boxBody { padding: 8px 12px; }
+    .box {
+      border: 2px solid #222;
+      margin-top: 10px;
+    }
+
+    .boxHead {
+      background: #3b9da2;
+      color: #fff;
+      padding: 3px 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+      line-height: 1.1;
+      font-size: 11px;
+    }
+
+    .boxBody {
+      padding: 5px 6px;
+      min-height: 40px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .footer {
+      margin-top: 15px;
+      display: grid;
+      grid-template-columns: 1.2fr .8fr 1fr;
+      gap: 20px;
+      align-items: end;
+    }
+
+    .note {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 10px;
+      color: #222;
+    }
+
+    .red {
+      color: #c62828;
+      font-weight: 700;
+    }
 
     .previewActions {
       position: sticky;
@@ -426,10 +521,7 @@ export function commonStyle(docClass = "") {
     .previewActions button:hover { background: #2a7a7d; transform: translateY(-1px); }
     .previewActions button.btn-back { background: #64748b; }
     
-    .plainTable td { border: none !important; padding: 1px 0 !important; font-size: 10px; }
-    .footer { margin-top: 20px; display: grid; grid-template-columns: 1.2fr 0.8fr 1fr; gap: 20px; align-items: end; }
-    .note { text-align: center; font-size: 11px; font-weight: 700; margin-top: 15px; color: #666; }
-    .red { color: #d32f2f; font-weight: bold; }
+    .plainTable td { border: none !important; padding: 1px 0 !important; font-size: 10px; font-weight: 700; }
   </style>
   <div class="doc ${docClass}">
   `;
@@ -445,61 +537,85 @@ function previewActions() {
   `;
 }
 
-function officialHeader(title, docNo, date, company = {}) {
+function logoBlock() {
   return `
-    <div style="display:flex; align-items:center; gap:15px; border-bottom:2.5px solid #000; padding-bottom:12px; margin-bottom:20px;">
-      <div style="width:15%">
-        <img src="${LOGO_URL}" style="width:100%; max-width:130px;">
-      </div>
-      <div style="width:85%; text-align:center;">
-        <div style="font-size:28px; font-weight:bold; color:#00529b; margin-bottom:2px; white-space:nowrap;">\u062C\u064A\u0647 \u0643\u064A\u0647 \u0628\u062A\u0631\u0648\u0643\u064A\u0645 \u0627\u0646\u062A\u0631\u0646\u0627\u0634\u064A\u0648\u0646\u0627\u0644 \u0645 \u0645 \u062D</div>
-        <div style="font-size:24px; font-weight:800; color:#00529b; margin-bottom:5px; white-space:nowrap;">JK Petrochem International FZE</div>
-        <div style="font-size:11px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
-        <div style="font-size:11px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
-      </div>
+    <div class="logoBox">
+      <img src="${LOGO_URL}" alt="JK Petrochem logo">
     </div>
-    
-    <div style="text-align:center; font-size:22px; font-weight:800; text-decoration:underline; margin:15px 0; text-transform:uppercase;">${title}</div>
-    
-    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:20px; font-weight:bold; font-size:14px;">
-      <div>
-        ${title === "PACKING LIST" ? "Packing List No." : "Invoice No."}: ${esc(docNo)}
-      </div>
-      <div>
-        Date: ${esc(fmtDate(date))}
-      </div>
+  `;
+}
+
+function rightHeader(title, docNo, customerId, date) {
+  const label =
+    title === "PRO FORMA INVOICE"
+      ? "Proforma Invoice #"
+      : title === "PACKING LIST"
+        ? "P.L. Invoice #"
+        : "Invoice #";
+
+  return `
+    <div>
+      <div class="docTitle">${title}</div>
+      <table class="meta thin">
+        <tr>
+          <td><b>Date</b></td>
+          <td class="center">${esc(fmtDate(date) || "")}</td>
+        </tr>
+        <tr>
+          <td><b>${label}</b></td>
+          <td class="center">${esc(String(docNo || "").replace(/\s+/g, " ").trim())}</td>
+        </tr>
+        <tr>
+          <td><b>Customer ID</b></td>
+          <td class="center">${esc(customerId || "")}</td>
+        </tr>
+      </table>
     </div>
   `;
 }
 
 function shipperBlock(company = {}) {
   return `
-    <div style="margin-bottom: 20px; line-height: 1.4; color: #000;">
-      <div style="font-size: 15px; font-weight: 800; text-decoration: underline; margin-bottom:4px">Shipper:</div>
-      <div style="font-size: 14px; font-weight: bold;">${esc(company.name || "JK Petrochem International FZE")}</div>
-      <div style="font-size: 13px; white-space:pre-wrap;">${esc(company.address || "")}</div>
+    <div class="panel">
+      <div class="bar">Shipper</div>
+      <div class="panelBody tight">
+        <div><b>${esc(company.name || "JK PETROCHEM INTERNATIONAL FZE")}</b></div>
+        <div style="white-space:pre-wrap;">${esc(company.address || "")}</div>
+        <div>Mobil ${esc(company.mobile || "+971524306170")}</div>
+        <div>Email: ${esc(company.email || "info@jkpetrochem.com")}</div>
+      </div>
     </div>
   `;
 }
 
 function consigneeBlock(buyer = {}) {
   return `
-    <div style="margin-bottom: 20px; line-height: 1.4; color: #000;">
-      <div style="font-size: 15px; font-weight: 800; text-decoration: underline; margin-bottom:4px">Consignee:</div>
-      <div style="font-size: 14px; font-weight: bold;">${esc(buyer.name || "—")}</div>
-      <div style="font-size: 13px; white-space:pre-wrap;">${esc(buyer.address || "—")}</div>
-      ${buyer.gst ? `<div style="font-size: 13px;">GST: ${esc(buyer.gst)}</div>` : ""}
-      ${buyer.iec ? `<div style="font-size: 13px;">IEC: ${esc(buyer.iec)}</div>` : ""}
+    <div class="panel">
+      <div class="bar">Consignee</div>
+      <div class="panelBody tight">
+        <div><b>${esc(buyer.name || "—")}</b></div>
+        <div style="white-space:pre-wrap;">${esc(buyer.address || "")}</div>
+        <div>GST NO: ${esc(buyer.gst || "—")}</div>
+        <div>IEC NO: ${esc(buyer.iec || "—")}</div>
+        <div>PAN: ${esc(buyer.pan || "—")}</div>
+        ${buyer.email ? `<div>Email: ${esc(buyer.email)}</div>` : ``}
+      </div>
     </div>
   `;
 }
 
 function notifyBlock(buyer = {}) {
   return `
-    <div style="margin-bottom: 20px; line-height: 1.4; color: #000;">
-      <div style="font-size: 15px; font-weight: 800; text-decoration: underline; margin-bottom:4px">Notify Party:</div>
-      <div style="font-size: 14px; font-weight: bold;">${esc(buyer.name || "—")}</div>
-      <div style="font-size: 13px; white-space:pre-wrap;">${esc(buyer.address || "—")}</div>
+    <div class="panel">
+      <div class="bar">Notify Party</div>
+      <div class="panelBody tight">
+        <div><b>${esc(buyer.name || "—")}</b></div>
+        <div style="white-space:pre-wrap;">${esc(buyer.address || "")}</div>
+        <div>GST NO: ${esc(buyer.gst || "—")}</div>
+        <div>IEC NO: ${esc(buyer.iec || "—")}</div>
+        <div>PAN: ${esc(buyer.pan || "—")}</div>
+        ${buyer.email ? `<div>Email: ${esc(buyer.email)}</div>` : ``}
+      </div>
     </div>
   `;
 }
@@ -722,40 +838,12 @@ export function buildPI(deal, buyer, supplier, company = {}) {
   </head>
   <body>
     ${previewActions()}
-    <div class="doc">
-    ${officialHeader("PRO FORMA INVOICE", String(deal.pi_no || deal.dealNo || "").replace(/^PI\s*/i, ""), date, company)}
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-      ${shipperBlock(company)}
-      <div style="text-align:right">
-        ${consigneeBlock(buyer)}
-      </div>
-    </div>
-    <table class="descTable" style="width:100%; border:1px solid #000; border-collapse:collapse;">
-      <tr style="background:#eee">
-        <th style="border:1px solid #000; padding:8px;">DESCRIPTION</th>
-        <th style="border:1px solid #000; padding:8px;">UNIT</th>
-        <th style="border:1px solid #000; padding:8px;">QTY</th>
-        <th style="border:1px solid #000; padding:8px;">RATE</th>
-        <th style="border:1px solid #000; padding:8px;">TOTAL</th>
-      </tr>
-      <tr>
-        <td style="border:1px solid #000; padding:8px;"><b>${esc(deal.productName || "")}</b><br>HS CODE : ${esc(deal.hsn_code || "—")}</td>
-        <td style="border:1px solid #000; padding:8px;" class="center">${esc(deal.unit || "MTON")}</td>
-        <td style="border:1px solid #000; padding:8px;" class="center">${esc(deal.quantity || "")}</td>
-        <td style="border:1px solid #000; padding:8px;" class="center">${fmt(deal.docRate || deal.rate || 0)}</td>
-        <td style="border:1px solid #000; padding:8px;" class="right">${fmt(total)}</td>
-      </tr>
-    </table>
-    <div style="margin-top:20px; font-weight:bold;">Amount in words: ${esc(amountWords(total, currency))}</div>
-    </div>
-  </body>
-  </html>`;
-}
 
-function innerCI(deal, buyer, supplier, company, date, currency) {
-  const total = Number(deal.totalAmount || 0);
-  return `
-    ${officialHeader("COMMERCIAL INVOICE", deal.ci_no || deal.dealNo || "", date, company)}
+    <div class="top">
+      ${shipperBlock(company)}
+      ${logoBlock()}
+      ${rightHeader("PRO FORMA INVOICE", String(deal.pi_no || deal.dealNo || "").replace(/^PI\s*/i, ""), buyer?.customer_id || "1057", date)}
+    </div>
 
     <div class="triple">
       ${consigneeBlock(buyer)}
@@ -767,37 +855,173 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
       <thead>
         <tr>
           <th style="width:45%">DESCRIPTION</th>
-          <th style="width:15%">UNIT</th>
+          <th style="width:10%">UNIT</th>
           <th style="width:10%">QTY</th>
-          <th style="width:15%">RATE<br>(${esc(currency)})</th>
-          <th style="width:15%">AMOUNT<br>(${esc(currency)})</th>
+          <th style="width:10%">RATE<br>(${esc(currency)})</th>
+          <th style="width:5%">TAX</th>
+          <th style="width:20%">TOTAL AMOUNT (${esc(currency)})</th>
         </tr>
       </thead>
       <tbody>
         <tr style="height:140px">
-          <td>
-            <b>${esc(deal.productName || "")}</b><br>
-            HS CODE : ${esc(deal.hsn_code || "—")}
+          <td style="padding:0">
+            <div style="display:flex; flex-direction:column; justify-content:space-between; height:140px; padding:4px 6px">
+              <div>
+                <b>${esc(deal.productName || "")}</b><br>
+                HS CODE : ${esc(deal.hsn_code || "—")}
+              </div>
+              <div style="margin-top:auto">
+                ADD : ${esc(amountWords(total, currency))}
+              </div>
+            </div>
           </td>
           <td class="center">${esc(deal.unit || "MTON")}</td>
           <td class="center">${esc(deal.quantity || "")}</td>
           <td class="right">${fmt(deal.docRate || deal.rate || 0)}</td>
-          <td class="right">${fmt(total)}</td>
-        </tr>
-        <tr style="background:#f2f2f2; font-weight:bold">
-          <td colspan="4" class="right">TOTAL</td>
+          <td class="center">-</td>
           <td class="right">${fmt(total)}</td>
         </tr>
       </tbody>
     </table>
 
-    <div style="margin-bottom:15px; font-weight:bold; font-size:12px;">
-      AMOUNT IN WORDS: ${esc(amountWords(total, currency))}
+    <div style="display:grid; grid-template-columns: 1.3fr .7fr; gap:10px; margin-top:0;">
+      <div class="box" style="height:100%">
+        <div class="boxHead">Terms of Sale and Other Comments</div>
+        <div class="boxBody" style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div><b>Terms of Delivery / Payment :</b></div>
+            <div>${esc(deal.terms_delivery || `CFR MUNDRA PORT, INDIA`)} <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span></div>
+          </div>
+
+          <div style="margin-top:10px">
+            <div><b>Our Bank Details:-</b></div>
+            <div>Account Name: <b>${esc(company.name || "JK PETROCHEM INTERNATIONAL FZE")}</b></div>
+            <div>Account Number (${esc(currency)}): ${esc(company.bankAccount || "9200101821")}</div>
+            <div>IBAN: ${esc(company.bankIBAN || "AE630010000009200101821")}</div>
+            <div>SWIFT ID: ${esc(company.bankSWIFT || "WICBAEADXXX")}</div>
+            <div>Bank Name: ${esc(company.bankName || "WIO BANK (AED)")}</div>
+          </div>
+
+          <div style="margin-top:5px"><b>BANK TERMS: ALL BANKS ON BUYERS ACC. ONLY</b></div>
+        </div>
+      </div>
+
+      <table class="meta thin" style="margin-top:10px">
+        <tr><td>Subtotal</td><td class="right">${fmt(total)}</td></tr>
+        <tr><td>Taxable</td><td class="right">-</td></tr>
+        <tr><td>Tax rate</td><td class="right">-</td></tr>
+        <tr><td>Tax</td><td class="right">-</td></tr>
+        <tr><td>Freight</td><td class="right">-</td></tr>
+        <tr><td>Insurance</td><td class="right">-</td></tr>
+        <tr><td>Legal/Consular</td><td class="right">-</td></tr>
+        <tr><td>Inspection/Cert.</td><td class="right">-</td></tr>
+        <tr><td>Round off (+/-)</td><td class="right">${roundOff !== 0 ? fmt(roundOff) : "0.15"}</td></tr>
+        <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(roundedTotal)}</b></td></tr>
+        <tr><td>Currency</td><td class="right">${esc(currency)}</td></tr>
+      </table>
     </div>
 
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+    <div style="margin-top:10px">
+       ${additionalDetailsBlock(deal, supplier, "Invoice No. Date:", "", false)}
+    </div>
+
+    ${footer(company, date, true)}
+  </body>
+  </html>`;
+}
+
+function innerCI(deal, buyer, supplier, company, date, currency) {
+  const total = Number(deal.totalAmount || 0);
+  const roundedTotal = Math.round(total);
+  const roundOff = roundedTotal - total;
+
+  return `
+    <div class="top">
+      ${shipperBlock(company)}
+      ${logoBlock()}
+      ${rightHeader("COMMERCIAL INVOICE", deal.ci_no || deal.dealNo || "", buyer?.customer_id || "1057", date)}
+    </div>
+
+    <div class="triple">
+      ${consigneeBlock(buyer)}
+      ${notifyBlock(buyer)}
+      ${shippingBlock(deal)}
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:45%">DESCRIPTION</th>
+          <th style="width:10%">UNIT</th>
+          <th style="width:10%">QTY</th>
+          <th style="width:10%">RATE<br>(${esc(currency)})</th>
+          <th style="width:5%">TAX</th>
+          <th style="width:20%">TOTAL AMOUNT (${esc(currency)})</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="height:145px">
+          <td style="padding:0">
+            <div style="display:flex; flex-direction:column; justify-content:space-between; height:145px; padding:4px 6px">
+              <div>
+                <b>${esc(deal.productName || "")}</b><br>
+                HS CODE : ${esc(deal.hsn_code || "—")}
+              </div>
+              <div style="margin-top:auto">
+                ADD : ${esc(amountWords(total, currency))}
+              </div>
+            </div>
+          </td>
+          <td class="center">${esc(deal.unit || "MTON")}</td>
+          <td class="center">${esc(deal.quantity || "")}</td>
+          <td class="right">${fmt(deal.docRate || deal.rate || 0)}</td>
+          <td class="center">-</td>
+          <td class="right">${fmt(total)}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display:grid; grid-template-columns: 1.15fr .65fr .7fr; gap:8px; margin-top:0;">
+      <div class="box" style="height:100%">
+        <div class="boxHead">Terms of Sale and Other Comments</div>
+        <div class="boxBody" style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div><b>Terms of Delivery / Payment :</b></div>
+            <div>${esc(deal.terms_delivery || `CFR MUNDRA, INDIA`)} <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span></div>
+          </div>
+
+          <div style="margin-top:10px">
+            <div><b>Our Bank Details:-</b></div>
+            <div>Account Name: <b>${esc(company.name || "JK PETROCHEM INTERNATIONAL FZE")}</b></div>
+            <div>Account Number (${esc(currency)}): ${esc(company.bankAccount || "9200101821")}</div>
+            <div>IBAN: ${esc(company.bankIBAN || "AE630010000009200101821")}</div>
+            <div>SWIFT ID: ${esc(company.bankSWIFT || "WICBAEADXXX")}</div>
+            <div>Bank Name: ${esc(company.bankName || "WIO BANK (AED)")}</div>
+          </div>
+
+          <div style="margin-top:5px"><b>BANK TERMS: ALL BANKS ON BUYERS ACC. ONLY</b></div>
+        </div>
+      </div>
+
       ${containerBlock(deal)}
-      ${additionalDetailsBlock(deal, supplier, "Invoice No. Date:", "", false)}
+
+      <table class="meta thin" style="margin-top:10px">
+        <tr><td>Subtotal</td><td class="right">${fmt(total)}</td></tr>
+        <tr><td>Taxable</td><td class="right">-</td></tr>
+        <tr><td>Tax rate</td><td class="right">-</td></tr>
+        <tr><td>Tax</td><td class="right">-</td></tr>
+        <tr><td>Freight</td><td class="right">-</td></tr>
+        <tr><td>Insurance</td><td class="right">-</td></tr>
+        <tr><td>Legal/Consular</td><td class="right">-</td></tr>
+        <tr><td>Inspection/Cert.</td><td class="right">-</td></tr>
+        <tr><td>Round off (+/-)</td><td class="right">${roundOff !== 0 ? fmt(roundOff) : "0.15"}</td></tr>
+        <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(roundedTotal)}</b></td></tr>
+        <tr><td>Currency</td><td class="right">${esc(currency)}</td></tr>
+      </table>
+    </div>
+
+    <div style="margin-top:10px">
+       ${additionalDetailsBlock(deal, supplier, "Invoice No. Date:", "", false)}
     </div>
 
     ${footer(company, date, true)}
@@ -808,16 +1032,20 @@ export function buildCI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
   const currency = docCurrency(deal);
   const filename = suggestFilename("CI", deal, buyer, company);
-  return `<!DOCTYPE html><html><head><title>${esc(filename)}</title>${commonStyle()}${previewScript()}</head><body>${previewActions()}<div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div></body></html>`;
+  return `<!DOCTYPE html><html><head><title>${esc(filename)}</title>${commonStyle()}${previewScript()}</head><body>${previewActions()}${innerCI(deal, buyer, supplier, company, date, currency)}</body></html>`;
 }
 
 function innerPL(deal, buyer, supplier, company, date) {
   return `
-    ${officialHeader("PACKING LIST", deal.pl_no || deal.dealNo || "", date, company)}
+    <div class="top">
+      ${shipperBlock(company)}
+      ${logoBlock()}
+      ${rightHeader("PACKING LIST", deal.pl_no || deal.dealNo || "", buyer?.customer_id || "1057", date)}
+    </div>
 
     <div class="triple">
       ${consigneeBlock(buyer)}
-      ${notifyBlock(buyer)}
+      ${containerBlock(deal)}
       ${shippingBlock(deal)}
     </div>
 
@@ -841,8 +1069,15 @@ function innerPL(deal, buyer, supplier, company, date) {
       </tbody>
     </table>
 
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
-      ${containerBlock(deal)}
+    <div class="box" style="margin-top:0;">
+      <div class="boxHead">Terms of Sale and Other Comments</div>
+      <div class="boxBody">
+        <div><b>Terms of Delivery</b></div>
+        <div style="margin-top:4px">${esc(deal.terms_delivery || `CFR MUNDRA PORT`)}</div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px">
       ${additionalDetailsBlock(deal, supplier, "Packing List No. Date:", "", false)}
     </div>
 
@@ -853,16 +1088,20 @@ function innerPL(deal, buyer, supplier, company, date) {
 export function buildPL(deal, buyer, supplier, company = {}) {
   const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
   const filename = suggestFilename("PL", deal, buyer, company);
-  return `<!DOCTYPE html><html><head><title>${esc(filename)}</title>${commonStyle()}${previewScript()}</head><body>${previewActions()}<div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div></body></html>`;
+  return `<!DOCTYPE html><html><head><title>${esc(filename)}</title>${commonStyle()}${previewScript()}</head><body>${previewActions()}${innerPL(deal, buyer, supplier, company, date)}</body></html>`;
 }
 
 function innerCOO(deal, buyer, supplier, company, date) {
   return `
-    ${officialHeader("CERTIFICATE OF ORIGIN", deal.coo_no || deal.dealNo || "", date, company)}
+    <div class="top">
+      ${shipperBlock(company)}
+      ${logoBlock()}
+      ${rightHeader("CERTIFICATE OF ORIGIN", deal.coo_no || deal.dealNo || "", buyer?.customer_id || "1057", date)}
+    </div>
 
     <div class="triple">
       ${consigneeBlock(buyer)}
-      ${notifyBlock(buyer)}
+      ${containerBlock(deal)}
       ${shippingBlock(deal)}
     </div>
 
@@ -884,11 +1123,13 @@ function innerCOO(deal, buyer, supplier, company, date) {
       </div>
     </div>
 
-    ${additionalDetailsBlock(deal, supplier, "C.O.O No. Date:", `
-        <div style="margin-top:10px; font-size:11px;">
-          <b>DECLARATION:</b> GOODS PACKED IN EXPORT SEAWORTHY ${esc(deal.loaded_on || "ISO TANKS")}
-        </div>
-    `, false)}
+    <div style="margin-top:10px">
+      ${additionalDetailsBlock(deal, supplier, "C.O.O No. Date:", `
+          <div style="margin-top:10px; font-size:11px;">
+            <b>DECLARATION:</b> GOODS PACKED IN EXPORT SEAWORTHY ${esc(deal.loaded_on || "ISO TANKS")}
+          </div>
+      `, false)}
+    </div>
 
     ${footer(company, date, false)}
   `;
@@ -908,7 +1149,7 @@ export function buildCOO(deal, buyer, supplier, company = {}) {
   </head>
   <body>
     ${previewActions()}
-    <div class="doc">${innerCOO(deal, buyer, supplier, company, date)}</div>
+    ${innerCOO(deal, buyer, supplier, company, date)}
   </body>
   </html>`;
 }
@@ -942,9 +1183,9 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
   </head>
   <body>
     ${previewActions()}
-    <div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div>
-    <div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div>
-    <div class="doc">${innerCOO(deal, buyer, supplier, company, date)}</div>
+    ${innerCI(deal, buyer, supplier, company, date, currency)}
+    ${innerPL(deal, buyer, supplier, company, date)}
+    ${innerCOO(deal, buyer, supplier, company, date)}
   </body>
   </html>`;
 }
