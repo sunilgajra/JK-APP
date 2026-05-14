@@ -32,7 +32,7 @@
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
-  --glass: blur(4px) saturate(150%);
+  --glass: blur(12px) saturate(180%);
   
   /* Legacy support */
   --primary: #d4af37;
@@ -167,9 +167,7 @@ body {
   border-radius: var(--radius-md);
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
-  transition: background 0.2s ease, box-shadow 0.2s ease;
-  backface-visibility: hidden;
-  transform: translateZ(0);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
@@ -215,14 +213,13 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 1.25rem;
-  transition: background 0.2s ease, border-color 0.2s ease;
-  backface-visibility: hidden;
-  transform: translateZ(0);
+  transition: all 0.2s ease;
 }
 
 .item:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: var(--border-active);
+  transform: translateY(-2px);
 }
 
 .item-title {

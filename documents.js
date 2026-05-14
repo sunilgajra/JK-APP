@@ -329,7 +329,7 @@ export function commonStyle(docClass = "") {
         box-shadow: none !important; 
         border: none !important; 
         margin: 0 !important; 
-        padding: 8mm !important; 
+        padding: 10mm !important; 
         width: 100% !important;
       }
     }
@@ -387,7 +387,7 @@ export function commonStyle(docClass = "") {
       font-weight: 800;
       text-align: right;
       line-height: 1;
-      margin: 0 0 5px 0;
+      margin: 0 0 10px 0;
       letter-spacing: .2px;
       text-transform: uppercase;
     }
@@ -404,7 +404,7 @@ export function commonStyle(docClass = "") {
 
     .panel {
       border: 2px solid #222;
-      min-height: 90px;
+      min-height: 110px;
     }
 
     .panelBody {
@@ -418,19 +418,19 @@ export function commonStyle(docClass = "") {
       display: grid;
       grid-template-columns: 1fr .95fr 1fr;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       align-items: start;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 8px;
+      margin-bottom: 15px;
     }
 
     th, td {
       border: 2px solid #222;
-      padding: 3px 5px;
+      padding: 4px 6px;
       vertical-align: top;
     }
 
@@ -473,13 +473,13 @@ export function commonStyle(docClass = "") {
 
     .boxBody {
       padding: 5px 6px;
-      min-height: 30px;
+      min-height: 40px;
       font-size: 10px;
       font-weight: 700;
     }
 
     .footer {
-      margin-top: 10px;
+      margin-top: 15px;
       display: grid;
       grid-template-columns: 1.2fr .8fr 1fr;
       gap: 20px;
@@ -960,9 +960,9 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
         </tr>
       </thead>
       <tbody>
-        <tr style="height:120px">
+        <tr style="height:145px">
           <td style="padding:0">
-            <div style="display:flex; flex-direction:column; justify-content:space-between; height:120px; padding:4px 6px">
+            <div style="display:flex; flex-direction:column; justify-content:space-between; height:145px; padding:4px 6px">
               <div>
                 <b>${esc(deal.productName || "")}</b><br>
                 HS CODE : ${esc(deal.hsn_code || "—")}
@@ -1005,7 +1005,7 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
 
       ${containerBlock(deal)}
 
-      <table class="meta thin" style="margin-top:5px">
+      <table class="meta thin" style="margin-top:10px">
         <tr><td>Subtotal</td><td class="right">${fmt(total)}</td></tr>
         <tr><td>Taxable</td><td class="right">-</td></tr>
         <tr><td>Tax rate</td><td class="right">-</td></tr>
@@ -1020,7 +1020,7 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
       </table>
     </div>
 
-    <div style="margin-top:5px">
+    <div style="margin-top:10px">
        ${additionalDetailsBlock(deal, supplier, "Invoice No. Date:", "", false)}
     </div>
 
@@ -1188,15 +1188,8 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
   <body>
     ${previewActions()}
     ${innerCI(deal, buyer, supplier, company, date, currency)}
-    </div>
-
-    <div class="doc">
-      ${innerPL(deal, buyer, supplier, company, date)}
-    </div>
-
-    <div class="doc">
-      ${innerCOO(deal, buyer, supplier, company, date)}
-    </div>
+    ${innerPL(deal, buyer, supplier, company, date)}
+    ${innerCOO(deal, buyer, supplier, company, date)}
   </body>
   </html>`;
 }

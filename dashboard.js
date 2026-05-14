@@ -140,7 +140,6 @@ export function dashboardView() {
       </div>
     </div>
 
-    /* --- LOCKED - DO NOT MODIFY --- */
     <div class="card mt-14" style="overflow:hidden; border-top: 4px solid #f1c40f">
       <div class="flex flex-between flex-center mb-12 flex-wrap gap-12">
         <div class="title mb-0">Surrender & Payment Summary</div>
