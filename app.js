@@ -2693,4 +2693,14 @@ function showCOAForm(dealId) {
 }
 
 // Start
+// Add scroll optimization to prevent flickering
+let scrollTimeout;
+window.addEventListener('scroll', () => {
+  document.body.classList.add('scrolling');
+  clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(() => {
+    document.body.classList.remove('scrolling');
+  }, 150);
+}, { passive: true });
+
 loadSession();

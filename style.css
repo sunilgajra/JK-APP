@@ -167,7 +167,8 @@ body {
   border-radius: var(--radius-md);
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  will-change: background, box-shadow;
 }
 
 .card:hover {
@@ -213,13 +214,13 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 1.25rem;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  will-change: background, border-color;
 }
 
 .item:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: var(--border-active);
-  transform: translateY(-2px);
 }
 
 .item-title {
@@ -503,6 +504,14 @@ form > div, form .grid, form .list { gap: 12px; }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+/* Disable hover effects during scroll to prevent flickering */
+.scrolling *,
+.scrolling *::before,
+.scrolling *::after {
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
 }
 
 /* Modal */
