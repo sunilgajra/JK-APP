@@ -301,36 +301,31 @@ function previewScript() {
 
         try {
           if (docEls.length > 1) {
-            docEls.forEach(docEl => {
-              docEl.style.zoom = "1";
-              docEl.style.height = "auto";
-              docEl.style.overflow = "visible";
-            });
-
-            const wrapper = document.createElement("div");
-            wrapper.style.cssText = "position:fixed; top:0; left:0; width:210mm; background:white; z-index:-1; opacity:0;";
-            document.body.appendChild(wrapper);
-
+            const pdf = new jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
             for (let i = 0; i < docEls.length; i++) {
-              const clone = docEls[i].cloneNode(true);
-              clone.style.zoom = "1";
-              clone.style.transform = "none";
-              clone.style.height = "297mm";
-              clone.style.overflow = "hidden";
-              clone.style.margin = "0";
-              clone.style.padding = "8mm";
-              clone.style.width = "210mm";
-              clone.style.boxShadow = "none";
-              clone.style.border = "none";
-              clone.style.borderRadius = "0";
-              clone.style.background = "white";
-              clone.style.pageBreakAfter = i < docEls.length - 1 ? "always" : "avoid";
-              clone.style.breakAfter = i < docEls.length - 1 ? "page" : "auto";
-              wrapper.appendChild(clone);
-            }
+              docEls[i].style.zoom = "1";
+              docEls[i].style.height = "auto";
+              docEls[i].style.overflow = "visible";
+              docEls[i].style.margin = "0";
+              docEls[i].style.boxShadow = "none";
 
-            await html2pdf().from(wrapper).set(opt).save();
-            document.body.removeChild(wrapper);
+              const canvas = await html2canvas(docEls[i], {
+                scale: 3,
+                useCORS: true,
+                windowWidth: 1000,
+                logging: false,
+                x: 0,
+                y: 0
+              });
+
+              const imgData = canvas.toDataURL("image/jpeg", 1.0);
+              const imgW = 210;
+              const imgH = (canvas.height * imgW) / canvas.width;
+
+              if (i > 0) pdf.addPage();
+              pdf.addImage(imgData, "JPEG", 0, 0, imgW, imgH);
+            }
+            pdf.save(title + ".pdf");
           } else {
             await html2pdf().from(docEls[0]).set(opt).save();
           }
