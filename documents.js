@@ -973,9 +973,9 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
         </tr>
       </thead>
       <tbody>
-        <tr style="height:145px">
+        <tr style="height:110px">
           <td style="padding:0">
-            <div style="display:flex; flex-direction:column; justify-content:space-between; height:145px; padding:4px 6px">
+            <div style="display:flex; flex-direction:column; justify-content:space-between; height:110px; padding:4px 6px">
               <div>
                 <b>${esc(deal.productName || "")}</b><br>
                 HS CODE : ${esc(deal.hsn_code || "—")}
@@ -1072,7 +1072,7 @@ function innerPL(deal, buyer, supplier, company, date) {
         </tr>
       </thead>
       <tbody>
-        <tr style="height:120px">
+        <tr style="height:80px">
           <td>
             <b>${esc(deal.productName || "")}</b><br>
             HS CODE : ${esc(deal.hsn_code || "—")}
@@ -1200,9 +1200,12 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
         .doc { 
           page-break-after: always; 
           break-after: page;
-          min-height: auto !important;
+          page-break-inside: avoid;
+          max-height: 297mm !important;
+          height: 297mm !important;
+          overflow: hidden !important;
           margin: 0 !important;
-          padding: 10mm !important;
+          padding: 8mm !important;
           width: 100% !important;
           box-shadow: none !important;
           border: none !important;
@@ -1219,9 +1222,10 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
         .doc { 
           page-break-after: always; 
           break-after: page;
-          min-height: auto;
+          max-height: 297mm;
+          overflow: hidden;
           margin: 0;
-          padding: 10mm;
+          padding: 8mm;
           width: 100%;
         }
         .doc:last-child { 
@@ -1230,6 +1234,28 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
         }
       }
     </style>
+    <script>
+      function fitDocsToOnePage() {
+        const A4_HEIGHT_MM = 297;
+        const MM_TO_PX = 3.7795;
+        const maxPx = A4_HEIGHT_MM * MM_TO_PX;
+        document.querySelectorAll(".doc").forEach(doc => {
+          doc.style.transform = "none";
+          doc.style.transformOrigin = "top left";
+          const h = doc.scrollHeight;
+          if (h > maxPx) {
+            const scale = maxPx / h;
+            doc.style.transform = "scale(" + scale + ")";
+            doc.style.height = maxPx + "px";
+            doc.style.overflow = "hidden";
+          } else {
+            doc.style.height = "auto";
+            doc.style.overflow = "visible";
+          }
+        });
+      }
+      window.addEventListener("DOMContentLoaded", fitDocsToOnePage);
+    </script>
   </head>
   <body>
     ${previewActions()}
