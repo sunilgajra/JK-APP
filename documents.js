@@ -1,0 +1,2231 @@
+/* --- LOCKED - DO NOT MODIFY (Documents & Format) --- */
+import { state } from "./state.js";
+
+function esc(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function fmt(n) {
+  return Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+}
+
+function fmtDate(d) {
+  if (!d) return "";
+  const x = new Date(d);
+  if (Number.isNaN(x.getTime())) return d;
+  return `${String(x.getDate()).padStart(2, "0")}/${String(x.getMonth() + 1).padStart(2, "0")}/${x.getFullYear()}`;
+}
+
+function assetUrl(file) {
+  return new URL(file, window.location.href).href;
+}
+
+const LOGO_URL = assetUrl("logo.PNG");
+const STAMP_URL = assetUrl("stamp.png");
+const SIGN_URL = assetUrl("signature.png");
+
+export function openPrintWindow(html) {
+  const w = window.open("", "_blank");
+  if (!w) {
+    alert("Please allow pop-ups to view the document preview.");
+    return false;
+  }
+
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+
+  // Explicitly set the title again after a short delay to ensure the browser picks it up for the print dialog
+  setTimeout(() => {
+    const titleMatch = html.match(/<title>(.*?)<\/title>/i);
+    if (titleMatch && titleMatch[1]) {
+      w.document.title = titleMatch[1];
+    }
+  }, 100);
+
+  return true;
+}
+
+function numberToWords(n) {
+  n = Math.round(Number(n || 0));
+  if (!n) return "ZERO";
+
+  const ones = ["", "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN", "EIGHTEEN", "NINETEEN"];
+  const tens = ["", "", "TWENTY", "THIRTY", "FORTY", "FIFTY", "SIXTY", "SEVENTY", "EIGHTY", "NINETY"];
+
+  function two(x) {
+    if (x < 20) return ones[x];
+    return tens[Math.floor(x / 10)] + (x % 10 ? " " + ones[x % 10] : "");
+  }
+
+  function three(x) {
+    if (x < 100) return two(x);
+    return ones[Math.floor(x / 100)] + " HUNDRED" + (x % 100 ? " " + two(x % 100) : "");
+  }
+
+  let out = [];
+  if (n >= 10000000) {
+    out.push(three(Math.floor(n / 10000000)) + " CRORE");
+    n %= 10000000;
+  }
+  if (n >= 100000) {
+    out.push(three(Math.floor(n / 100000)) + " LAKH");
+    n %= 100000;
+  }
+  if (n >= 1000) {
+    out.push(three(Math.floor(n / 1000)) + " THOUSAND");
+    n %= 1000;
+  }
+  if (n > 0) out.push(three(n));
+  return out.join(" ").trim();
+}
+
+/* --- LOCKED - DO NOT MODIFY --- */
+function amountWords(n, currency = "USD") {
+  const rounded = Math.floor(n || 0);
+  const decimals = Math.round((n - rounded) * 100);
+  
+  let words = numberToWords(rounded).toUpperCase();
+  
+  if (currency === "USD") {
+    words += " US DOLLARS";
+    if (decimals > 0) {
+      words += " AND " + numberToWords(decimals).toUpperCase() + " CENTS";
+    }
+  } else {
+    words += " UAE DIRHAMS";
+    if (decimals > 0) {
+      words += " AND " + numberToWords(decimals).toUpperCase() + " FILS";
+    }
+  }
+  
+  return words + " ONLY";
+}
+
+/* --- LOCKED - DO NOT MODIFY --- */
+export function buildShippingInstruction(si, buyer, supplier, deal, company = {}) {
+  const date = new Date().toISOString();
+  const shipper = company.shippers?.[si.shipper_index] || company;
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(suggestFilename("SI", deal, buyer, company))}</title>
+    ${commonStyle()}
+    ${previewScript()}
+  </head>
+  <body>
+    ${previewActions()}
+    <div class="top">
+      <div class="panel">
+        <div class="bar">Shipper</div>
+        <div class="panelBody tight">
+          <div><b>${esc(shipper.name || company.name)}</b></div>
+          <div>${esc(shipper.address || company.address)}</div>
+          <div>Mobil ${esc(shipper.mobile || company.mobile)}</div>
+          <div>Email: ${esc(shipper.email || company.email)}</div>
+        </div>
+      </div>
+      ${logoBlock()}
+      <div class="docTitle">SHIPPING INSTRUCTION</div>
+    </div>
+
+    <div class="triple">
+      <div class="panel">
+        <div class="bar">Buyer / Consignee</div>
+        <div class="panelBody tight">
+          <div><b>${esc(buyer?.name || "—")}</b></div>
+          <div>${esc(buyer?.address || "")}</div>
+          <div>GST: ${esc(buyer?.gst || "—")}</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="bar">Supplier</div>
+        <div class="panelBody tight">
+          <div><b>${esc(supplier?.name || "—")}</b></div>
+          <div>${esc(supplier?.company_name || "")}</div>
+          <div>Country: ${esc(supplier?.country || "")}</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="bar">Deal Info</div>
+        <div class="panelBody tight">
+          <div><b>Deal No:</b> ${esc(deal?.deal_no || "—")}</div>
+          <div><b>Product:</b> ${esc(si.product || "—")}</div>
+          <div><b>HSN:</b> ${esc(si.hsn_code || "—")}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="box" style="margin-top:20px">
+      <div class="boxHead">Instruction Details</div>
+      <div class="boxBody" style="font-size:12px; line-height:1.6">
+        <p><b>Free Days:</b> ${esc(si.free_days_text || "21 FREE DAYS AT POD")}</p>
+        <p><b>Detention:</b> ${esc(si.detention_text || "THEREAFTER USD 25/ DAY/TANK")}</p>
+        <div style="margin-top:20px; white-space:pre-wrap"><b>Other Instructions:</b>\n${esc(si.other_instructions || "")}</div>
+      </div>
+    </div>
+
+    ${footer(company, date)}
+  </body>
+  </html>`;
+}
+
+function docCurrency(deal = {}) {
+  return deal.document_currency || deal.currency || deal.base_currency || "AED";
+}
+
+function previewScript() {
+  return `
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+      async function waitForImages(root) {
+        const images = Array.from(root.querySelectorAll("img"));
+        await Promise.all(images.map((img) => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        }));
+      }
+
+      function adjustScale() {
+        const doc = document.querySelector(".doc");
+        if (!doc) return;
+        const vw = window.innerWidth;
+        const dw = doc.offsetWidth;
+        if (vw < dw + 40) {
+          const scale = (vw - 20) / dw;
+          doc.style.transform = "scale(" + scale + ")";
+          doc.style.marginTop = "60px";
+        } else {
+          doc.style.transform = "none";
+          doc.style.marginTop = "30px";
+        }
+      }
+
+      window.addEventListener("resize", adjustScale);
+      window.addEventListener("DOMContentLoaded", () => {
+        adjustScale();
+      });
+
+      function triggerPrint() {
+        const doc = document.querySelector(".doc");
+        const actions = document.querySelector(".previewActions");
+        const oldTransform = doc ? doc.style.transform : "";
+        const oldMargin = doc ? doc.style.marginTop : "";
+        const oldTitle = document.title;
+        
+        if (doc) {
+          doc.style.transform = "none";
+          doc.style.marginTop = "0";
+        }
+        if (actions) actions.style.display = "none";
+        
+        window.print();
+        
+        setTimeout(() => {
+          document.title = oldTitle;
+          if (doc) {
+            doc.style.transform = oldTransform;
+            doc.style.marginTop = oldMargin;
+          }
+          if (actions) actions.style.display = "flex";
+        }, 1000);
+      }
+
+      async function downloadExactPdf() {
+        const actions = document.querySelector(".previewActions");
+        const doc = document.querySelector(".doc");
+        const oldTransform = doc ? doc.style.transform : "";
+        const oldBodyMarginTop = doc ? doc.style.marginTop : "";
+        const btn = event.target;
+        const oldText = btn.innerText;
+
+        if (btn) {
+          btn.innerText = "Generating...";
+          btn.disabled = true;
+        }
+
+        if (actions) actions.style.display = "none";
+        if (doc) {
+          doc.style.transform = "none";
+          doc.style.marginTop = "0";
+        }
+
+        window.scrollTo(0,0);
+        
+        const title = document.title || "document";
+        const docEl = document.querySelector(".doc");
+        if (!docEl) return;
+
+        const isLandscape = title.includes("SETTLEMENT") || title.includes("SUMMARY");
+        
+        const oldShadow = docEl.style.boxShadow;
+        const oldDocMargin = docEl.style.margin;
+        docEl.style.boxShadow = "none";
+        docEl.style.margin = "0";
+
+        const opt = {
+          margin: 0,
+          filename: title + ".pdf",
+          image: { type: "jpeg", quality: 1.0 },
+          html2canvas: { 
+            scale: 3, 
+            useCORS: true, 
+            windowWidth: isLandscape ? 1200 : 800,
+            logging: false,
+            x: 0,
+            y: 0
+          },
+          jsPDF: { unit: "mm", format: "a4", orientation: isLandscape ? "landscape" : "portrait" }
+        };
+
+        try {
+          await html2pdf().from(docEl).set(opt).save();
+        } catch (err) {
+          console.error(err);
+          alert("Download failed. Please use 'Print / PDF' instead.");
+        } finally {
+          docEl.style.boxShadow = oldShadow;
+          docEl.style.margin = oldDocMargin;
+          if (btn) {
+            btn.innerText = oldText;
+            btn.disabled = false;
+          }
+          if (actions) actions.style.display = "flex";
+          if (doc) {
+            doc.style.transform = oldTransform;
+            doc.style.marginTop = oldBodyMarginTop;
+          }
+        }
+      }
+
+    </script>
+  `;
+}
+
+/* --- LOCKED - DO NOT MODIFY --- */
+export function commonStyle(docClass = "") {
+  return `
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <style>
+    @page { 
+      size: A4; 
+      margin: 0mm !important; 
+    }
+    @media print {
+      body { background: white !important; -webkit-print-color-adjust: exact; }
+      .previewActions { display: none !important; }
+      .doc { 
+        box-shadow: none !important; 
+        border: none !important; 
+        margin: 0 !important; 
+        padding: 10mm !important; 
+        width: 100% !important;
+      }
+    }
+
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #f0f2f5;
+      color: #111;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 13px;
+    }
+
+    .doc {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 30px auto;
+      padding: 15mm;
+      background: white;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .doc.landscape {
+      width: 297mm;
+      min-width: 297mm;
+    }
+
+    .top {
+      display: grid;
+      grid-template-columns: 1fr 0.62fr 1fr;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .logoBox {
+      text-align: center;
+      padding-top: 10px;
+    }
+
+    .logoBox img {
+      width: 110px;
+      max-width: 110px;
+      object-fit: contain;
+    }
+
+    .docTitle {
+      color: #3b9da2;
+      font-size: 24px;
+      font-weight: 800;
+      text-align: right;
+      line-height: 1;
+      margin: 0 0 10px 0;
+      letter-spacing: .2px;
+      text-transform: uppercase;
+    }
+
+    .bar {
+      background: #3b9da2;
+      color: #fff;
+      font-weight: 700;
+      padding: 3px 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
+    .panel {
+      border: 2px solid #222;
+      min-height: 110px;
+    }
+
+    .panelBody {
+      padding: 5px 6px;
+      line-height: 1.4;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .triple {
+      display: grid;
+      grid-template-columns: 1fr .95fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+      align-items: start;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+
+    th, td {
+      border: 2px solid #222;
+      padding: 4px 6px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #3b9da2;
+      color: #fff;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .meta td {
+      padding: 3px 6px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .meta td:first-child {
+      width: 50%;
+    }
+
+    .right { text-align: right; }
+    .center { text-align: center; }
+    
+    .box {
+      border: 2px solid #222;
+      margin-top: 10px;
+    }
+
+    .boxHead {
+      background: #3b9da2;
+      color: #fff;
+      padding: 3px 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+      line-height: 1.1;
+      font-size: 11px;
+    }
+
+    .boxBody {
+      padding: 5px 6px;
+      min-height: 40px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .footer {
+      margin-top: 15px;
+      display: grid;
+      grid-template-columns: 1.2fr .8fr 1fr;
+      gap: 20px;
+      align-items: end;
+    }
+
+    .note {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 10px;
+      color: #222;
+    }
+
+    .red {
+      color: #c62828;
+      font-weight: 700;
+    }
+
+    .previewActions {
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      display: flex;
+      gap: 12px;
+      padding: 15px;
+      background: #fff;
+      border-bottom: 2px solid #3b9da2;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      justify-content: center;
+    }
+
+    .previewActions button {
+      padding: 12px 24px;
+      border: none;
+      background: #3b9da2;
+      color: #fff;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .previewActions button:hover { background: #2a7a7d; transform: translateY(-1px); }
+    .previewActions button.btn-back { background: #64748b; }
+    
+    .plainTable td { border: none !important; padding: 1px 0 !important; font-size: 10px; font-weight: 700; }
+  </style>
+  <div class="doc ${docClass}">
+  `;
+}
+
+function previewActions() {
+  return `
+    <div class="previewActions">
+      <button onclick="downloadExactPdf(event)">Download Clean PDF</button>
+      <button onclick="triggerPrint()" style="background:#475569">Browser Print</button>
+      <button onclick="window.close()" class="btn-back">Back</button>
+    </div>
+  `;
+}
+
+function logoBlock() {
+  return `
+    <div class="logoBox">
+      <img src="${LOGO_URL}" alt="JK Petrochem logo">
+    </div>
+  `;
+}
+
+function rightHeader(title, docNo, customerId, date) {
+  const label =
+    title === "PRO FORMA INVOICE"
+      ? "Proforma Invoice #"
+      : title === "PACKING LIST"
+        ? "P.L. Invoice #"
+        : "Invoice #";
+
+  return `
+    <div>
+      <div class="docTitle">${title}</div>
+      <table class="meta thin">
+        <tr>
+          <td><b>Date</b></td>
+          <td class="center">${esc(fmtDate(date) || "")}</td>
+        </tr>
+        <tr>
+          <td><b>${label}</b></td>
+          <td class="center">${esc(String(docNo || "").replace(/\s+/g, " ").trim())}</td>
+        </tr>
+        <tr>
+          <td><b>Customer ID</b></td>
+          <td class="center">${esc(customerId || "")}</td>
+        </tr>
+      </table>
+    </div>
+  `;
+}
+
+function shipperBlock(company = {}) {
+  return `
+    <div class="panel">
+      <div class="bar">Shipper</div>
+      <div class="panelBody tight">
+        <div><b>${esc(company.name || "JK PETROCHEM INTERNATIONAL FZE")}</b></div>
+        <div style="white-space:pre-wrap;">${esc(company.address || "")}</div>
+        <div>Mobil ${esc(company.mobile || "+971524306170")}</div>
+        <div>Email: ${esc(company.email || "info@jkpetrochem.com")}</div>
+      </div>
+    </div>
+  `;
+}
+
+function consigneeBlock(buyer = {}) {
+  return `
+    <div class="panel">
+      <div class="bar">Consignee</div>
+      <div class="panelBody tight">
+        <div><b>${esc(buyer.name || "—")}</b></div>
+        <div style="white-space:pre-wrap;">${esc(buyer.address || "")}</div>
+        <div>GST NO: ${esc(buyer.gst || "—")}</div>
+        <div>IEC NO: ${esc(buyer.iec || "—")}</div>
+        <div>PAN: ${esc(buyer.pan || "—")}</div>
+        ${buyer.email ? `<div>Email: ${esc(buyer.email)}</div>` : ``}
+      </div>
+    </div>
+  `;
+}
+
+function notifyBlock(buyer = {}) {
+  return `
+    <div class="panel">
+      <div class="bar">Notify Party</div>
+      <div class="panelBody tight">
+        <div><b>${esc(buyer.name || "—")}</b></div>
+        <div style="white-space:pre-wrap;">${esc(buyer.address || "")}</div>
+        <div>GST NO: ${esc(buyer.gst || "—")}</div>
+        <div>IEC NO: ${esc(buyer.iec || "—")}</div>
+        <div>PAN: ${esc(buyer.pan || "—")}</div>
+        ${buyer.email ? `<div>Email: ${esc(buyer.email)}</div>` : ``}
+      </div>
+    </div>
+  `;
+}
+
+
+
+function containerBlock(deal = {}) {
+  const list = Array.isArray(deal.container_numbers)
+    ? deal.container_numbers
+    : String(deal.container_numbers || "")
+      .split(/[,\n]+/)
+      .map((x) => x.trim())
+      .filter(Boolean);
+
+  const cleanList = list.map(x => String(x).replace(/[^A-Z0-9]/gi, "").toUpperCase());
+  const minItems = 20;
+  const totalItems = Math.max(minItems, cleanList.length);
+  const evenTotal = totalItems % 2 === 0 ? totalItems : totalItems + 1;
+
+  const normalized = [...cleanList];
+  while (normalized.length < evenTotal) {
+    normalized.push("-");
+  }
+
+  const rows = [];
+  for (let i = 0; i < normalized.length; i += 2) {
+    rows.push([normalized[i], normalized[i + 1]]);
+  }
+
+  return `
+    <div class="panel" style="height:100%">
+      <div class="bar">Container Nos:</div>
+      <table class="thin" style="height:calc(100% - 18px)">
+        ${rows.map((r) => `
+          <tr style="height:22px">
+            <td class="center">${esc(r[0] || "-")}</td>
+            <td class="center">${esc(r[1] || "-")}</td>
+          </tr>
+        `).join("")}
+      </table>
+    </div>
+  `;
+}
+
+function shippingBlock(deal = {}) {
+  return `
+    <div class="panel">
+      <div class="bar">Shipping Details</div>
+      <div class="panelBody tight">
+        <table class="plainTable">
+          <tr>
+            <td style="width:95px;">Freight Type</td>
+            <td>${esc(deal.freight_type || "BY SEA")}</td>
+          </tr>
+          <tr>
+            <td>Shippment Date</td>
+            <td>[--------------]</td>
+          </tr>
+          <tr>
+            <td>Gross Weight</td>
+            <td>[${esc(deal.gross_weight || "")}${deal.gross_weight ? " KGS" : ""}]</td>
+          </tr>
+          <tr>
+            <td>Net Weight</td>
+            <td>[${esc(deal.net_weight || "")}${deal.net_weight ? " KGS" : ""}]</td>
+          </tr>
+          <tr>
+            <td>Total Packages</td>
+            <td>${esc(deal.package_details || "20ft x 10 Containers")}</td>
+          </tr>
+        </table>
+        <div class="red center" style="margin-top:4px">( Loaded on ${esc(deal.loaded_on || "ISO TANK")} )</div>
+      </div>
+    </div>
+  `;
+}
+
+function suggestFilename(type, deal, buyer, company, extra = {}) {
+  const docType = type.toUpperCase();
+  const shipper = (company.name || "JK").split(/\s+/)[0].toUpperCase();
+  
+  if (type === "PO") {
+    const po = deal;
+    const poNo = String(po.po_no || "NOPO").replace(/[^A-Z0-9]/gi, "-");
+    const supp = (extra.supplier?.name || "SUPP").split(/\s+/)[0].toUpperCase();
+    return `PO-${poNo}-${shipper}-${supp}`;
+  }
+
+  const blNo = (deal?.bl_no || deal?.blNo || "NOBL").replace(/[^A-Z0-9]/gi, "");
+
+  const product = (deal?.product_name || deal?.productName || "PRODUCT").toUpperCase();
+  let productShort = product.split(/\s+/).filter(w => w.length > 0).map(w => w[0]).join("");
+  if (product.includes("LUBRICATING OIL")) productShort = "LO";
+  else if (product.includes("BASE OIL")) productShort = "BO";
+  else if (product.includes("BITUMEN")) productShort = "BT";
+
+  const consignee = (buyer?.name || "BUYER").split(/\s+/).filter(Boolean).slice(0, 2).join("-").toUpperCase();
+
+  let dNo = "";
+  if (docType === "CI") dNo = deal?.ci_no;
+  else if (docType === "PI") dNo = deal?.pi_no;
+  else if (docType === "PL") dNo = deal?.pl_no;
+  else if (docType === "COO") dNo = deal?.coo_no || deal?.ci_no;
+  else if (docType === "COA") dNo = extra.coa?.cert_no || deal?.bl_no;
+
+  const docNo = String(dNo || deal?.ci_no || deal?.pi_no || deal?.pl_no || deal?.dealNo || deal?.deal_no || "000").replace(/[^A-Z0-9\-\/]/gi, "").replace(/\//g, "-");
+
+  const count = deal?.dealCount || 1;
+
+  if (type.includes("STATEMENT") || type.includes("SETTLEMENT")) {
+    const date = new Date().toISOString().split("T")[0].replace(/-/g, "");
+    if (type.includes("MASTER")) {
+      const entityName = (buyer?.name || "ENTITY").split(/\s+/).filter(Boolean).slice(0, 5).join("-").toUpperCase();
+      const partyName = (extra.partyName || shipper).split(/\s+/).filter(Boolean).slice(0, 3).join("-").toUpperCase();
+      return `${docType}-${entityName}-${partyName}-${date}`;
+    }
+    return `${docType}-${consignee}-${date}`;
+  }
+
+  return `${docType}-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}-${count}`;
+}
+
+function additionalDetailsBlock(deal, supplier, docLabel = "Packing list No. Date:", extraHtml = "", showDocNo = true) {
+  const docNoRow = showDocNo ? `
+          <tr>
+            <td>${docLabel}</td>
+            <td>${esc(String(deal.pl_no || deal.ci_no || deal.pi_no || deal.dealNo || "—").replace(/\s+/g, ""))}</td>
+          </tr>` : "";
+
+  return `
+    <div class="box" style="margin-top:0;">
+      <div class="boxHead">Additional Details</div>
+      <div class="boxBody tight">
+        <table class="plainTable">
+          <tr>
+            <td style="width:140px;">Country of Origin</td>
+            <td>${esc(deal.country_of_origin || supplier?.country || "UAE")}</td>
+          </tr>
+          ${docNoRow}
+          <tr>
+            <td>Port of Loading</td>
+            <td>${esc(deal.loading_port || "—")}</td>
+          </tr>
+          <tr>
+            <td>Port of Discharge</td>
+            <td>${esc(deal.discharge_port || "—")}</td>
+          </tr>
+          <tr>
+            <td>BL NO:</td>
+            <td>${esc(deal.bl_no || "—")}</td>
+          </tr>
+          <tr>
+            <td>Vessel / Voyage No.</td>
+            <td>${esc(deal.vessel_voyage || deal.vessel || "—")}</td>
+          </tr>
+          <tr>
+            <td>CFS:</td>
+            <td>${esc(deal.cfs || "-")}</td>
+          </tr>
+        </table>
+        ${extraHtml}
+      </div>
+    </div>
+  `;
+}
+
+function footer(company = {}, date = "", showSignatory = false) {
+  return `
+    <div class="footer">
+      <div style="position:relative; min-height:110px;">
+        <div style="font-size: 10px; font-weight: 700; min-height: 18px;">
+          FOR ${esc(company.name || "")}
+        </div>
+        ${showSignatory ? `
+          <div style="position:relative; margin-top:5px; height:90px;">
+            <img src="${SIGN_URL}" style="height:75px; position:absolute; left:20px; bottom:25px; z-index:3;" onerror="this.style.display='none'">
+            <img src="${STAMP_URL}" style="height:90px; position:absolute; left:65px; bottom:15px; z-index:2; opacity:0.85;" onerror="this.style.display='none'">
+            <div style="font-size:10px;font-weight:700; position:absolute; bottom:0; left:0; z-index:4; padding-top:5px;">Authorised Signatory</div>
+          </div>
+        ` : `
+          <div style="position:relative; margin-top:5px; height:70px;">
+            <img src="${STAMP_URL}" style="height:85px; position:absolute; left:20px; bottom:5px; z-index:2; opacity:0.85;" onerror="this.style.display='none'">
+          </div>
+        `}
+      </div>
+      <div><!-- Empty middle col --></div>
+      <div>
+        <div style="border-bottom: 2px solid #222; padding-bottom: 2px; font-size: 10px; font-weight: 700; min-height: 18px; text-align: center;">
+          ${esc(fmtDate(date) || "")}
+        </div>
+        <div style="font-size:10px;font-weight:700;margin-top:2px; text-align: center;">Date</div>
+      </div>
+    </div>
+    <div class="note">This is computer generated Document</div>
+  </div>
+  `;
+}
+
+/* --- LOCKED - DO NOT MODIFY --- */
+export function buildPI(deal, buyer, supplier, company = {}) {
+  const date = deal.invoice_date || deal.created_at || new Date().toISOString();
+  const total = Number(deal.totalAmount || 0);
+  const roundedTotal = Math.round(total);
+  const roundOff = roundedTotal - total;
+  const currency = docCurrency(deal);
+  const filename = suggestFilename("PI", deal, buyer, company);
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(filename)}</title>
+    ${commonStyle()}
+    ${previewScript()}
+  </head>
+  <body>
+    ${previewActions()}
+
+    <div class="top">
+      ${shipperBlock(company)}
+      ${logoBlock()}
+      ${rightHeader("PRO FORMA INVOICE", String(deal.pi_no || deal.dealNo || "").replace(/^PI\s*/i, ""), buyer?.customer_id || "1057", date)}
+    </div>
+
+    <div class="triple">
+      ${consigneeBlock(buyer)}
+      ${notifyBlock(buyer)}
+      ${shippingBlock(deal)}
+    </div>
+
+    <table class="descTable" style="margin-top:0;">
+      <thead>
+        <tr>
+          <th style="width:45%">DESCRIPTION</th>
+          <th style="width:10%">UNIT</th>
+          <th style="width:10%">QTY</th>
+          <th style="width:10%">RATE<br>(${esc(currency)})</th>
+          <th style="width:5%">TAX</th>
+          <th style="width:20%">TOTAL AMOUNT (${esc(currency)})</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="height:140px">
+          <td style="padding:0">
+            <div style="display:flex; flex-direction:column; justify-content:space-between; height:140px; padding:4px 6px">
+              <div>
+                <b>${esc(deal.productName || "")}</b><br>
+                HS CODE : ${esc(deal.hsn_code || "—")}
+              </div>
+              <div style="margin-top:auto">
+                ${esc(currency)} : ${esc(amountWords(total, currency))}
+              </div>
+            </div>
+          </td>
+          <td class="center">${esc(deal.unit || "MTON")}</td>
+          <td class="center">${esc(deal.quantity || "")}</td>
+          <td class="right">${fmt(deal.docRate || deal.rate || 0)}</td>
+          <td class="center">-</td>
+          <td class="right">${fmt(total)}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display:grid; grid-template-columns: 1.3fr .7fr; gap:10px; margin-top:0;">
+      <div class="box" style="height:100%">
+        <div class="boxHead">Terms of Sale and Other Comments</div>
+        <div class="boxBody" style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div><b>Terms of Delivery / Payment :</b></div>
+            <div>${esc(deal.terms_delivery || `CFR MUNDRA PORT, INDIA`)} <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span></div>
+          </div>
+
+          <div style="margin-top:10px">
+            <div><b>Our Bank Details:-</b></div>
+            <div>Account Name: <b>${esc(company.name || "JK PETROCHEM INTERNATIONAL FZE")}</b></div>
+            <div>Account Number (${esc(currency)}): ${esc(company.bankAccount || "9200101821")}</div>
+            <div>IBAN: ${esc(company.bankIBAN || "AE630010000009200101821")}</div>
+            <div>SWIFT ID: ${esc(company.bankSWIFT || "WICBAEADXXX")}</div>
+            <div>Bank Name: ${esc(company.bankName || "WIO BANK (AED)")}</div>
+          </div>
+
+          <div style="margin-top:5px"><b>BANK TERMS: ALL BANKS ON BUYERS ACC. ONLY</b></div>
+        </div>
+      </div>
+
+      <table class="meta thin" style="margin-top:10px">
+        <tr><td>Subtotal</td><td class="right">${fmt(total)}</td></tr>
+        <tr><td>Taxable</td><td class="right">-</td></tr>
+        <tr><td>Tax rate</td><td class="right">-</td></tr>
+        <tr><td>Tax</td><td class="right">-</td></tr>
+        <tr><td>Freight</td><td class="right">-</td></tr>
+        <tr><td>Insurance</td><td class="right">-</td></tr>
+        <tr><td>Legal/Consular</td><td class="right">-</td></tr>
+        <tr><td>Inspection/Cert.</td><td class="right">-</td></tr>
+        <tr><td>Round off (+/-)</td><td class="right">${roundOff !== 0 ? fmt(roundOff) : "0.15"}</td></tr>
+        <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(roundedTotal)}</b></td></tr>
+        <tr><td>Currency</td><td class="right">${esc(currency)}</td></tr>
+      </table>
+    </div>
+
+    <div style="margin-top:10px">
+       ${additionalDetailsBlock(deal, supplier, "Invoice No. Date:", "", false)}
+    </div>
+
+    ${footer(company, date, true)}
+  </body>
+  </html>`;
+}
+
+function innerCI(deal, buyer, supplier, company, date, currency) {
+  const total = Number(deal.totalAmount || 0);
+  const roundedTotal = Math.round(total);
+  const roundOff = roundedTotal - total;
+
+  return `
+    <div class="top">
+      ${shipperBlock(company)}
+      ${logoBlock()}
+      ${rightHeader("COMMERCIAL INVOICE", deal.ci_no || deal.dealNo || "", buyer?.customer_id || "1057", date)}
+    </div>
+
+    <div class="triple">
+      ${consigneeBlock(buyer)}
+      ${notifyBlock(buyer)}
+      ${shippingBlock(deal)}
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:45%">DESCRIPTION</th>
+          <th style="width:10%">UNIT</th>
+          <th style="width:10%">QTY</th>
+          <th style="width:10%">RATE<br>(${esc(currency)})</th>
+          <th style="width:5%">TAX</th>
+          <th style="width:20%">TOTAL AMOUNT (${esc(currency)})</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="height:145px">
+          <td style="padding:0">
+            <div style="display:flex; flex-direction:column; justify-content:space-between; height:145px; padding:4px 6px">
+              <div>
+                <b>${esc(deal.productName || "")}</b><br>
+                HS CODE : ${esc(deal.hsn_code || "—")}
+              </div>
+              <div style="margin-top:auto">
+                ${esc(currency)} : ${esc(amountWords(total, currency))}
+              </div>
+            </div>
+          </td>
+          <td class="center">${esc(deal.unit || "MTON")}</td>
+          <td class="center">${esc(deal.quantity || "")}</td>
+          <td class="right">${fmt(deal.docRate || deal.rate || 0)}</td>
+          <td class="center">-</td>
+          <td class="right">${fmt(total)}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="display:grid; grid-template-columns: 1.15fr .65fr .7fr; gap:8px; margin-top:0;">
+      <div class="box" style="height:100%">
+        <div class="boxHead">Terms of Sale and Other Comments</div>
+        <div class="boxBody" style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div><b>Terms of Delivery / Payment :</b></div>
+            <div>${esc(deal.terms_delivery || `CFR MUNDRA, INDIA`)} <span class="red">${esc(deal.payment_terms || "100% ADVANCE PAYMENT")}</span></div>
+          </div>
+
+          <div style="margin-top:10px">
+            <div><b>Our Bank Details:-</b></div>
+            <div>Account Name: <b>${esc(company.name || "JK PETROCHEM INTERNATIONAL FZE")}</b></div>
+            <div>Account Number (${esc(currency)}): ${esc(company.bankAccount || "9200101821")}</div>
+            <div>IBAN: ${esc(company.bankIBAN || "AE630010000009200101821")}</div>
+            <div>SWIFT ID: ${esc(company.bankSWIFT || "WICBAEADXXX")}</div>
+            <div>Bank Name: ${esc(company.bankName || "WIO BANK (AED)")}</div>
+          </div>
+
+          <div style="margin-top:5px"><b>BANK TERMS: ALL BANKS ON BUYERS ACC. ONLY</b></div>
+        </div>
+      </div>
+
+      ${containerBlock(deal)}
+
+      <table class="meta thin" style="margin-top:10px">
+        <tr><td>Subtotal</td><td class="right">${fmt(total)}</td></tr>
+        <tr><td>Taxable</td><td class="right">-</td></tr>
+        <tr><td>Tax rate</td><td class="right">-</td></tr>
+        <tr><td>Tax</td><td class="right">-</td></tr>
+        <tr><td>Freight</td><td class="right">-</td></tr>
+        <tr><td>Insurance</td><td class="right">-</td></tr>
+        <tr><td>Legal/Consular</td><td class="right">-</td></tr>
+        <tr><td>Inspection/Cert.</td><td class="right">-</td></tr>
+        <tr><td>Round off (+/-)</td><td class="right">${roundOff !== 0 ? fmt(roundOff) : "0.15"}</td></tr>
+        <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(roundedTotal)}</b></td></tr>
+        <tr><td>Currency</td><td class="right">${esc(currency)}</td></tr>
+      </table>
+    </div>
+
+    <div style="margin-top:10px">
+       ${additionalDetailsBlock(deal, supplier, "Invoice No. Date:", "", false)}
+    </div>
+
+    ${footer(company, date, true)}
+  `;
+}
+
+/* --- LOCKED - DO NOT MODIFY --- */
+export function buildCI(deal, buyer, supplier, company = {}) {
+  const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
+  const currency = docCurrency(deal);
+  const filename = suggestFilename("CI", deal, buyer, company);
+  return `<!DOCTYPE html><html><head><title>${esc(filename)}</title>${commonStyle()}${previewScript()}</head><body>${previewActions()}${innerCI(deal, buyer, supplier, company, date, currency)}</body></html>`;
+}
+
+function innerPL(deal, buyer, supplier, company, date) {
+  return `
+    <div class="top">
+      ${shipperBlock(company)}
+      ${logoBlock()}
+      ${rightHeader("PACKING LIST", deal.pl_no || deal.dealNo || "", buyer?.customer_id || "1057", date)}
+    </div>
+
+    <div class="triple">
+      ${consigneeBlock(buyer)}
+      ${containerBlock(deal)}
+      ${shippingBlock(deal)}
+    </div>
+
+    <table class="descTable" style="margin-top:0;">
+      <thead>
+        <tr>
+          <th style="width:60%">DESCRIPTION</th>
+          <th style="width:15%">UNIT</th>
+          <th style="width:25%">QTY</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="height:120px">
+          <td>
+            <b>${esc(deal.productName || "")}</b><br>
+            HS CODE : ${esc(deal.hsn_code || "—")}
+          </td>
+          <td class="center">${esc(deal.unit || "MTON")}</td>
+          <td class="center">${esc(deal.quantity || "")}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="box" style="margin-top:0;">
+      <div class="boxHead">Terms of Sale and Other Comments</div>
+      <div class="boxBody">
+        <div><b>Terms of Delivery</b></div>
+        <div style="margin-top:4px">${esc(deal.terms_delivery || `CFR MUNDRA PORT`)}</div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px">
+      ${additionalDetailsBlock(deal, supplier, "Packing List No. Date:", "", false)}
+    </div>
+
+    ${footer(company, date, false)}
+  `;
+}
+
+/* --- LOCKED - DO NOT MODIFY --- */
+export function buildPL(deal, buyer, supplier, company = {}) {
+  const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
+  const filename = suggestFilename("PL", deal, buyer, company);
+  return `<!DOCTYPE html><html><head><title>${esc(filename)}</title>${commonStyle()}${previewScript()}</head><body>${previewActions()}${innerPL(deal, buyer, supplier, company, date)}</body></html>`;
+}
+
+function innerCOO(deal, buyer, supplier, company, date) {
+  return `
+    <div class="top">
+      ${shipperBlock(company)}
+      ${logoBlock()}
+      ${rightHeader("CERTIFICATE OF ORIGIN", deal.coo_no || deal.dealNo || "", buyer?.customer_id || "1057", date)}
+    </div>
+
+    <div class="triple">
+      ${consigneeBlock(buyer)}
+      ${containerBlock(deal)}
+      ${shippingBlock(deal)}
+    </div>
+
+    <div class="box" style="margin-top:0;">
+      <div class="boxBody center" style="font-weight:700; min-height:auto; padding:18px 12px; font-size:12px;">
+        CERTIFY THAT THE GOODS SHIPPED ARE UNDER NON-NEGATIVE LIST OF IMPORT AND EXPORT POLICY 2015-2020.
+      </div>
+    </div>
+
+    <div class="box" style="margin-top:10px;">
+      <div class="boxBody center" style="font-weight:700; min-height:auto; padding:12px; font-size:13px;">
+        DESCRIPTION OF GOODS : ${esc(deal.productName || "—")}
+      </div>
+    </div>
+
+    <div class="box" style="margin-top:10px;">
+      <div class="boxBody center" style="font-weight:800; font-size:18px; min-height:auto; padding:14px 12px;">
+        QUANTITY (${esc(deal.unit || "MTONS")}): ${esc(deal.quantity || "—")}
+      </div>
+    </div>
+
+    <div style="margin-top:10px">
+      ${additionalDetailsBlock(deal, supplier, "C.O.O No. Date:", `
+          <div style="margin-top:10px; font-size:11px;">
+            <b>DECLARATION:</b> GOODS PACKED IN EXPORT SEAWORTHY ${esc(deal.loaded_on || "ISO TANKS")}
+          </div>
+      `, false)}
+    </div>
+
+    ${footer(company, date, false)}
+  `;
+}
+
+/* --- LOCKED - DO NOT MODIFY --- */
+export function buildCOO(deal, buyer, supplier, company = {}) {
+  const date = deal.shipment_out_date || deal.invoice_date || new Date().toISOString();
+  const filename = suggestFilename("COO", deal, buyer, company);
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(filename)}</title>
+    ${commonStyle()}
+    ${previewScript()}
+  </head>
+  <body>
+    ${previewActions()}
+    ${innerCOO(deal, buyer, supplier, company, date)}
+  </body>
+  </html>`;
+}
+
+/* --- LOCKED - DO NOT MODIFY --- */
+export function buildDocumentSet(deal, buyer, supplier, company = {}) {
+  const date = deal.invoice_date || deal.shipment_out_date || new Date().toISOString();
+  const currency = docCurrency(deal);
+  const blNo = (deal.bl_no || deal.blNo || "NOBL").replace(/[^A-Z0-9]/gi, "");
+  const shipper = (company.name || "JK").split(/\s+/)[0].toUpperCase();
+  const product = (deal.product_name || deal.productName || "PRODUCT").toUpperCase();
+  let productShort = product.split(/\s+/).filter(w => w.length > 0).map(w => w[0]).join("");
+  if (product.includes("LUBRICATING OIL")) productShort = "LO";
+  else if (product.includes("BASE OIL")) productShort = "BO";
+  else if (product.includes("BITUMEN")) productShort = "BT";
+  const consignee = (buyer?.name || "BUYER").split(/\s+/).filter(Boolean).slice(0, 2).join(" ").toUpperCase();
+  const docNo = String(deal.ci_no || deal.dealNo || deal.deal_no || "000").replace(/[^A-Z0-9\-\/]/gi, "");
+
+  const filename = `SET-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}`;
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(filename)}</title>
+    ${commonStyle()}
+    ${previewScript()}
+    <style>
+      .doc { page-break-after: always !important; }
+      .doc:last-child { page-break-after: auto !important; }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+    ${innerCI(deal, buyer, supplier, company, date, currency)}
+    ${innerPL(deal, buyer, supplier, company, date)}
+    ${innerCOO(deal, buyer, supplier, company, date)}
+  </body>
+  </html>`;
+}
+
+export function buildSupplierStatement(deal, buyer, supplier, payments, company = {}) {
+  const date = new Date().toISOString();
+  const outPayments = payments.filter(p => p.direction === "out");
+  const purchaseTotalUsd = Number(deal.purchase_total_usd || 0);
+  const purchaseTotalAed = Number(deal.purchase_total_aed || 0);
+  const conv = Number(deal.purchase_conversion_rate || deal.conversion_rate || 3.6725);
+
+  let paidAed = 0;
+  let paidUsd = 0;
+  outPayments.forEach(p => {
+    const amt = Number(p.amount || 0);
+    if (p.currency === "AED") {
+      paidAed += amt;
+      paidUsd += (amt / conv);
+    } else {
+      paidUsd += amt;
+      paidAed += (amt * conv);
+    }
+  });
+
+  const balAed = purchaseTotalAed - paidAed;
+  const balUsd = purchaseTotalUsd - paidUsd;
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(suggestFilename("SUPPLIER-SETTLEMENT", deal, buyer, supplier, company))}</title>
+    ${commonStyle()}
+    ${previewScript()}
+    <style>
+      .doc { width: 210mm; padding: 10mm; }
+      .statement-table th { background: #dce6f1; color: #333; border: 1px solid #999; font-size: 10px; }
+      .statement-table td { border: 1px solid #ccc; padding: 4px; }
+      .summary-box { border: 1px solid #3b9da2; padding: 10px; margin-top: 20px; background:#f9f9f9; }
+      .bal-to-pay { background: #ffff00; font-weight: 800; padding: 4px; border: 1px solid #000; }
+      .excel-header { background: #dce6f1; font-weight: bold; text-align: center; padding: 5px; border: 1px solid #999; text-transform: uppercase; }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+    
+    <div style="margin-bottom: 20px; font-size: 14px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px;">
+      SUPPLIER SETTLEMENT REPORT - ${esc(deal.deal_no)}
+    </div>
+
+    <div class="excel-header">PURCHASE (${esc(supplier?.name || "PRIME")})</div>
+    <table class="statement-table thin">
+      <tr>
+        <th style="width:25%">MATERIAL</th>
+        <th style="width:10%">QTY</th>
+        <th style="width:10%">RATE</th>
+        <th style="width:15%">Amount USD</th>
+        <th style="width:15%">AED @${conv}</th>
+        <th style="width:10%">DUE</th>
+        <th style="width:15%">Due Amount USD</th>
+      </tr>
+      <tr>
+        <td class="center">${esc(deal.product_name)}</td>
+        <td class="center">${fmt(deal.quantity)}</td>
+        <td class="center">${fmt(deal.docPurchaseRate || deal.purchase_rate)}</td>
+        <td class="right">${fmt(purchaseTotalUsd)}</td>
+        <td class="right">${fmt(purchaseTotalAed)}</td>
+        <td class="center">100%</td>
+        <td class="right">${fmt(purchaseTotalUsd)}</td>
+      </tr>
+      <tr style="background:#f2f2f2; font-weight:bold">
+        <td colspan="3" class="right">TOTAL</td>
+        <td class="right">${fmt(purchaseTotalUsd)}</td>
+        <td class="right">${fmt(purchaseTotalAed)}</td>
+        <td></td>
+        <td class="right">${fmt(purchaseTotalUsd)}</td>
+      </tr>
+    </table>
+
+    <div class="excel-header" style="margin-top:20px">PAYMENT</div>
+    <table class="statement-table thin">
+      <tr>
+        <th style="width:20%">DATE</th>
+        <th style="width:25%">AED</th>
+        <th style="width:25%">USD</th>
+        <th style="width:30%">METHOD / REF</th>
+      </tr>
+      ${outPayments.length ? outPayments.map(p => {
+    const pUsd = p.currency === "USD" ? p.amount : p.amount / conv;
+    const pAed = p.currency === "AED" ? p.amount : p.amount * conv;
+    return `
+        <tr>
+          <td class="center">${fmtDate(p.payment_date)}</td>
+          <td class="right">${fmt(pAed)}</td>
+          <td class="right">${fmt(pUsd)}</td>
+          <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
+        </tr>`;
+  }).join("") : `<tr><td colspan="4" class="center">No payments recorded</td></tr>`}
+      <tr style="background:#f2f2f2; font-weight:bold">
+        <td class="right">TOTAL PAID</td>
+        <td class="right">${fmt(paidAed)}</td>
+        <td class="right">${fmt(paidUsd)}</td>
+        <td></td>
+      </tr>
+    </table>
+
+    <div class="excel-header" style="margin-top:20px">FINAL SUMMARY</div>
+    <div class="summary-box">
+      <table class="plainTable" style="width:100%">
+        <tr>
+          <td style="width:200px; font-weight:bold">Due Amount</td>
+          <td style="width:150px" class="right">AED ${fmt(purchaseTotalAed)}</td>
+          <td style="width:150px" class="right">USD ${fmt(purchaseTotalUsd)}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td style="font-weight:bold">Less Payment Done</td>
+          <td class="right">AED ${fmt(paidAed)}</td>
+          <td class="right">USD ${fmt(paidUsd)}</td>
+          <td></td>
+        </tr>
+        <tr style="height:15px"><td></td><td></td><td></td><td></td></tr>
+        <tr style="height:15px"><td></td><td></td><td></td><td></td></tr>
+        <tr style="font-weight:800">
+          <td>Total:</td>
+          <td class="right"><span class="bal-to-pay">${fmt(balAed)}</span></td>
+          <td class="right"><span class="bal-to-pay">${fmt(balUsd)}</span></td>
+          <td style="padding-left:10px; font-size:10px">BAL TO PAY</td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="margin-top: 30px; font-size: 10px; color: #666; text-align: right;">
+      Generated on ${fmtDate(new Date())} · BL No: ${esc(deal.bl_no || "PENDING")}
+    </div>
+  </body>
+  </html>`;
+}
+
+export function buildBuyerStatement(deal, buyer, supplier, payments, company = {}) {
+  const date = new Date().toISOString();
+  const inPayments = payments.filter(p => p.direction === "in");
+  const saleTotalUsd = Number(deal.total_amount_usd || 0);
+  const saleTotalAed = Number(deal.total_amount_aed || 0);
+  const conv = Number(deal.sale_conversion_rate || deal.conversion_rate || 3.6725);
+
+  let recAed = 0;
+  let recUsd = 0;
+  inPayments.forEach(p => {
+    const amt = Number(p.amount || 0);
+    if (p.currency === "AED") {
+      recAed += amt;
+      recUsd += (amt / conv);
+    } else {
+      recUsd += amt;
+      recAed += (amt * conv);
+    }
+  });
+
+  const balAed = saleTotalAed - recAed;
+  const balUsd = saleTotalUsd - recUsd;
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(suggestFilename("BUYER-SETTLEMENT", deal, buyer, supplier, company))}</title>
+    ${commonStyle("landscape")}
+    ${previewScript()}
+    <style>
+      .statement-table th { background: #3b9da2; color: #fff; border: 1.5px solid #2a7a7d; font-size: 11px; padding: 10px 5px; }
+      .statement-table td { border: 1px solid #ccc; padding: 8px 5px; font-size: 11px; }
+      .summary-box { border: 2px solid #3b9da2; padding: 20px; margin-top: 30px; background:#f9fdfe; border-radius: 12px; }
+      .bal-to-rec { background: #ffff00; font-weight: 800; padding: 6px 12px; border: 2px solid #000; border-radius: 6px; font-size: 16px; }
+      .excel-header { background: #2a7a7d; color: #fff; font-weight: 800; text-align: center; padding: 12px; border: 1px solid #333; text-transform: uppercase; margin-top: 25px; border-radius: 8px 8px 0 0; font-size: 16px; letter-spacing: 0.5px; }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+    
+    <div style="margin-bottom: 20px; font-size: 14px; font-weight: bold; border-bottom: 2px solid #333; padding-bottom: 5px;">
+      BUYER SETTLEMENT REPORT - ${esc(deal.deal_no)}
+    </div>
+
+    <div class="excel-header">SALE (${deal.is_high_seas ? 'HIGH SEAS BUYER: ' + esc(buyer?.name || "DETAILS") : esc(buyer?.name || "DETAILS")})</div>
+    <table class="statement-table thin">
+      <tr>
+        <th style="width:25%">MATERIAL</th>
+        <th style="width:10%">QTY</th>
+        <th style="width:10%">RATE</th>
+        <th style="width:15%">Amount USD</th>
+        <th style="width:15%">AED @${conv}</th>
+        <th style="width:10%">DUE</th>
+        <th style="width:15%">Due Amount USD</th>
+      </tr>
+      <tr>
+        <td class="center">${esc(deal.product_name)}</td>
+        <td class="center">${fmt(deal.quantity)}</td>
+        <td class="center">${fmt(deal.docRate || deal.rate)}</td>
+        <td class="right">${fmt(saleTotalUsd)}</td>
+        <td class="right">${fmt(saleTotalAed)}</td>
+        <td class="center">100%</td>
+        <td class="right">${fmt(saleTotalUsd)}</td>
+      </tr>
+      <tr style="background:#f2f2f2; font-weight:bold">
+        <td colspan="3" class="right">TOTAL</td>
+        <td class="right">${fmt(saleTotalUsd)}</td>
+        <td class="right">${fmt(saleTotalAed)}</td>
+        <td></td>
+        <td class="right">${fmt(saleTotalUsd)}</td>
+      </tr>
+    </table>
+
+    <div class="excel-header" style="margin-top:20px">PAYMENTS RECEIVED</div>
+    <table class="statement-table thin">
+      <tr>
+        <th style="width:20%">DATE</th>
+        <th style="width:25%">AED</th>
+        <th style="width:25%">USD</th>
+        <th style="width:30%">METHOD / REF</th>
+      </tr>
+      ${inPayments.length ? inPayments.map(p => {
+    const pUsd = p.currency === "USD" ? p.amount : p.amount / conv;
+    const pAed = p.currency === "AED" ? p.amount : p.amount * conv;
+    return `
+        <tr>
+          <td class="center">${fmtDate(p.payment_date)}</td>
+          <td class="right">${fmt(pAed)}</td>
+          <td class="right">${fmt(pUsd)}</td>
+          <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
+        </tr>`;
+  }).join("") : `<tr><td colspan="4" class="center">No payments recorded</td></tr>`}
+      <tr style="background:#f2f2f2; font-weight:bold">
+        <td class="right">TOTAL RECEIVED</td>
+        <td class="right">${fmt(recAed)}</td>
+        <td class="right">${fmt(recUsd)}</td>
+        <td></td>
+      </tr>
+    </table>
+
+    <div class="excel-header" style="margin-top:20px">FINAL SUMMARY</div>
+    <div class="summary-box">
+      <table class="plainTable" style="width:100%">
+        <tr>
+          <td style="width:200px; font-weight:bold">Invoice Amount</td>
+          <td style="width:150px" class="right">AED ${fmt(saleTotalAed)}</td>
+          <td style="width:150px" class="right">USD ${fmt(saleTotalUsd)}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td style="font-weight:bold">Less Payment Received</td>
+          <td class="right">AED ${fmt(recAed)}</td>
+          <td class="right">USD ${fmt(recUsd)}</td>
+          <td></td>
+        </tr>
+        <tr style="height:15px"><td></td><td></td><td></td><td></td></tr>
+        <tr style="height:15px"><td></td><td></td><td></td><td></td></tr>
+        <tr style="font-weight:800">
+          <td>Total:</td>
+          <td class="right"><span class="bal-to-rec">${fmt(balAed)}</span></td>
+          <td class="right"><span class="bal-to-rec">${fmt(balUsd)}</span></td>
+          <td style="padding-left:10px; font-size:10px">BAL RECEIVABLE</td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="margin-top: 30px; font-size: 10px; color: #666; text-align: right;">
+      Generated on ${fmtDate(new Date())} · BL No: ${esc(deal.bl_no || "—")}
+    </div>
+  </body>
+  </html>`;
+}
+
+/* --- LOCKED - DO NOT MODIFY --- */
+export function buildSupplierMasterStatement(supplier, deals, allPayments, company = {}) {
+  const date = new Date().toISOString();
+
+  let totalDueAed = 0;
+  let totalDueUsd = 0;
+  let totalPaidAed = 0;
+  let totalPaidUsd = 0;
+
+  const dealRows = deals.map(d => {
+    const qty = Number(d.quantity || 0);
+    const rate = Number(d.purchase_rate || 0);
+    const conv = Number(d.purchase_conversion_rate || d.conversion_rate || 3.6725);
+    const amtUsd = qty * rate;
+    const amtAed = amtUsd * conv;
+
+    totalDueUsd += amtUsd;
+    totalDueAed += amtAed;
+
+    return { ...d, amtUsd, amtAed, conv };
+  });
+
+  const paymentRows = allPayments.filter(p => p.direction === "out").map(p => {
+    const deal = deals.find(d => String(d.id) === String(p.deal_id)) || {};
+    const dealConv = Number(deal.purchase_conversion_rate || deal.conversion_rate || 3.6725);
+    const conv = (Number(p.conversion_rate) && Number(p.conversion_rate) !== 1) ? Number(p.conversion_rate) : dealConv;
+    const amt = Number(p.amount || 0);
+    let pUsd = 0, pAed = 0;
+
+    if (p.currency === "AED") {
+      pAed = amt;
+      pUsd = amt / conv;
+    } else {
+      pUsd = amt;
+      pAed = amt * conv;
+    }
+
+    totalPaidAed += pAed;
+    totalPaidUsd += pUsd;
+
+    return { ...p, pAed, pUsd };
+  });
+
+  const balAed = totalDueAed - totalPaidAed;
+  const balUsd = totalDueUsd - totalPaidUsd;
+
+  const buyerIds = [...new Set(deals.map(d => d.is_high_seas ? d.high_seas_buyer_id : d.buyer_id).filter(Boolean))];
+  const buyerNames = buyerIds.map(id => state.buyers.find(b => String(b.id) === String(id))?.name || "UNKNOWN");
+  const buyerStr = buyerNames.length === 1 ? buyerNames[0] : (buyerNames.length > 1 ? "VARIOUS" : "JK");
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(suggestFilename("SUPPLIER-MASTER-SETTLEMENT", { dealCount: deals.length }, supplier, company, { partyName: buyerStr }))}</title>
+    ${commonStyle("landscape")}
+    ${previewScript()}
+    <style>
+      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
+      .statement-table th { background: #3b9da2; color: white; border: 1.5px solid #2a7a7d; font-size: 9px; padding: 10px 4px; text-transform: uppercase; word-wrap: break-word; }
+      .statement-table td { border: 1px solid #ccc; padding: 8px 4px; font-size: 10px; word-wrap: break-word; overflow: hidden; }
+      .summary-box { border: 2px solid #3b9da2; padding: 20px; margin-top: 40px; background:#f9fdfe; border-radius: 12px; box-shadow: 0 4px 12px rgba(59,157,162,0.1); }
+      .bal-to-pay { background: #ffff00; font-weight: 800; padding: 4px 10px; border: 2px solid #000; border-radius: 6px; font-size: 16px; }
+      .excel-header { background: #2a7a7d; color:white; font-weight: 800; text-align: center; padding: 12px; border: 1px solid #333; text-transform: uppercase; margin-top: 30px; border-radius: 8px 8px 0 0; font-size: 16px; letter-spacing: 0.5px; }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+
+      <div style="margin-bottom: 25px; font-size: 18px; font-weight: bold; border-bottom: 4px solid #3b9da2; padding-bottom: 10px; display:flex; justify-content:space-between; align-items: flex-end;">
+        <span style="color:#2a7a7d">MASTER SETTLEMENT REPORT</span>
+        <div style="text-align: right">
+          <div style="font-size: 14px; color: #666;">SUPPLIER: ${esc(supplier.name)}</div>
+          <div style="font-size: 12px; color: #888; margin-top: 4px;">BUYER: ${esc(buyerStr)}</div>
+        </div>
+      </div>
+
+      <div class="excel-header">PURCHASE TRANSACTIONS (ALL DEALS)</div>
+      <table class="statement-table">
+        <thead>
+          <tr>
+            <th style="width: 8%;">DEAL NO</th>
+            <th style="width: 8%;">DATE</th>
+            <th style="width: 14%;">BL NO</th>
+            <th style="width: 22%;">BUYER</th>
+            <th style="width: 13%;">MATERIAL</th>
+            <th style="width: 7%;">QTY</th>
+            <th style="width: 7%;">RATE</th>
+            <th style="width: 10%;">AMOUNT USD</th>
+            <th style="width: 11%;">AMOUNT AED</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${dealRows.map(r => `
+            <tr>
+              <td class="center" style="font-weight:bold">${esc(r.deal_no)}</td>
+              <td class="center">${new Date(r.invoice_date || r.created_at).toLocaleDateString()}</td>
+              <td class="center">${esc(r.bl_no || "—")}</td>
+              <td>
+                ${esc((state.buyers.find(b => String(b.id) === String(r.buyer_id)) || {}).name || "—")}
+                ${r.is_high_seas ? `<br><small style="color:var(--info)">HSS: ${esc((state.buyers.find(b => String(b.id) === String(r.high_seas_buyer_id)) || {}).name || "—")}</small>` : ""}
+              </td>
+              <td>${esc(r.product_name)}</td>
+              <td class="right">${Number(r.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.purchase_rate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.amtUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.amtAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+        <tfoot>
+          <tr style="background:#f2f2f2; font-weight:bold">
+            <td colspan="7" class="right">TOTAL PAYABLE</td>
+            <td class="right">${totalDueUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="right">${totalDueAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="excel-header">PAYMENTS SENT</div>
+      <table class="statement-table">
+        <thead>
+          <tr>
+            <th>DATE</th>
+            <th>DEAL REF</th>
+            <th>AED</th>
+            <th>USD</th>
+            <th>METHOD / NOTE</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${paymentRows.length ? paymentRows.map(p => `
+            <tr>
+              <td class="center">${new Date(p.payment_date).toLocaleDateString()}</td>
+              <td class="center">${esc(deals.find(d => String(d.id) === String(p.deal_id))?.deal_no || "—")}</td>
+              <td class="right">${Number(p.pAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(p.pUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
+            </tr>
+          `).join("") : `<tr><td colspan="5" class="center">No payments recorded</td></tr>`}
+        </tbody>
+        <tfoot>
+          <tr style="background:#f2f2f2; font-weight:bold">
+            <td colspan="2" class="right">TOTAL PAID</td>
+            <td class="right">${totalPaidAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="right">${totalPaidUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="excel-header">CONSOLIDATED SUMMARY</div>
+      <div class="summary-box">
+        <table style="width:100%; border-collapse: collapse;">
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px; font-weight:bold">Total Invoice Amount (All Deals)</td>
+            <td style="padding: 10px;" class="right">AED ${totalDueAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 10px;" class="right">USD ${totalDueUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px; font-weight:bold">Total Payment Sent</td>
+            <td style="padding: 10px;" class="right">AED ${totalPaidAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 10px;" class="right">USD ${totalPaidUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          </tr>
+          <tr>
+            <td style="padding: 15px 10px; font-weight:800; font-size:16px; color:#2a7a7d">NET OUTSTANDING TO PAY:</td>
+            <td style="padding: 15px 10px;" class="right"><span class="bal-to-pay">${balAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></td>
+            <td style="padding: 15px 10px;" class="right"><span class="bal-to-pay">${balUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="margin-top: 50px; font-size: 11px; color: #999; text-align: right; border-top: 1px solid #eee; padding-top: 10px;">
+        Generated on ${new Date().toLocaleString()}
+      </div>
+    </div>
+  </body>
+  </html>`;
+}
+
+/* --- LOCKED - DO NOT MODIFY --- */
+export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {}) {
+  const date = new Date().toISOString();
+
+  let totalDueAed = 0;
+  let totalDueUsd = 0;
+  let totalRecAed = 0;
+  let totalRecUsd = 0;
+
+  const dealRows = deals.map(d => {
+    const qty = Number(d.quantity || 0);
+    const rate = Number(d.rate || 0);
+    const conv = Number(d.sale_conversion_rate || d.conversion_rate || 3.6725);
+    const amtUsd = qty * rate;
+    const amtAed = amtUsd * conv;
+
+    totalDueUsd += amtUsd;
+    totalDueAed += amtAed;
+
+    return { ...d, amtUsd, amtAed, conv };
+  });
+
+  const paymentRows = allPayments.filter(p => p.direction === "in").map(p => {
+    const deal = deals.find(d => String(d.id) === String(p.deal_id)) || {};
+    const dealConv = Number(deal.sale_conversion_rate || deal.conversion_rate || 3.6725);
+    const conv = (Number(p.conversion_rate) && Number(p.conversion_rate) !== 1) ? Number(p.conversion_rate) : dealConv;
+    const amt = Number(p.amount || 0);
+    let pUsd = 0, pAed = 0;
+
+    if (p.currency === "AED") {
+      pAed = amt;
+      pUsd = amt / conv;
+    } else {
+      pUsd = amt;
+      pAed = amt * conv;
+    }
+
+    totalRecAed += pAed;
+    totalRecUsd += pUsd;
+
+    return { ...p, pAed, pUsd };
+  });
+
+  const balAed = totalDueAed - totalRecAed;
+  const balUsd = totalDueUsd - totalRecUsd;
+
+  const supplierIds = [...new Set(deals.map(d => d.supplier_id).filter(Boolean))];
+  const supplierNames = supplierIds.map(id => state.suppliers.find(s => String(s.id) === String(id))?.name || "UNKNOWN");
+  const supplierStr = supplierNames.length === 1 ? supplierNames[0] : (supplierNames.length > 1 ? "VARIOUS" : "JK");
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(suggestFilename("BUYER-MASTER-SETTLEMENT", { dealCount: deals.length }, buyer, company, { partyName: supplierStr }))}</title>
+    ${commonStyle("landscape")}
+    ${previewScript()}
+    <style>
+      .statement-table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
+      .statement-table th { background: #3b9da2; color: white; border: 1.5px solid #2a7a7d; font-size: 9px; padding: 10px 4px; text-transform: uppercase; word-wrap: break-word; }
+      .statement-table td { border: 1px solid #ccc; padding: 8px 4px; font-size: 10px; word-wrap: break-word; overflow: hidden; }
+      .summary-box { border: 2px solid #3b9da2; padding: 20px; margin-top: 40px; background:#f9fdfe; border-radius: 12px; box-shadow: 0 4px 12px rgba(59,157,162,0.1); }
+      .bal-to-rec { background: #ffff00; font-weight: 800; padding: 4px 10px; border: 2px solid #000; border-radius: 6px; font-size: 16px; }
+      .excel-header { background: #2a7a7d; color:white; font-weight: 800; text-align: center; padding: 12px; border: 1px solid #333; text-transform: uppercase; margin-top: 30px; border-radius: 8px 8px 0 0; font-size: 16px; letter-spacing: 0.5px; }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+
+      <div style="margin-bottom: 25px; font-size: 18px; font-weight: bold; border-bottom: 4px solid #3b9da2; padding-bottom: 10px; display:flex; justify-content:space-between; align-items: flex-end;">
+        <span style="color:#2a7a7d">MASTER SETTLEMENT REPORT</span>
+        <div style="text-align: right">
+          <div style="font-size: 14px; color: #666;">BUYER: ${esc(buyer.name)}</div>
+          <div style="font-size: 12px; color: #888; margin-top: 4px;">SUPPLIER: ${esc(supplierStr)}</div>
+        </div>
+      </div>
+
+      <div class="excel-header">SALE TRANSACTIONS (ALL DEALS)</div>
+      <table class="statement-table">
+        <thead>
+          <tr>
+            <th style="width: 8%;">DEAL NO</th>
+            <th style="width: 8%;">DATE</th>
+            <th style="width: 14%;">BL NO</th>
+            <th style="width: 22%;">SUPPLIER</th>
+            <th style="width: 13%;">MATERIAL</th>
+            <th style="width: 7%;">QTY</th>
+            <th style="width: 7%;">RATE</th>
+            <th style="width: 10%;">AMOUNT USD</th>
+            <th style="width: 11%;">AMOUNT AED</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${dealRows.map(r => `
+            <tr>
+              <td class="center" style="font-weight:bold">${esc(r.deal_no)}</td>
+              <td class="center">${new Date(r.invoice_date || r.created_at).toLocaleDateString()}</td>
+              <td class="center">${esc(r.bl_no || "—")}</td>
+              <td>${esc((state.suppliers.find(s => String(s.id) === String(r.supplier_id)) || {}).name || "—")}</td>
+              <td>${esc(r.product_name)}</td>
+              <td class="right">${Number(r.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.rate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.amtUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.amtAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+        <tfoot>
+          <tr style="background:#f2f2f2; font-weight:bold">
+            <td colspan="7" class="right">TOTAL RECEIVABLE</td>
+            <td class="right">${totalDueUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="right">${totalDueAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="excel-header">PAYMENTS RECEIVED</div>
+      <table class="statement-table">
+        <thead>
+          <tr>
+            <th>DATE</th>
+            <th>DEAL REF</th>
+            <th>AED</th>
+            <th>USD</th>
+            <th>METHOD / NOTE</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${paymentRows.length ? paymentRows.map(p => `
+            <tr>
+              <td class="center">${new Date(p.payment_date).toLocaleDateString()}</td>
+              <td class="center">${esc(deals.find(d => String(d.id) === String(p.deal_id))?.deal_no || "—")}</td>
+              <td class="right">${Number(p.pAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(p.pUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td>${esc(p.method)} ${p.ref ? `(${esc(p.ref)})` : ""}</td>
+            </tr>
+          `).join("") : `<tr><td colspan="5" class="center">No payments received</td></tr>`}
+        </tbody>
+        <tfoot>
+          <tr style="background:#f2f2f2; font-weight:bold">
+            <td colspan="2" class="right">TOTAL RECEIVED</td>
+            <td class="right">${totalRecAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="right">${totalRecUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="excel-header">CONSOLIDATED SUMMARY</div>
+      <div class="summary-box">
+        <table style="width:100%; border-collapse: collapse;">
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px; font-weight:bold">Total Invoice Amount (All Deals)</td>
+            <td style="padding: 10px;" class="right">AED ${totalDueAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 10px;" class="right">USD ${totalDueUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 10px; font-weight:bold">Total Payment Received</td>
+            <td style="padding: 10px;" class="right">AED ${totalRecAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 10px;" class="right">USD ${totalRecUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          </tr>
+          <tr>
+            <td style="padding: 15px 10px; font-weight:800; font-size:16px; color:#2a7a7d">NET OUTSTANDING TO RECEIVE:</td>
+            <td style="padding: 15px 10px;" class="right"><span class="bal-to-rec">${balAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></td>
+            <td style="padding: 15px 10px;" class="right"><span class="bal-to-rec">${balUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="margin-top: 50px; font-size: 11px; color: #999; text-align: right; border-top: 1px solid #eee; padding-top: 10px;">
+        Generated on ${new Date().toLocaleString()}
+      </div>
+    </div>
+  </body>
+  </html>`;
+}
+
+export function buildAgentStatement(agent, deals, company = {}, payments = []) {
+  const date = new Date().toLocaleDateString();
+  let totalCommUsd = 0;
+  let totalCommAed = 0;
+
+  const rows = deals.map(d => {
+    const amt = Number(d.commission_total || 0);
+    const curr = d.commission_currency || "USD";
+    const conv = Number(d.conversion_rate || 3.6725);
+    let aUsd = 0, aAed = 0;
+    if (curr === "AED") { aAed = amt; aUsd = amt / conv; }
+    else { aUsd = amt; aAed = amt * conv; }
+    totalCommUsd += aUsd;
+    totalCommAed += aAed;
+    return { ...d, aUsd, aAed, curr };
+  });
+
+  let totalPaidUsd = 0;
+  let totalPaidAed = 0;
+  const pRows = payments.map(p => {
+    const amt = Number(p.amount || 0);
+    const curr = p.currency || "AED";
+    const conv = 3.6725; // Default for agent payments
+    let pUsd = 0, pAed = 0;
+    if (curr === "AED") { pAed = amt; pUsd = amt / conv; }
+    else { pUsd = amt; pAed = amt * conv; }
+
+    if (p.type === "out") { totalPaidUsd += pUsd; totalPaidAed += pAed; }
+    else { totalPaidUsd -= pUsd; totalPaidAed -= pAed; }
+    return { ...p, pUsd, pAed };
+  });
+
+  const balUsd = totalCommUsd - totalPaidUsd;
+  const balAed = totalCommAed - totalPaidAed;
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Agent Statement - ${esc(agent.name)}</title>
+    <style>
+      body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; color: #333; line-height: 1.4; }
+      .doc { width: 210mm; margin: auto; border: 1px solid #eee; padding: 15mm; }
+      .header { display: flex; justify-content: space-between; border-bottom: 2px solid #d4af37; padding-bottom: 10px; margin-bottom: 15px; }
+      .company-name { font-size: 18px; font-weight: 800; color: #d4af37; }
+      .title { font-size: 20px; font-weight: 800; text-align: center; margin: 15px 0; color: #222; text-transform: uppercase; }
+      .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+      .table th { background: #f8f8f8; border: 1px solid #ddd; padding: 8px; font-size: 10px; text-transform: uppercase; text-align: left; }
+      .table td { border: 1px solid #ddd; padding: 8px; font-size: 11px; }
+      .total-row { font-weight: 800; background: #f9f9f9; }
+      .bal-box { background: #ffff00; font-weight: 800; padding: 5px 10px; border: 1px solid #000; display: inline-block; }
+      .right { text-align: right; }
+      .section-title { font-weight: 800; font-size: 12px; margin-top: 20px; margin-bottom: 5px; color: #d4af37; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+      @media print { .no-print { display: none; } }
+    </style>
+  </head>
+  <body>
+    <div class="doc">
+      <button class="no-print" onclick="window.print()" style="margin-bottom:15px; padding:6px 12px; background:#d4af37; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Print Report</button>
+      
+      <div class="header">
+        <div>
+          <div class="company-name">${esc(company.name)}</div>
+          <div style="font-size:11px; margin-top:3px; white-space:pre-wrap;">${esc(company.address)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:700; font-size:12px">DATE: ${date}</div>
+          <div style="font-size:11px">COMMISSION ACCOUNT STATEMENT</div>
+        </div>
+      </div>
+
+      <div class="title">Agent Account Statement</div>
+
+      <div style="margin-bottom:15px">
+        <div style="font-weight:700; font-size:12px">AGENT: ${esc(agent.name)}</div>
+        <div style="font-size:11px; color:#666">${esc(agent.country || "—")} | ${esc(agent.phone || "—")}</div>
+      </div>
+
+      <div class="section-title">COMMISSION TRANSACTIONS (FROM DEALS)</div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Deal No</th>
+            <th>Material</th>
+            <th>Qty</th>
+            <th>Rate</th>
+            <th class="right">USD</th>
+            <th class="right">AED</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td>${new Date(r.invoice_date || r.created_at).toLocaleDateString()}</td>
+              <td style="font-weight:700">${esc(r.deal_no)}</td>
+              <td>${esc(r.product_name)}</td>
+              <td>${Number(r.quantity || 0).toLocaleString()} ${esc(r.unit || "MT")}</td>
+              <td>${Number(r.commission_rate || 0).toFixed(2)}</td>
+              <td class="right">${Number(r.aUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${Number(r.aAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="5" class="right">GROSS COMMISSION EARNED</td>
+            <td class="right">${totalCommUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="right">${totalCommAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="section-title">PAYMENTS MADE TO AGENT</div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Mode</th>
+            <th>Ref / Note</th>
+            <th>Type</th>
+            <th class="right">USD</th>
+            <th class="right">AED</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${pRows.map(p => `
+            <tr>
+              <td>${new Date(p.payment_date).toLocaleDateString()}</td>
+              <td>${esc(p.mode)}</td>
+              <td>${esc(p.ref || "—")}</td>
+              <td style="color:${p.type === "out" ? "inherit" : "var(--success)"}">${p.type.toUpperCase()}</td>
+              <td class="right">${p.type === "out" ? "" : "+"}${Number(p.pUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="right">${p.type === "out" ? "" : "+"}${Number(p.pAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            </tr>
+          `).join("")}
+          ${!pRows.length ? '<tr><td colspan="6" style="text-align:center; opacity:0.5">No payment history found.</td></tr>' : ''}
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="4" class="right">TOTAL PAYMENTS SENT</td>
+            <td class="right">${totalPaidUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="right">${totalPaidAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div style="margin-top:25px; border:2px solid #000; padding:15px; display:flex; justify-content:space-between; align-items:center; background:#fcfcfc">
+        <div>
+           <div style="font-weight:800; font-size:14px; text-transform:uppercase">Net Outstanding Balance:</div>
+           <div style="font-size:11px; color:#666">Remaining commission amount to be paid to agent.</div>
+        </div>
+        <div style="text-align:right">
+           <div class="bal-box" style="font-size:18px">USD ${balUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div><br>
+           <div class="bal-box" style="margin-top:5px">AED ${balAed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+        </div>
+      </div>
+
+      </div>
+    </div>
+  </body>
+  </html>`;
+}
+
+export function buildCOA(coa, deal, company = {}) {
+  const date = coa.date || new Date().toISOString();
+  const blNo = coa.bl_no || deal.bl_no || "—";
+  const grade = coa.grade || deal.product_name || "—";
+  const certNo = coa.cert_no || `COA/${String(grade).substring(0, 2).toUpperCase()}/${blNo}/${new Date().toISOString().slice(2, 10).replace(/-/g, '')}`;
+  const tests = coa.tests || [];
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(suggestFilename("COA", deal, (state.buyers.find(b => String(b.id) === String(deal?.buyer_id)) || {}), company, { coa }))}</title>
+    ${commonStyle()}
+    ${previewScript()}
+    <style>
+      .coa-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      .coa-table th, .coa-table td { border: 1px solid #000; padding: 8px 12px; font-size: 11px; color: #000; }
+      .coa-table th { background: #dcdcdc; color: #000; font-weight: 800; text-align: left; text-transform: uppercase; }
+      .coa-header-info { margin-top: 20px; font-size: 12px; line-height: 1.6; font-weight: bold; color: #000; }
+      .coa-title { text-align: center; text-decoration: underline; font-size: 18px; font-weight: 800; margin: 20px 0; color: #000; }
+      .sub-header { background: #f0f0f0; font-weight: bold; text-align: center !important; color: #000; }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+    <div class="doc">
+      <!-- EXACT IMAGE HEADER START -->
+      <div style="display:flex; align-items:center; gap:15px; border-bottom:1px solid #000; padding-bottom:10px;">
+        <div style="width:15%">
+          <img src="${LOGO_URL}" style="width:100%; max-width:140px;">
+        </div>
+        <div style="width:85%; text-align:center;">
+          <div style="font-size:28px; font-weight:bold; color:#00529b; margin-bottom:2px; white-space:nowrap;">\u062C\u064A\u0647 \u0643\u064A\u0647 \u0628\u062A\u0631\u0648\u0643\u064A\u0645 \u0627\u0646\u062A\u0631\u0646\u0627\u0634\u064A\u0648\u0646\u0627\u0644 \u0645 \u0645 \u062D</div>
+          <div style="font-size:24px; font-weight:800; color:#00529b; margin-bottom:5px; white-space:nowrap;">JK Petrochem International FZE</div>
+          <div style="font-size:11px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
+          <div style="font-size:11px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
+        </div>
+      </div>
+
+      <div style="text-align:center; font-size:24px; font-weight:800; text-decoration:underline; margin:25px 0;">Certificate Of Analysis</div>
+
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:15px;">
+        <div style="font-size:14px; font-weight:bold;">
+          <div style="margin-bottom:8px;">BL No.: ${esc(blNo)}</div>
+          <div style="margin-bottom:8px;">Grade/Description : ${esc(grade)}</div>
+          <div>Certificate no.: ${esc(certNo)}</div>
+        </div>
+        <div style="font-size:14px; font-weight:bold;">
+          Date.: ${esc(fmtDate(date))}
+        </div>
+      </div>
+      <!-- EXACT IMAGE HEADER END -->
+
+    <table class="coa-table">
+      <thead>
+        <tr>
+          <th style="width:35%">Test Parameters</th>
+          <th style="width:25%">Method</th>
+          <th style="width:15%">Unit</th>
+          <th style="width:25%">Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tests.map(t => {
+    if (t.isHeader) {
+      return `<tr><td colspan="4" class="sub-header">${esc(t.parameter)}</td></tr>`;
+    }
+    return `
+            <tr>
+              <td>${esc(t.parameter)}</td>
+              <td>${esc(t.method)}</td>
+              <td>${esc(t.unit)}</td>
+              <td>${esc(t.result)}</td>
+            </tr>
+          `;
+  }).join("")}
+        ${!tests.length ? '<tr><td colspan="4" style="text-align:center; padding:20px; opacity:0.5">No test parameters entered</td></tr>' : ''}
+      </tbody>
+    </table>
+    ${footer(company, date, true)}
+    </div> <!-- end .doc -->
+  </body>
+  </html>`;
+}
+
+/* --- LOCKED - DO NOT MODIFY --- */
+export function buildPO(po, supplier, company = {}) {
+  const date = po.po_date;
+  const specs = Array.isArray(po.specifications) ? po.specifications : [];
+  const terms = Array.isArray(po.commercial_terms) ? po.commercial_terms : [];
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>${esc(suggestFilename("PO", po, {}, company, { supplier }))}</title>
+    ${commonStyle()}
+    ${previewScript()}
+    <style>
+      .po-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }
+      .po-table th, .po-table td { border: 1px solid #000; padding: 6px 4px; text-align: center; font-size: 11px; color: #000; word-break: break-word; }
+      .po-table th { background: #dcdcdc; color: #000; font-weight: 800; text-transform: uppercase; }
+      .po-section { margin-bottom: 20px; line-height: 1.6; color: #000; }
+      .po-section h3 { font-size: 15px; margin-bottom: 5px; text-decoration: underline; font-weight: 800; }
+      .po-section p { margin: 0; font-size: 14px; font-weight: bold; }
+      .po-meta { font-weight: 800; font-size: 15px; color: #000; }
+    </style>
+  </head>
+  <body>
+    ${previewActions()}
+    <div class="doc">
+      <!-- EXACT IMAGE HEADER START -->
+      <div style="display:flex; align-items:center; gap:15px; border-bottom:1px solid #000; padding-bottom:10px;">
+        <div style="width:15%">
+          <img src="${LOGO_URL}" style="width:100%; max-width:140px;">
+        </div>
+        <div style="width:85%; text-align:center;">
+          <div style="font-size:28px; font-weight:bold; color:#00529b; margin-bottom:2px; white-space:nowrap;">\u062C\u064A\u0647 \u0643\u064A\u0647 \u0628\u062A\u0631\u0648\u0643\u064A\u0645 \u0627\u0646\u062A\u0631\u0646\u0627\u0634\u064A\u0648\u0646\u0627\u0644 \u0645 \u0645 \u062D</div>
+          <div style="font-size:24px; font-weight:800; color:#00529b; margin-bottom:5px; white-space:nowrap;">JK Petrochem International FZE</div>
+          <div style="font-size:11px; font-weight:600;">P6-ELOB, Office No. E2-110G-02, Hamriyah Free Zone, Sharjah, United Arab Emirates</div>
+          <div style="font-size:11px; font-weight:600;">Phone: +971524 306 170, Email: info@jkpetrochem.com</div>
+        </div>
+      </div>
+
+      <div style="text-align:center; font-size:24px; font-weight:800; text-decoration:underline; margin:25px 0;">PURCHASE ORDER</div>
+
+      <div class="po-meta" style="margin-bottom:20px">
+        <div>PONo.: ${esc(po.po_no)}</div>
+        <div>PODate: ${esc(fmtDate(date))}</div>
+      </div>
+
+      <div style="margin-bottom: 25px; line-height: 1.4; color: #000; max-width: 400px;">
+        <div style="font-size: 16px; font-weight: 800; text-decoration: underline; margin-bottom:5px">Supplier:</div>
+        <div style="font-size: 15px; font-weight: bold;">${esc(supplier?.name || "—")}</div>
+        <div style="font-size: 14px;">${esc(supplier?.company_name || "")}</div>
+        <div style="font-size: 14px; overflow-wrap: break-word; width: 100%; max-width: 380px;">${esc(supplier?.address || "—")}</div>
+        <div style="font-size: 14px;">Email: ${esc(supplier?.email || "—")}</div>
+        <div style="font-size: 14px;">Website: ${esc(supplier?.website || "—")}</div>
+      </div>
+
+      <table class="po-table">
+        <thead>
+          <tr>
+            <th style="width:5%"></th>
+            <th style="width:28%">Product Name</th>
+            <th style="width:15%">HSN Code</th>
+            <th style="width:15%">Packing</th>
+            <th style="width:15%">Quantity</th>
+            <th style="width:10%">Price</th>
+            <th style="width:12%">Incoterm</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${(() => {
+            let linesHtml = "";
+            const dealIds = po.linked_deals ? String(po.linked_deals).split(",") : (po.deal_id ? String(po.deal_id).split(",") : []);
+            
+            if (dealIds.length > 0) {
+              const linkedDeals = dealIds.map(id => state.deals.find(d => String(d.id) === String(id))).filter(Boolean);
+              if (linkedDeals.length > 0) {
+                const groups = {};
+                linkedDeals.forEach(d => {
+                  const p = d.product_name || po.product_name;
+                  if (!groups[p]) {
+                     groups[p] = {
+                       product_name: p,
+                       hsn_code: d.hsn_code || po.hsn_code,
+                       packing: d.loaded_on || d.package_details || po.packing,
+                       quantity: 0,
+                       weight: 0,
+                       price: po.price,
+                       incoterm: (d.terms_delivery ? d.terms_delivery + " " + (d.discharge_port || "") : po.incoterm),
+                       unit: d.unit || "MT"
+                     };
+                  }
+                  groups[p].quantity += Number(d.quantity || 0);
+                  groups[p].weight += Number(d.net_weight || d.gross_weight || 0);
+                });
+
+                let index = 1;
+                for (const key in groups) {
+                  const g = groups[key];
+                  
+                  let approxQty = g.quantity;
+                  if (g.quantity >= 100) approxQty = Math.round(g.quantity / 100) * 100;
+                  else if (g.quantity >= 10) approxQty = Math.round(g.quantity / 10) * 10;
+                  else approxQty = Math.round(g.quantity);
+                  
+                  let pd = g.packing || "";
+
+                  linesHtml += `
+                    <tr>
+                      <td>${index++}</td>
+                      <td><b>${esc(g.product_name)}</b></td>
+                      <td>${esc(g.hsn_code)}</td>
+                      <td>${esc(pd)}</td>
+                      <td>Approx ${approxQty} ${esc(g.unit)}</td>
+                      <td>${esc(g.price)}</td>
+                      <td>${esc(g.incoterm)}</td>
+                    </tr>
+                  `;
+                }
+              }
+            }
+            if (!linesHtml) {
+              let pd = po.packing || "";
+              
+              linesHtml = `
+                <tr>
+                  <td>1</td>
+                  <td><b>${esc(po.product_name)}</b></td>
+                  <td>${esc(po.hsn_code)}</td>
+                  <td>${esc(pd)}</td>
+                  <td>${esc(po.quantity)}</td>
+                  <td>${esc(po.price)}</td>
+                  <td>${esc(po.incoterm)}</td>
+                </tr>
+              `;
+            }
+            return linesHtml;
+          })()}
+        </tbody>
+      </table>
+
+      ${specs.length ? `
+        <div class="po-section">
+          <h3>Specifications:</h3>
+          ${specs.map(s => `<p>${esc(s)}</p>`).join("")}
+        </div>
+      ` : ""}
+
+      ${terms.length ? `
+        <div class="po-section">
+          <h3>Commercial Terms:</h3>
+          ${terms.map(t => `<p>${esc(t)}</p>`).join("")}
+        </div>
+      ` : ""}
+
+      <div style="margin-top: 40px;">
+        ${footer(company, date, true)}
+      </div>
+    </div>
+  </body>
+  </html>`;
+}
