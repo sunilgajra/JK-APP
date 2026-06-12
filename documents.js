@@ -1181,15 +1181,48 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
     ${commonStyle()}
     ${previewScript()}
     <style>
-      .doc { page-break-after: always !important; }
-      .doc:last-child { page-break-after: auto !important; }
+      @media print {
+        @page { margin: 0; size: A4; }
+        body { margin: 0; padding: 0; background: white; }
+        .doc { 
+          page-break-after: always; 
+          break-after: page;
+          min-height: auto !important;
+          margin: 0 !important;
+          padding: 10mm !important;
+          width: 100% !important;
+          box-shadow: none !important;
+          border: none !important;
+          border-radius: 0 !important;
+          background: white !important;
+        }
+        .doc:last-child { 
+          page-break-after: auto; 
+          break-after: auto; 
+        }
+        .no-print, .previewActions, .preview-actions { display: none !important; }
+      }
+      @media screen {
+        .doc { 
+          page-break-after: always; 
+          break-after: page;
+          min-height: auto;
+          margin: 0;
+          padding: 10mm;
+          width: 100%;
+        }
+        .doc:last-child { 
+          page-break-after: auto; 
+          break-after: auto; 
+        }
+      }
     </style>
   </head>
   <body>
     ${previewActions()}
-    ${innerCI(deal, buyer, supplier, company, date, currency)}
-    ${innerPL(deal, buyer, supplier, company, date)}
-    ${innerCOO(deal, buyer, supplier, company, date)}
+    <div class="doc">${innerCI(deal, buyer, supplier, company, date, currency)}</div>
+    <div class="doc">${innerPL(deal, buyer, supplier, company, date)}</div>
+    <div class="doc">${innerCOO(deal, buyer, supplier, company, date)}</div>
   </body>
   </html>`;
 }
