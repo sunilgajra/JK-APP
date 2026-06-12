@@ -403,8 +403,24 @@ function bindUI() {
   document.querySelectorAll("[data-delete-buyer]").forEach(btn => btn.addEventListener("click", () => deleteBuyer(btn.dataset.deleteBuyer)));
   document.querySelectorAll("[data-edit-supplier]").forEach(btn => btn.addEventListener("click", () => showEditSupplierForm(btn.dataset.editSupplier)));
   document.querySelectorAll("[data-delete-supplier]").forEach(btn => btn.addEventListener("click", () => deleteSupplier(btn.dataset.deleteSupplier)));
-  document.querySelectorAll("[data-edit-deal]").forEach(btn => btn.addEventListener("click", () => showEditDealForm(btn.dataset.editDeal)));
-  document.querySelectorAll("[data-high-seas]").forEach(btn => btn.addEventListener("click", () => showHighSeasForm(btn.dataset.highSeas)));
+  document.querySelectorAll("[data-edit-deal]").forEach(btn => btn.addEventListener("click", () => {
+    const id = btn.dataset.editDeal;
+    const wrap = document.getElementById(`deal-edit-wrap-${id}`);
+    if (wrap && wrap.innerHTML.trim()) {
+      wrap.innerHTML = "";
+    } else {
+      showEditDealForm(id);
+    }
+  }));
+  document.querySelectorAll("[data-high-seas]").forEach(btn => btn.addEventListener("click", () => {
+    const id = btn.dataset.highSeas;
+    const wrap = document.getElementById(`high-seas-form-wrap-${id}`);
+    if (wrap && wrap.innerHTML.trim()) {
+      wrap.innerHTML = "";
+    } else {
+      showHighSeasForm(id);
+    }
+  }));
   document.querySelectorAll("[data-delete-deal]").forEach(btn => btn.addEventListener("click", () => deleteDeal(btn.dataset.deleteDeal)));
   document.querySelectorAll("[data-edit-product]").forEach(btn => btn.addEventListener("click", () => showEditProductForm(btn.dataset.editProduct)));
   document.querySelectorAll("[data-delete-product]").forEach(btn => btn.addEventListener("click", () => deleteProduct(btn.dataset.deleteProduct)));
@@ -455,10 +471,26 @@ function bindUI() {
   }));
 
   // Payments and Docs
-  document.querySelectorAll("[data-show-payment-form]").forEach(btn => btn.addEventListener("click", () => showPaymentForm(btn.dataset.showPaymentForm)));
+  document.querySelectorAll("[data-show-payment-form]").forEach(btn => btn.addEventListener("click", () => {
+    const id = btn.dataset.showPaymentForm;
+    const wrap = document.getElementById(`payment-form-wrap-${id}`);
+    if (wrap && wrap.innerHTML.trim()) {
+      wrap.innerHTML = "";
+    } else {
+      showPaymentForm(id);
+    }
+  }));
   document.querySelectorAll("[data-edit-payment]").forEach(btn => btn.addEventListener("click", () => showEditPaymentForm(btn.dataset.editPayment)));
   document.querySelectorAll("[data-delete-payment]").forEach(btn => btn.addEventListener("click", () => deletePayment(btn.dataset.deletePayment)));
-  document.querySelectorAll("[data-show-document-form]").forEach(btn => btn.addEventListener("click", () => showDocumentForm(btn.dataset.showDocumentForm)));
+  document.querySelectorAll("[data-show-document-form]").forEach(btn => btn.addEventListener("click", () => {
+    const id = btn.dataset.showDocumentForm;
+    const wrap = document.getElementById(`document-form-wrap-${id}`);
+    if (wrap && wrap.innerHTML.trim()) {
+      wrap.innerHTML = "";
+    } else {
+      showDocumentForm(id);
+    }
+  }));
 
   // Settings
   document.getElementById("company-settings-form")?.addEventListener("submit", saveCompanySettings);
