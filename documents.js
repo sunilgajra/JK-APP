@@ -301,28 +301,12 @@ function previewScript() {
 
         try {
           if (docEls.length > 1) {
-            const container = document.createElement("div");
-            container.style.position = "absolute";
-            container.style.left = "-9999px";
-            container.style.top = "0";
-            document.body.appendChild(container);
-
-            for (let i = 0; i < docEls.length; i++) {
-              const clone = docEls[i].cloneNode(true);
-              clone.style.zoom = "1";
-              clone.style.transform = "none";
-              clone.style.height = "auto";
-              clone.style.overflow = "visible";
-              clone.style.pageBreakAfter = "always";
-              clone.style.pageBreakInside = "avoid";
-              if (i < docEls.length - 1) {
-                clone.style.marginBottom = "0";
-              }
-              container.appendChild(clone);
-            }
-
-            await html2pdf().from(container).set(opt).save();
-            document.body.removeChild(container);
+            docEls.forEach(docEl => {
+              docEl.style.zoom = "1";
+              docEl.style.height = "auto";
+              docEl.style.overflow = "visible";
+            });
+            await html2pdf().from(document.body).set(opt).save();
           } else {
             await html2pdf().from(docEls[0]).set(opt).save();
           }
