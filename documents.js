@@ -291,7 +291,7 @@ function previewScript() {
           html2canvas: { 
             scale: 3, 
             useCORS: true, 
-            windowWidth: isLandscape ? 1200 : 800,
+            windowWidth: isLandscape ? 1200 : 1000,
             logging: false,
             x: 0,
             y: 0
@@ -306,7 +306,31 @@ function previewScript() {
               docEl.style.height = "auto";
               docEl.style.overflow = "visible";
             });
-            await html2pdf().from(document.body).set(opt).save();
+
+            const wrapper = document.createElement("div");
+            wrapper.style.cssText = "position:fixed; top:0; left:0; width:210mm; background:white; z-index:-1; opacity:0;";
+            document.body.appendChild(wrapper);
+
+            for (let i = 0; i < docEls.length; i++) {
+              const clone = docEls[i].cloneNode(true);
+              clone.style.zoom = "1";
+              clone.style.transform = "none";
+              clone.style.height = "297mm";
+              clone.style.overflow = "hidden";
+              clone.style.margin = "0";
+              clone.style.padding = "8mm";
+              clone.style.width = "210mm";
+              clone.style.boxShadow = "none";
+              clone.style.border = "none";
+              clone.style.borderRadius = "0";
+              clone.style.background = "white";
+              clone.style.pageBreakAfter = i < docEls.length - 1 ? "always" : "avoid";
+              clone.style.breakAfter = i < docEls.length - 1 ? "page" : "auto";
+              wrapper.appendChild(clone);
+            }
+
+            await html2pdf().from(wrapper).set(opt).save();
+            document.body.removeChild(wrapper);
           } else {
             await html2pdf().from(docEls[0]).set(opt).save();
           }
