@@ -1208,6 +1208,23 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
     ${previewScript()}
     <style>
       @page { margin: 0; size: A4; }
+      .doc {
+        font-size: 11px !important;
+        padding: 8mm !important;
+        line-height: 1.3 !important;
+      }
+      .doc .top { margin-bottom: 6px !important; }
+      .doc .triple { gap: 6px !important; }
+      .doc .panel { min-height: auto !important; }
+      .doc table th, .doc table td { padding: 3px 5px !important; font-size: 10px !important; }
+      .doc .boxBody { padding: 6px !important; }
+      .doc .bar { padding: 2px 5px !important; font-size: 10px !important; }
+      .doc .footer { font-size: 9px !important; }
+      .doc .footer img { max-height: 60px !important; }
+      .doc .footer > div:first-child { min-height: auto !important; }
+      .doc .docTitle { font-size: 20px !important; margin-bottom: 6px !important; }
+      .doc .meta th, .doc .meta td { padding: 2px 4px !important; font-size: 10px !important; }
+      .doc .descTable td { font-size: 11px !important; }
       @media print {
         body { margin: 0; padding: 0; background: white; }
         .doc { 
@@ -1216,7 +1233,6 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
           page-break-inside: avoid;
           overflow: hidden !important;
           margin: 0 !important;
-          padding: 8mm !important;
           box-shadow: none !important;
           border: none !important;
           border-radius: 0 !important;
@@ -1233,7 +1249,6 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
           page-break-after: always; 
           break-after: page;
           margin: 0;
-          padding: 8mm;
         }
         .doc:last-child { 
           page-break-after: auto; 
@@ -1259,8 +1274,7 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
           }
         });
       }
-      window.addEventListener("load", fitDocsToOnePage);
-      window.addEventListener("afterprint", fitDocsToOnePage);
+      window.addEventListener("load", function() { setTimeout(fitDocsToOnePage, 100); });
     </script>
   </head>
   <body>
