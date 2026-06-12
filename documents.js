@@ -222,11 +222,13 @@ function previewScript() {
         const actions = document.querySelector(".previewActions");
         const oldTransforms = Array.from(docs).map(d => d.style.transform);
         const oldMargins = Array.from(docs).map(d => d.style.marginTop);
+        const oldZooms = Array.from(docs).map(d => d.style.zoom);
         const oldTitle = document.title;
         
         docs.forEach(doc => {
           doc.style.transform = "none";
           doc.style.marginTop = "0";
+          doc.style.zoom = "1";
         });
         if (actions) actions.style.display = "none";
         
@@ -237,6 +239,7 @@ function previewScript() {
           docs.forEach((doc, i) => {
             doc.style.transform = oldTransforms[i];
             doc.style.marginTop = oldMargins[i];
+            doc.style.zoom = oldZooms[i];
           });
           if (actions) actions.style.display = "flex";
         }, 1000);
@@ -247,6 +250,9 @@ function previewScript() {
         const docs = document.querySelectorAll(".doc");
         const oldTransforms = Array.from(docs).map(d => d.style.transform);
         const oldBodyMarginTops = Array.from(docs).map(d => d.style.marginTop);
+        const oldZooms = Array.from(docs).map(d => d.style.zoom);
+        const oldHeights = Array.from(docs).map(d => d.style.height);
+        const oldOverflows = Array.from(docs).map(d => d.style.overflow);
         const btn = event.target;
         const oldText = btn.innerText;
 
@@ -294,9 +300,29 @@ function previewScript() {
         };
 
         try {
-          // For multi-doc sets, we need to render all docs
           if (docEls.length > 1) {
-            await html2pdf().from(document.body).set(opt).save();
+            const container = document.createElement("div");
+            container.style.position = "absolute";
+            container.style.left = "-9999px";
+            container.style.top = "0";
+            document.body.appendChild(container);
+
+            for (let i = 0; i < docEls.length; i++) {
+              const clone = docEls[i].cloneNode(true);
+              clone.style.zoom = "1";
+              clone.style.transform = "none";
+              clone.style.height = "auto";
+              clone.style.overflow = "visible";
+              clone.style.pageBreakAfter = "always";
+              clone.style.pageBreakInside = "avoid";
+              if (i < docEls.length - 1) {
+                clone.style.marginBottom = "0";
+              }
+              container.appendChild(clone);
+            }
+
+            await html2pdf().from(container).set(opt).save();
+            document.body.removeChild(container);
           } else {
             await html2pdf().from(docEls[0]).set(opt).save();
           }
@@ -307,6 +333,9 @@ function previewScript() {
           docEls.forEach((docEl, i) => {
             docEl.style.boxShadow = oldStyles[i].boxShadow;
             docEl.style.margin = oldStyles[i].margin;
+            docEl.style.zoom = oldZooms[i];
+            docEl.style.height = oldHeights[i];
+            docEl.style.overflow = oldOverflows[i];
           });
           if (btn) {
             btn.innerText = oldText;
@@ -1194,19 +1223,16 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
     ${commonStyle()}
     ${previewScript()}
     <style>
+      @page { margin: 0; size: A4; }
       @media print {
-        @page { margin: 0; size: A4; }
         body { margin: 0; padding: 0; background: white; }
         .doc { 
           page-break-after: always; 
           break-after: page;
           page-break-inside: avoid;
-          max-height: 297mm !important;
-          height: 297mm !important;
           overflow: hidden !important;
           margin: 0 !important;
           padding: 8mm !important;
-          width: 100% !important;
           box-shadow: none !important;
           border: none !important;
           border-radius: 0 !important;
@@ -1222,11 +1248,8 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
         .doc { 
           page-break-after: always; 
           break-after: page;
-          max-height: 297mm;
-          overflow: hidden;
           margin: 0;
           padding: 8mm;
-          width: 100%;
         }
         .doc:last-child { 
           page-break-after: auto; 
@@ -1236,25 +1259,24 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
     </style>
     <script>
       function fitDocsToOnePage() {
-        const A4_HEIGHT_MM = 297;
-        const MM_TO_PX = 3.7795;
-        const maxPx = A4_HEIGHT_MM * MM_TO_PX;
-        document.querySelectorAll(".doc").forEach(doc => {
-          doc.style.transform = "none";
-          doc.style.transformOrigin = "top left";
-          const h = doc.scrollHeight;
+        var A4_MM = 297;
+        var MM_TO_PX = 3.7795;
+        var maxPx = A4_MM * MM_TO_PX;
+        document.querySelectorAll(".doc").forEach(function(doc) {
+          doc.style.zoom = "1";
+          doc.style.height = "auto";
+          doc.style.overflow = "visible";
+          var h = doc.scrollHeight;
           if (h > maxPx) {
-            const scale = maxPx / h;
-            doc.style.transform = "scale(" + scale + ")";
+            var z = maxPx / h;
+            doc.style.zoom = z;
             doc.style.height = maxPx + "px";
             doc.style.overflow = "hidden";
-          } else {
-            doc.style.height = "auto";
-            doc.style.overflow = "visible";
           }
         });
       }
-      window.addEventListener("DOMContentLoaded", fitDocsToOnePage);
+      window.addEventListener("load", fitDocsToOnePage);
+      window.addEventListener("afterprint", fitDocsToOnePage);
     </script>
   </head>
   <body>
