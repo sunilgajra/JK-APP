@@ -196,18 +196,20 @@ function previewScript() {
       }
 
       function adjustScale() {
-        const doc = document.querySelector(".doc");
-        if (!doc) return;
+        const docs = document.querySelectorAll(".doc");
+        if (!docs.length) return;
         const vw = window.innerWidth;
-        const dw = doc.offsetWidth;
-        if (vw < dw + 40) {
-          const scale = (vw - 20) / dw;
-          doc.style.transform = "scale(" + scale + ")";
-          doc.style.marginTop = "60px";
-        } else {
-          doc.style.transform = "none";
-          doc.style.marginTop = "30px";
-        }
+        docs.forEach(doc => {
+          const dw = doc.offsetWidth;
+          if (vw < dw + 40) {
+            const scale = (vw - 20) / dw;
+            doc.style.transform = "scale(" + scale + ")";
+            doc.style.marginTop = "60px";
+          } else {
+            doc.style.transform = "none";
+            doc.style.marginTop = "30px";
+          }
+        });
       }
 
       window.addEventListener("resize", adjustScale);
@@ -216,35 +218,35 @@ function previewScript() {
       });
 
       function triggerPrint() {
-        const doc = document.querySelector(".doc");
+        const docs = document.querySelectorAll(".doc");
         const actions = document.querySelector(".previewActions");
-        const oldTransform = doc ? doc.style.transform : "";
-        const oldMargin = doc ? doc.style.marginTop : "";
+        const oldTransforms = Array.from(docs).map(d => d.style.transform);
+        const oldMargins = Array.from(docs).map(d => d.style.marginTop);
         const oldTitle = document.title;
         
-        if (doc) {
+        docs.forEach(doc => {
           doc.style.transform = "none";
           doc.style.marginTop = "0";
-        }
+        });
         if (actions) actions.style.display = "none";
         
         window.print();
         
         setTimeout(() => {
           document.title = oldTitle;
-          if (doc) {
-            doc.style.transform = oldTransform;
-            doc.style.marginTop = oldMargin;
-          }
+          docs.forEach((doc, i) => {
+            doc.style.transform = oldTransforms[i];
+            doc.style.marginTop = oldMargins[i];
+          });
           if (actions) actions.style.display = "flex";
         }, 1000);
       }
 
       async function downloadExactPdf() {
         const actions = document.querySelector(".previewActions");
-        const doc = document.querySelector(".doc");
-        const oldTransform = doc ? doc.style.transform : "";
-        const oldBodyMarginTop = doc ? doc.style.marginTop : "";
+        const docs = document.querySelectorAll(".doc");
+        const oldTransforms = Array.from(docs).map(d => d.style.transform);
+        const oldBodyMarginTops = Array.from(docs).map(d => d.style.marginTop);
         const btn = event.target;
         const oldText = btn.innerText;
 
@@ -254,23 +256,27 @@ function previewScript() {
         }
 
         if (actions) actions.style.display = "none";
-        if (doc) {
+        docs.forEach(doc => {
           doc.style.transform = "none";
           doc.style.marginTop = "0";
-        }
+        });
 
         window.scrollTo(0,0);
         
         const title = document.title || "document";
-        const docEl = document.querySelector(".doc");
-        if (!docEl) return;
+        const docEls = document.querySelectorAll(".doc");
+        if (!docEls.length) return;
 
         const isLandscape = title.includes("SETTLEMENT") || title.includes("SUMMARY");
         
-        const oldShadow = docEl.style.boxShadow;
-        const oldDocMargin = docEl.style.margin;
-        docEl.style.boxShadow = "none";
-        docEl.style.margin = "0";
+        const oldStyles = Array.from(docEls).map(docEl => ({
+          boxShadow: docEl.style.boxShadow,
+          margin: docEl.style.margin
+        }));
+        docEls.forEach(docEl => {
+          docEl.style.boxShadow = "none";
+          docEl.style.margin = "0";
+        });
 
         const opt = {
           margin: 0,
@@ -288,22 +294,29 @@ function previewScript() {
         };
 
         try {
-          await html2pdf().from(docEl).set(opt).save();
+          // For multi-doc sets, we need to render all docs
+          if (docEls.length > 1) {
+            await html2pdf().from(document.body).set(opt).save();
+          } else {
+            await html2pdf().from(docEls[0]).set(opt).save();
+          }
         } catch (err) {
           console.error(err);
           alert("Download failed. Please use 'Print / PDF' instead.");
         } finally {
-          docEl.style.boxShadow = oldShadow;
-          docEl.style.margin = oldDocMargin;
+          docEls.forEach((docEl, i) => {
+            docEl.style.boxShadow = oldStyles[i].boxShadow;
+            docEl.style.margin = oldStyles[i].margin;
+          });
           if (btn) {
             btn.innerText = oldText;
             btn.disabled = false;
           }
           if (actions) actions.style.display = "flex";
-          if (doc) {
-            doc.style.transform = oldTransform;
-            doc.style.marginTop = oldBodyMarginTop;
-          }
+          docs.forEach((doc, i) => {
+            doc.style.transform = oldTransforms[i];
+            doc.style.marginTop = oldBodyMarginTops[i];
+          });
         }
       }
 
