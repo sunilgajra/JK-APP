@@ -301,31 +301,37 @@ function previewScript() {
 
         try {
           if (docEls.length > 1) {
-            const pdf = new jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-            for (let i = 0; i < docEls.length; i++) {
-              docEls[i].style.zoom = "1";
-              docEls[i].style.height = "auto";
-              docEls[i].style.overflow = "visible";
-              docEls[i].style.margin = "0";
-              docEls[i].style.boxShadow = "none";
+            docEls.forEach(docEl => {
+              docEl.style.zoom = "1";
+              docEl.style.height = "297mm";
+              docEl.style.overflow = "hidden";
+              docEl.style.margin = "0";
+              docEl.style.boxShadow = "none";
+              docEl.style.borderRadius = "0";
+              docEl.style.background = "white";
+            });
 
-              const canvas = await html2canvas(docEls[i], {
-                scale: 3,
-                useCORS: true,
-                windowWidth: 1000,
-                logging: false,
-                x: 0,
-                y: 0
-              });
-
-              const imgData = canvas.toDataURL("image/jpeg", 1.0);
-              const imgW = 210;
-              const imgH = (canvas.height * imgW) / canvas.width;
-
-              if (i > 0) pdf.addPage();
-              pdf.addImage(imgData, "JPEG", 0, 0, imgW, imgH);
+            const allEls = document.body.children;
+            const hiddenEls = [];
+            for (let i = 0; i < allEls.length; i++) {
+              const el = allEls[i];
+              const isDoc = Array.from(docEls).some(d => d === el || d.contains(el));
+              const isStyle = el.tagName === "STYLE" || el.tagName === "SCRIPT" || el.tagName === "LINK";
+              if (!isDoc && !isStyle) {
+                hiddenEls.push({ el, old: el.style.display });
+                el.style.display = "none";
+              }
             }
-            pdf.save(title + ".pdf");
+
+            document.body.style.margin = "0";
+            document.body.style.padding = "0";
+            window.scrollTo(0, 0);
+
+            await html2pdf().from(document.body).set(opt).save();
+
+            hiddenEls.forEach(({ el, old }) => { el.style.display = old; });
+            document.body.style.margin = "";
+            document.body.style.padding = "";
           } else {
             await html2pdf().from(docEls[0]).set(opt).save();
           }
