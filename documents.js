@@ -674,11 +674,12 @@ function containerBlock(deal = {}) {
       .filter(Boolean);
 
   const cleanList = list.map(x => String(x).replace(/[^A-Z0-9]/gi, "").toUpperCase());
-  const minItems = 16;
-  const totalItems = Math.max(minItems, cleanList.length);
-  const evenTotal = totalItems % 2 === 0 ? totalItems : totalItems + 1;
+  const maxDisplay = 32;
+  const displayList = cleanList.slice(0, maxDisplay);
+  const overflow = cleanList.length > maxDisplay ? cleanList.length - maxDisplay : 0;
 
-  const normalized = [...cleanList];
+  const evenTotal = displayList.length % 2 === 0 ? displayList.length : displayList.length + 1;
+  const normalized = [...displayList];
   while (normalized.length < evenTotal) {
     normalized.push("-");
   }
@@ -688,16 +689,33 @@ function containerBlock(deal = {}) {
     rows.push([normalized[i], normalized[i + 1]]);
   }
 
+  const rowCount = rows.length;
+  let rowHeight, fontSize;
+  if (rowCount <= 8) {
+    rowHeight = 18;
+    fontSize = "11px";
+  } else if (rowCount <= 10) {
+    rowHeight = 15;
+    fontSize = "10px";
+  } else if (rowCount <= 12) {
+    rowHeight = 13;
+    fontSize = "9px";
+  } else {
+    rowHeight = 11;
+    fontSize = "8px";
+  }
+
   return `
     <div class="panel" style="height:100%">
-      <div class="bar">Container Nos:</div>
-      <table class="thin" style="height:calc(100% - 18px)">
+      <div class="bar">Container Nos: (${cleanList.length})</div>
+      <table class="thin" style="height:calc(100% - 18px); font-size:${fontSize}">
         ${rows.map((r) => `
-          <tr style="height:18px">
+          <tr style="height:${rowHeight}px">
             <td class="center">${esc(r[0] || "-")}</td>
             <td class="center">${esc(r[1] || "-")}</td>
           </tr>
         `).join("")}
+        ${overflow > 0 ? `<tr style="height:auto"><td colspan="2" class="center" style="font-weight:700; color:#3b9da2; padding:2px">... and ${overflow} more</td></tr>` : ""}
       </table>
     </div>
   `;
