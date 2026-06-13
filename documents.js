@@ -276,17 +276,50 @@ function previewScript() {
           background: docEl.style.background
         }));
 
-        docs.forEach(doc => {
-          doc.style.transform = "none";
-          doc.style.marginTop = "0";
-          doc.style.zoom = "1";
-          doc.style.width = "100%";
-          doc.style.minWidth = "0";
-          doc.style.boxShadow = "none";
-          doc.style.margin = "0";
-          doc.style.borderRadius = "0";
-          doc.style.background = "white";
-        });
+        const isMultiDoc = docEls.length > 1;
+        if (isMultiDoc) {
+          const A4_MM = 297;
+          const MM_TO_PX = 3.7795;
+          const maxPx = A4_MM * MM_TO_PX;
+          docEls.forEach(docEl => {
+            docEl.style.transform = "none";
+            docEl.style.zoom = "1";
+            docEl.style.height = "auto";
+            docEl.style.overflow = "visible";
+            const h = docEl.scrollHeight;
+            if (h > maxPx) {
+              docEl.style.zoom = String(maxPx / h);
+              docEl.style.height = maxPx + "px";
+              docEl.style.overflow = "hidden";
+            } else {
+              docEl.style.height = maxPx + "px";
+              docEl.style.overflow = "hidden";
+            }
+            docEl.style.width = "100%";
+            docEl.style.maxWidth = "210mm";
+            docEl.style.minWidth = "0";
+            docEl.style.boxShadow = "none";
+            docEl.style.borderRadius = "0";
+            docEl.style.background = "white";
+            docEl.style.margin = "0";
+            docEl.style.padding = "8mm";
+          });
+          document.body.style.margin = "0";
+          document.body.style.padding = "0";
+          document.body.style.background = "white";
+        } else {
+          docs.forEach(doc => {
+            doc.style.transform = "none";
+            doc.style.marginTop = "0";
+            doc.style.zoom = "1";
+            doc.style.width = "100%";
+            doc.style.minWidth = "0";
+            doc.style.boxShadow = "none";
+            doc.style.margin = "0";
+            doc.style.borderRadius = "0";
+            doc.style.background = "white";
+          });
+        }
 
         if (actions) actions.style.display = "none";
 
@@ -324,6 +357,9 @@ function previewScript() {
           alert("Download failed. Please use 'Browser Print' instead.");
         } finally {
           hiddenEls.forEach(({ el, old }) => { el.style.display = old; });
+          document.body.style.margin = "";
+          document.body.style.padding = "";
+          document.body.style.background = "";
           docEls.forEach((docEl, i) => {
             docEl.style.boxShadow = oldStyles[i].boxShadow;
             docEl.style.margin = oldStyles[i].margin;
@@ -332,6 +368,12 @@ function previewScript() {
             docEl.style.zoom = oldZooms[i];
             docEl.style.width = oldWidths[i];
             docEl.style.minWidth = oldMinWidths[i];
+            docEl.style.height = "";
+            docEl.style.maxHeight = "";
+            docEl.style.maxWidth = "";
+            docEl.style.overflow = "";
+            docEl.style.padding = "";
+            docEl.style.pageBreakAfter = "";
           });
           if (btn) {
             btn.innerText = oldText;
