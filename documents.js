@@ -29,24 +29,24 @@ const STAMP_URL = assetUrl("stamp.png");
 const SIGN_URL = assetUrl("signature.png");
 
 export function openPrintWindow(html) {
-  const blob = new Blob([html], { type: "text/html" });
-  const url = URL.createObjectURL(blob);
-  const w = window.open(url, "_blank");
+  const w = window.open("", "_blank");
   if (!w) {
     alert("Please allow pop-ups to view the document preview.");
-    URL.revokeObjectURL(url);
     return false;
   }
 
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+
   setTimeout(() => {
-    URL.revokeObjectURL(url);
     try {
       const titleMatch = html.match(/<title>(.*?)<\/title>/i);
       if (titleMatch && titleMatch[1]) {
         w.document.title = titleMatch[1];
       }
     } catch(e) {}
-  }, 2000);
+  }, 100);
 
   return true;
 }
@@ -299,8 +299,8 @@ function previewScript() {
               document.head.appendChild(s);
             });
           }
-          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js');
+          await loadScript('html2canvas.min.js');
+          await loadScript('jspdf.umd.min.js');
 
           if (!window.jspdf || !window.jspdf.jsPDF) {
             alert("PDF library failed to load. Please use 'Browser Print' instead.");
@@ -1365,15 +1365,17 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
   const docNo = String(deal.ci_no || deal.dealNo || deal.deal_no || "000").replace(/[^A-Z0-9\-\/]/gi, "");
 
   const filename = `SET-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}`;
+  const baseHref = new URL('.', window.location.href).href;
 
   return `
   <!DOCTYPE html>
   <html>
   <head>
+    <base href="${esc(baseHref)}">
     <title>${esc(filename)}</title>
     ${commonStyle()}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="html2canvas.min.js"></script>
+    <script src="jspdf.umd.min.js"></script>
     ${previewScript()}
     <style>
       @page { margin: 0; size: A4; }
