@@ -287,24 +287,44 @@ function previewScript() {
           const A4_MM = 297;
           const MM_TO_PX = 3.7795;
           const maxPx = A4_MM * MM_TO_PX;
-          docEls.forEach(docEl => {
+          const { jsPDF: JsPDF } = window.jspdf;
+          const pdf = new JsPDF({ unit: "mm", format: "a4", orientation: isLandscape ? "landscape" : "portrait" });
+          const pageW = pdf.internal.pageSize.getWidth();
+          const pageH = pdf.internal.pageSize.getHeight();
+
+          for (let i = 0; i < docEls.length; i++) {
+            const docEl = docEls[i];
+            const savedStyles = {
+              transform: docEl.style.transform,
+              zoom: docEl.style.zoom,
+              height: docEl.style.height,
+              overflow: docEl.style.overflow,
+              width: docEl.style.width,
+              maxWidth: docEl.style.maxWidth,
+              minWidth: docEl.style.minWidth,
+              boxShadow: docEl.style.boxShadow,
+              borderRadius: docEl.style.borderRadius,
+              background: docEl.style.background,
+              margin: docEl.style.margin,
+              padding: docEl.style.padding,
+              position: docEl.style.position
+            };
+
+            docEls.forEach((d, j) => { d.style.display = j === i ? "block" : "none"; });
+            if (actions) actions.style.display = "none";
+            const allEls = document.body.children;
+            for (let k = 0; k < allEls.length; k++) {
+              const el = allEls[k];
+              if (el !== docEl && !el.contains(docEl) && el.tagName !== "STYLE" && el.tagName !== "SCRIPT" && el.tagName !== "LINK") {
+                el.style.display = "none";
+              }
+            }
+
             docEl.style.transform = "none";
             docEl.style.zoom = "1";
             docEl.style.height = "auto";
             docEl.style.overflow = "visible";
-            docEl.style.pageBreakAfter = "auto";
-            docEl.style.breakAfter = "auto";
-            docEl.style.pageBreakInside = "avoid";
-            const h = docEl.scrollHeight;
-            if (h > maxPx) {
-              docEl.style.zoom = String(maxPx / h);
-              docEl.style.height = maxPx + "px";
-              docEl.style.overflow = "hidden";
-            } else {
-              docEl.style.height = maxPx + "px";
-              docEl.style.overflow = "hidden";
-            }
-            docEl.style.width = "100%";
+            docEl.style.width = "210mm";
             docEl.style.maxWidth = "210mm";
             docEl.style.minWidth = "0";
             docEl.style.boxShadow = "none";
@@ -312,19 +332,44 @@ function previewScript() {
             docEl.style.background = "white";
             docEl.style.margin = "0";
             docEl.style.padding = "8mm";
-          });
-          document.body.style.margin = "0";
-          document.body.style.padding = "0";
-          document.body.style.background = "white";
-          document.body.style.lineHeight = "0";
-          const bodyNodes = document.body.childNodes;
-          for (let i = bodyNodes.length - 1; i >= 0; i--) {
-            const node = bodyNodes[i];
-            if (node.nodeType === 3 && !node.textContent.trim()) {
-              removedNodes.push({ parent: node.parentNode, next: node.nextSibling, text: node.textContent });
-              node.parentNode.removeChild(node);
+
+            await new Promise(r => setTimeout(r, 50));
+
+            const canvas = await html2canvas(docEl, {
+              scale: 3,
+              useCORS: true,
+              logging: false,
+              windowWidth: 210 * MM_TO_PX,
+              backgroundColor: "#ffffff"
+            });
+
+            if (i > 0) pdf.addPage();
+
+            const imgData = canvas.toDataURL("image/jpeg", 1.0);
+            const imgW = pageW;
+            const imgH = (canvas.height * imgW) / canvas.width;
+            pdf.addImage(imgData, "JPEG", 0, 0, imgW, Math.min(imgH, pageH));
+
+            Object.assign(docEl.style, savedStyles);
+          }
+
+          pdf.save(title + ".pdf");
+
+          docEls.forEach(d => { d.style.display = ""; });
+          const allEls = document.body.children;
+          for (let k = 0; k < allEls.length; k++) {
+            const el = allEls[k];
+            if (el.tagName !== "STYLE" && el.tagName !== "SCRIPT" && el.tagName !== "LINK") {
+              el.style.display = "";
             }
           }
+
+          if (btn) {
+            btn.innerText = oldText;
+            btn.disabled = false;
+          }
+          if (actions) actions.style.display = "flex";
+          return;
         } else {
           docs.forEach(doc => {
             doc.style.transform = "none";
@@ -378,7 +423,6 @@ function previewScript() {
           document.body.style.margin = "";
           document.body.style.padding = "";
           document.body.style.background = "";
-          document.body.style.lineHeight = "";
           removedNodes.forEach(({ parent, next, text }) => {
             const t = document.createTextNode(text);
             if (next && next.parentNode === parent) {
