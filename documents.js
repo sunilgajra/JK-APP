@@ -287,6 +287,27 @@ function previewScript() {
           const A4_MM = 297;
           const MM_TO_PX = 3.7795;
           const maxPx = A4_MM * MM_TO_PX;
+
+          function loadScript(url) {
+            return new Promise((resolve, reject) => {
+              if (document.querySelector('script[src="' + url + '"]')) { resolve(); return; }
+              var s = document.createElement('script');
+              s.src = url;
+              s.onload = resolve;
+              s.onerror = reject;
+              document.head.appendChild(s);
+            });
+          }
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js');
+
+          if (!window.jspdf || !window.jspdf.jsPDF) {
+            alert("PDF library failed to load. Please use 'Browser Print' instead.");
+            if (btn) { btn.innerText = oldText; btn.disabled = false; }
+            if (actions) actions.style.display = "flex";
+            return;
+          }
+
           const { jsPDF: JsPDF } = window.jspdf;
           const pdf = new JsPDF({ unit: "mm", format: "a4", orientation: isLandscape ? "landscape" : "portrait" });
           const pageW = pdf.internal.pageSize.getWidth();
