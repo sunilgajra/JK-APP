@@ -251,8 +251,8 @@ function previewScript() {
         const oldTransforms = Array.from(docs).map(d => d.style.transform);
         const oldBodyMarginTops = Array.from(docs).map(d => d.style.marginTop);
         const oldZooms = Array.from(docs).map(d => d.style.zoom);
-        const oldHeights = Array.from(docs).map(d => d.style.height);
-        const oldOverflows = Array.from(docs).map(d => d.style.overflow);
+        const oldWidths = Array.from(docs).map(d => d.style.width);
+        const oldMinWidths = Array.from(docs).map(d => d.style.minWidth);
         const btn = event.target;
         const oldText = btn.innerText;
 
@@ -261,12 +261,6 @@ function previewScript() {
           btn.disabled = true;
         }
 
-        if (actions) actions.style.display = "none";
-        docs.forEach(doc => {
-          doc.style.transform = "none";
-          doc.style.marginTop = "0";
-        });
-
         window.scrollTo(0,0);
         
         const title = document.title || "document";
@@ -274,15 +268,39 @@ function previewScript() {
         if (!docEls.length) return;
 
         const isLandscape = title.includes("SETTLEMENT") || title.includes("SUMMARY");
-        
+
         const oldStyles = Array.from(docEls).map(docEl => ({
           boxShadow: docEl.style.boxShadow,
-          margin: docEl.style.margin
+          margin: docEl.style.margin,
+          borderRadius: docEl.style.borderRadius,
+          background: docEl.style.background
         }));
-        docEls.forEach(docEl => {
-          docEl.style.boxShadow = "none";
-          docEl.style.margin = "0";
+
+        docs.forEach(doc => {
+          doc.style.transform = "none";
+          doc.style.marginTop = "0";
+          doc.style.zoom = "1";
+          doc.style.width = "100%";
+          doc.style.minWidth = "0";
+          doc.style.boxShadow = "none";
+          doc.style.margin = "0";
+          doc.style.borderRadius = "0";
+          doc.style.background = "white";
         });
+
+        if (actions) actions.style.display = "none";
+
+        const allEls = document.body.children;
+        const hiddenEls = [];
+        for (let i = 0; i < allEls.length; i++) {
+          const el = allEls[i];
+          const isDoc = Array.from(docEls).some(d => d === el || d.contains(el));
+          const isStyle = el.tagName === "STYLE" || el.tagName === "SCRIPT" || el.tagName === "LINK";
+          if (!isDoc && !isStyle) {
+            hiddenEls.push({ el, old: el.style.display });
+            el.style.display = "none";
+          }
+        }
 
         const opt = {
           margin: 0,
@@ -291,7 +309,7 @@ function previewScript() {
           html2canvas: { 
             scale: 3, 
             useCORS: true, 
-            windowWidth: isLandscape ? 1200 : 1000,
+            windowWidth: 210 * 3.7795,
             logging: false,
             x: 0,
             y: 0
@@ -300,51 +318,20 @@ function previewScript() {
         };
 
         try {
-          if (docEls.length > 1) {
-            docEls.forEach(docEl => {
-              docEl.style.zoom = "1";
-              docEl.style.height = "297mm";
-              docEl.style.overflow = "hidden";
-              docEl.style.margin = "0";
-              docEl.style.boxShadow = "none";
-              docEl.style.borderRadius = "0";
-              docEl.style.background = "white";
-            });
-
-            const allEls = document.body.children;
-            const hiddenEls = [];
-            for (let i = 0; i < allEls.length; i++) {
-              const el = allEls[i];
-              const isDoc = Array.from(docEls).some(d => d === el || d.contains(el));
-              const isStyle = el.tagName === "STYLE" || el.tagName === "SCRIPT" || el.tagName === "LINK";
-              if (!isDoc && !isStyle) {
-                hiddenEls.push({ el, old: el.style.display });
-                el.style.display = "none";
-              }
-            }
-
-            document.body.style.margin = "0";
-            document.body.style.padding = "0";
-            window.scrollTo(0, 0);
-
-            await html2pdf().from(document.body).set(opt).save();
-
-            hiddenEls.forEach(({ el, old }) => { el.style.display = old; });
-            document.body.style.margin = "";
-            document.body.style.padding = "";
-          } else {
-            await html2pdf().from(docEls[0]).set(opt).save();
-          }
+          await html2pdf().from(document.body).set(opt).save();
         } catch (err) {
           console.error(err);
-          alert("Download failed. Please use 'Print / PDF' instead.");
+          alert("Download failed. Please use 'Browser Print' instead.");
         } finally {
+          hiddenEls.forEach(({ el, old }) => { el.style.display = old; });
           docEls.forEach((docEl, i) => {
             docEl.style.boxShadow = oldStyles[i].boxShadow;
             docEl.style.margin = oldStyles[i].margin;
+            docEl.style.borderRadius = oldStyles[i].borderRadius;
+            docEl.style.background = oldStyles[i].background;
             docEl.style.zoom = oldZooms[i];
-            docEl.style.height = oldHeights[i];
-            docEl.style.overflow = oldOverflows[i];
+            docEl.style.width = oldWidths[i];
+            docEl.style.minWidth = oldMinWidths[i];
           });
           if (btn) {
             btn.innerText = oldText;
