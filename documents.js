@@ -29,23 +29,24 @@ const STAMP_URL = assetUrl("stamp.png");
 const SIGN_URL = assetUrl("signature.png");
 
 export function openPrintWindow(html) {
-  const w = window.open("", "_blank");
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, "_blank");
   if (!w) {
     alert("Please allow pop-ups to view the document preview.");
+    URL.revokeObjectURL(url);
     return false;
   }
 
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-
-  // Explicitly set the title again after a short delay to ensure the browser picks it up for the print dialog
   setTimeout(() => {
-    const titleMatch = html.match(/<title>(.*?)<\/title>/i);
-    if (titleMatch && titleMatch[1]) {
-      w.document.title = titleMatch[1];
-    }
-  }, 100);
+    URL.revokeObjectURL(url);
+    try {
+      const titleMatch = html.match(/<title>(.*?)<\/title>/i);
+      if (titleMatch && titleMatch[1]) {
+        w.document.title = titleMatch[1];
+      }
+    } catch(e) {}
+  }, 2000);
 
   return true;
 }
@@ -1371,6 +1372,8 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
   <head>
     <title>${esc(filename)}</title>
     ${commonStyle()}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
     ${previewScript()}
     <style>
       @page { margin: 0; size: A4; }
