@@ -273,10 +273,16 @@ function previewScript() {
           boxShadow: docEl.style.boxShadow,
           margin: docEl.style.margin,
           borderRadius: docEl.style.borderRadius,
-          background: docEl.style.background
+          background: docEl.style.background,
+          pageBreakAfter: docEl.style.pageBreakAfter,
+          breakAfter: docEl.style.breakAfter,
+          pageBreakInside: docEl.style.pageBreakInside,
+          height: docEl.style.height,
+          overflow: docEl.style.overflow
         }));
 
         const isMultiDoc = docEls.length > 1;
+        let removedNodes = [];
         if (isMultiDoc) {
           const A4_MM = 297;
           const MM_TO_PX = 3.7795;
@@ -286,6 +292,9 @@ function previewScript() {
             docEl.style.zoom = "1";
             docEl.style.height = "auto";
             docEl.style.overflow = "visible";
+            docEl.style.pageBreakAfter = "auto";
+            docEl.style.breakAfter = "auto";
+            docEl.style.pageBreakInside = "avoid";
             const h = docEl.scrollHeight;
             if (h > maxPx) {
               docEl.style.zoom = String(maxPx / h);
@@ -307,6 +316,15 @@ function previewScript() {
           document.body.style.margin = "0";
           document.body.style.padding = "0";
           document.body.style.background = "white";
+          document.body.style.lineHeight = "0";
+          const bodyNodes = document.body.childNodes;
+          for (let i = bodyNodes.length - 1; i >= 0; i--) {
+            const node = bodyNodes[i];
+            if (node.nodeType === 3 && !node.textContent.trim()) {
+              removedNodes.push({ parent: node.parentNode, next: node.nextSibling, text: node.textContent });
+              node.parentNode.removeChild(node);
+            }
+          }
         } else {
           docs.forEach(doc => {
             doc.style.transform = "none";
@@ -360,20 +378,31 @@ function previewScript() {
           document.body.style.margin = "";
           document.body.style.padding = "";
           document.body.style.background = "";
+          document.body.style.lineHeight = "";
+          removedNodes.forEach(({ parent, next, text }) => {
+            const t = document.createTextNode(text);
+            if (next && next.parentNode === parent) {
+              parent.insertBefore(t, next);
+            } else {
+              parent.appendChild(t);
+            }
+          });
           docEls.forEach((docEl, i) => {
             docEl.style.boxShadow = oldStyles[i].boxShadow;
             docEl.style.margin = oldStyles[i].margin;
             docEl.style.borderRadius = oldStyles[i].borderRadius;
             docEl.style.background = oldStyles[i].background;
+            docEl.style.pageBreakAfter = oldStyles[i].pageBreakAfter;
+            docEl.style.breakAfter = oldStyles[i].breakAfter;
+            docEl.style.pageBreakInside = oldStyles[i].pageBreakInside;
+            docEl.style.height = oldStyles[i].height;
+            docEl.style.overflow = oldStyles[i].overflow;
             docEl.style.zoom = oldZooms[i];
             docEl.style.width = oldWidths[i];
             docEl.style.minWidth = oldMinWidths[i];
-            docEl.style.height = "";
             docEl.style.maxHeight = "";
             docEl.style.maxWidth = "";
-            docEl.style.overflow = "";
             docEl.style.padding = "";
-            docEl.style.pageBreakAfter = "";
           });
           if (btn) {
             btn.innerText = oldText;
