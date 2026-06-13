@@ -367,7 +367,7 @@ export function commonStyle(docClass = "") {
         box-shadow: none !important; 
         border: none !important; 
         margin: 0 !important; 
-        padding: 10mm !important; 
+        padding: 8mm !important; 
         width: 100% !important;
       }
     }
@@ -387,7 +387,7 @@ export function commonStyle(docClass = "") {
       width: 210mm;
       min-height: 297mm;
       margin: 30px auto;
-      padding: 15mm;
+      padding: 10mm;
       background: white;
       box-shadow: 0 15px 35px rgba(0,0,0,0.2);
       border-radius: 8px;
@@ -403,9 +403,9 @@ export function commonStyle(docClass = "") {
     .top {
       display: grid;
       grid-template-columns: 1fr 0.62fr 1fr;
-      gap: 10px;
+      gap: 8px;
       align-items: start;
-      margin-bottom: 12px;
+      margin-bottom: 6px;
     }
 
     .logoBox {
@@ -421,11 +421,11 @@ export function commonStyle(docClass = "") {
 
     .docTitle {
       color: #3b9da2;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 800;
       text-align: right;
       line-height: 1;
-      margin: 0 0 10px 0;
+      margin: 0 0 6px 0;
       letter-spacing: .2px;
       text-transform: uppercase;
     }
@@ -442,7 +442,7 @@ export function commonStyle(docClass = "") {
 
     .panel {
       border: 2px solid #222;
-      min-height: 110px;
+      min-height: 80px;
     }
 
     .panelBody {
@@ -455,15 +455,15 @@ export function commonStyle(docClass = "") {
     .triple {
       display: grid;
       grid-template-columns: 1fr .95fr 1fr;
-      gap: 10px;
-      margin-bottom: 15px;
+      gap: 8px;
+      margin-bottom: 8px;
       align-items: start;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 15px;
+      margin-bottom: 6px;
     }
 
     th, td {
@@ -496,7 +496,7 @@ export function commonStyle(docClass = "") {
     
     .box {
       border: 2px solid #222;
-      margin-top: 10px;
+      margin-top: 4px;
     }
 
     .boxHead {
@@ -517,18 +517,18 @@ export function commonStyle(docClass = "") {
     }
 
     .footer {
-      margin-top: 15px;
+      margin-top: 8px;
       display: grid;
       grid-template-columns: 1.2fr .8fr 1fr;
-      gap: 20px;
+      gap: 15px;
       align-items: end;
     }
 
     .note {
       text-align: center;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      margin-top: 10px;
+      margin-top: 6px;
       color: #222;
     }
 
@@ -674,7 +674,7 @@ function containerBlock(deal = {}) {
       .filter(Boolean);
 
   const cleanList = list.map(x => String(x).replace(/[^A-Z0-9]/gi, "").toUpperCase());
-  const minItems = 20;
+  const minItems = 16;
   const totalItems = Math.max(minItems, cleanList.length);
   const evenTotal = totalItems % 2 === 0 ? totalItems : totalItems + 1;
 
@@ -693,7 +693,7 @@ function containerBlock(deal = {}) {
       <div class="bar">Container Nos:</div>
       <table class="thin" style="height:calc(100% - 18px)">
         ${rows.map((r) => `
-          <tr style="height:22px">
+          <tr style="height:18px">
             <td class="center">${esc(r[0] || "-")}</td>
             <td class="center">${esc(r[1] || "-")}</td>
           </tr>
@@ -828,28 +828,28 @@ function additionalDetailsBlock(deal, supplier, docLabel = "Packing list No. Dat
 function footer(company = {}, date = "", showSignatory = false) {
   return `
     <div class="footer">
-      <div style="position:relative; min-height:110px;">
-        <div style="font-size: 10px; font-weight: 700; min-height: 18px;">
+      <div style="position:relative; min-height:70px;">
+        <div style="font-size: 10px; font-weight: 700; min-height: 14px;">
           FOR ${esc(company.name || "")}
         </div>
         ${showSignatory ? `
-          <div style="position:relative; margin-top:5px; height:90px;">
-            <img src="${SIGN_URL}" style="height:75px; position:absolute; left:20px; bottom:25px; z-index:3;" onerror="this.style.display='none'">
-            <img src="${STAMP_URL}" style="height:90px; position:absolute; left:65px; bottom:15px; z-index:2; opacity:0.85;" onerror="this.style.display='none'">
-            <div style="font-size:10px;font-weight:700; position:absolute; bottom:0; left:0; z-index:4; padding-top:5px;">Authorised Signatory</div>
+          <div style="position:relative; margin-top:3px; height:55px;">
+            <img src="${SIGN_URL}" style="height:50px; position:absolute; left:20px; bottom:15px; z-index:3;" onerror="this.style.display='none'">
+            <img src="${STAMP_URL}" style="height:60px; position:absolute; left:65px; bottom:10px; z-index:2; opacity:0.85;" onerror="this.style.display='none'">
+            <div style="font-size:9px;font-weight:700; position:absolute; bottom:0; left:0; z-index:4;">Authorised Signatory</div>
           </div>
         ` : `
-          <div style="position:relative; margin-top:5px; height:70px;">
-            <img src="${STAMP_URL}" style="height:85px; position:absolute; left:20px; bottom:5px; z-index:2; opacity:0.85;" onerror="this.style.display='none'">
+          <div style="position:relative; margin-top:3px; height:50px;">
+            <img src="${STAMP_URL}" style="height:55px; position:absolute; left:20px; bottom:5px; z-index:2; opacity:0.85;" onerror="this.style.display='none'">
           </div>
         `}
       </div>
       <div><!-- Empty middle col --></div>
       <div>
-        <div style="border-bottom: 2px solid #222; padding-bottom: 2px; font-size: 10px; font-weight: 700; min-height: 18px; text-align: center;">
+        <div style="border-bottom: 2px solid #222; padding-bottom: 2px; font-size: 10px; font-weight: 700; min-height: 14px; text-align: center;">
           ${esc(fmtDate(date) || "")}
         </div>
-        <div style="font-size:10px;font-weight:700;margin-top:2px; text-align: center;">Date</div>
+        <div style="font-size:9px;font-weight:700;margin-top:1px; text-align: center;">Date</div>
       </div>
     </div>
     <div class="note">This is computer generated Document</div>
@@ -998,9 +998,9 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
         </tr>
       </thead>
       <tbody>
-        <tr style="height:110px">
+        <tr style="height:80px">
           <td style="padding:0">
-            <div style="display:flex; flex-direction:column; justify-content:space-between; height:110px; padding:4px 6px">
+            <div style="display:flex; flex-direction:column; justify-content:space-between; height:80px; padding:3px 5px">
               <div>
                 <b>${esc(deal.productName || "")}</b><br>
                 HS CODE : ${esc(deal.hsn_code || "—")}
