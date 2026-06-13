@@ -269,140 +269,44 @@ function previewScript() {
         if (!docEls.length) return;
 
         const isLandscape = title.includes("SETTLEMENT") || title.includes("SUMMARY");
+        const isMultiDoc = docEls.length > 1;
+        const A4_MM = 297;
+        const MM_TO_PX = 3.7795;
+        const maxPx = A4_MM * MM_TO_PX;
 
         const oldStyles = Array.from(docEls).map(docEl => ({
           boxShadow: docEl.style.boxShadow,
           margin: docEl.style.margin,
           borderRadius: docEl.style.borderRadius,
-          background: docEl.style.background,
-          pageBreakAfter: docEl.style.pageBreakAfter,
-          breakAfter: docEl.style.breakAfter,
-          pageBreakInside: docEl.style.pageBreakInside,
-          height: docEl.style.height,
-          overflow: docEl.style.overflow
+          background: docEl.style.background
         }));
 
-        const isMultiDoc = docEls.length > 1;
-        let removedNodes = [];
+        docEls.forEach(docEl => {
+          docEl.style.transform = "none";
+          docEl.style.zoom = "1";
+          docEl.style.height = "auto";
+          docEl.style.overflow = "visible";
+          docEl.style.width = "100%";
+          docEl.style.minWidth = "0";
+          docEl.style.boxShadow = "none";
+          docEl.style.borderRadius = "0";
+          docEl.style.background = "white";
+          docEl.style.margin = "0";
+          docEl.style.padding = "8mm";
+          docEl.style.pageBreakAfter = "always";
+          docEl.style.pageBreakInside = "avoid";
+        });
+
         if (isMultiDoc) {
-          const A4_MM = 297;
-          const MM_TO_PX = 3.7795;
-          const maxPx = A4_MM * MM_TO_PX;
-
-          function loadScript(url) {
-            return new Promise((resolve, reject) => {
-              if (document.querySelector('script[src="' + url + '"]')) { resolve(); return; }
-              var s = document.createElement('script');
-              s.src = url;
-              s.onload = resolve;
-              s.onerror = reject;
-              document.head.appendChild(s);
-            });
-          }
-          await loadScript('html2canvas.min.js');
-          await loadScript('jspdf.umd.min.js');
-
-          if (!window.jspdf || !window.jspdf.jsPDF) {
-            alert("PDF library failed to load. Please use 'Browser Print' instead.");
-            if (btn) { btn.innerText = oldText; btn.disabled = false; }
-            if (actions) actions.style.display = "flex";
-            return;
-          }
-
-          const { jsPDF: JsPDF } = window.jspdf;
-          const pdf = new JsPDF({ unit: "mm", format: "a4", orientation: isLandscape ? "landscape" : "portrait" });
-          const pageW = pdf.internal.pageSize.getWidth();
-          const pageH = pdf.internal.pageSize.getHeight();
-
-          for (let i = 0; i < docEls.length; i++) {
-            const docEl = docEls[i];
-            const savedStyles = {
-              transform: docEl.style.transform,
-              zoom: docEl.style.zoom,
-              height: docEl.style.height,
-              overflow: docEl.style.overflow,
-              width: docEl.style.width,
-              maxWidth: docEl.style.maxWidth,
-              minWidth: docEl.style.minWidth,
-              boxShadow: docEl.style.boxShadow,
-              borderRadius: docEl.style.borderRadius,
-              background: docEl.style.background,
-              margin: docEl.style.margin,
-              padding: docEl.style.padding,
-              position: docEl.style.position
-            };
-
-            docEls.forEach((d, j) => { d.style.display = j === i ? "block" : "none"; });
-            if (actions) actions.style.display = "none";
-            const allEls = document.body.children;
-            for (let k = 0; k < allEls.length; k++) {
-              const el = allEls[k];
-              if (el !== docEl && !el.contains(docEl) && el.tagName !== "STYLE" && el.tagName !== "SCRIPT" && el.tagName !== "LINK") {
-                el.style.display = "none";
-              }
+          docEls.forEach(docEl => {
+            const h = docEl.scrollHeight;
+            if (h > maxPx) {
+              docEl.style.zoom = String(maxPx / h);
             }
-
-            docEl.style.transform = "none";
-            docEl.style.zoom = "1";
-            docEl.style.height = "auto";
-            docEl.style.overflow = "visible";
-            docEl.style.width = "210mm";
-            docEl.style.maxWidth = "210mm";
-            docEl.style.minWidth = "0";
-            docEl.style.boxShadow = "none";
-            docEl.style.borderRadius = "0";
-            docEl.style.background = "white";
-            docEl.style.margin = "0";
-            docEl.style.padding = "8mm";
-
-            await new Promise(r => setTimeout(r, 50));
-
-            const canvas = await html2canvas(docEl, {
-              scale: 3,
-              useCORS: true,
-              logging: false,
-              windowWidth: 210 * MM_TO_PX,
-              backgroundColor: "#ffffff"
-            });
-
-            if (i > 0) pdf.addPage();
-
-            const imgData = canvas.toDataURL("image/jpeg", 1.0);
-            const imgW = pageW;
-            const imgH = (canvas.height * imgW) / canvas.width;
-            pdf.addImage(imgData, "JPEG", 0, 0, imgW, Math.min(imgH, pageH));
-
-            Object.assign(docEl.style, savedStyles);
-          }
-
-          pdf.save(title + ".pdf");
-
-          docEls.forEach(d => { d.style.display = ""; });
-          const allEls = document.body.children;
-          for (let k = 0; k < allEls.length; k++) {
-            const el = allEls[k];
-            if (el.tagName !== "STYLE" && el.tagName !== "SCRIPT" && el.tagName !== "LINK") {
-              el.style.display = "";
-            }
-          }
-
-          if (btn) {
-            btn.innerText = oldText;
-            btn.disabled = false;
-          }
-          if (actions) actions.style.display = "flex";
-          return;
-        } else {
-          docs.forEach(doc => {
-            doc.style.transform = "none";
-            doc.style.marginTop = "0";
-            doc.style.zoom = "1";
-            doc.style.width = "100%";
-            doc.style.minWidth = "0";
-            doc.style.boxShadow = "none";
-            doc.style.margin = "0";
-            doc.style.borderRadius = "0";
-            doc.style.background = "white";
+          });
+          docEls.forEach(docEl => {
+            docEl.style.height = docEl.offsetHeight + "px";
+            docEl.style.overflow = "hidden";
           });
         }
 
@@ -420,6 +324,10 @@ function previewScript() {
           }
         }
 
+        document.body.style.margin = "0";
+        document.body.style.padding = "0";
+        document.body.style.background = "white";
+
         const opt = {
           margin: 0,
           filename: title + ".pdf",
@@ -427,7 +335,7 @@ function previewScript() {
           html2canvas: { 
             scale: 3, 
             useCORS: true, 
-            windowWidth: 210 * 3.7795,
+            windowWidth: 210 * MM_TO_PX,
             logging: false,
             x: 0,
             y: 0
@@ -445,30 +353,21 @@ function previewScript() {
           document.body.style.margin = "";
           document.body.style.padding = "";
           document.body.style.background = "";
-          removedNodes.forEach(({ parent, next, text }) => {
-            const t = document.createTextNode(text);
-            if (next && next.parentNode === parent) {
-              parent.insertBefore(t, next);
-            } else {
-              parent.appendChild(t);
-            }
-          });
           docEls.forEach((docEl, i) => {
             docEl.style.boxShadow = oldStyles[i].boxShadow;
             docEl.style.margin = oldStyles[i].margin;
             docEl.style.borderRadius = oldStyles[i].borderRadius;
             docEl.style.background = oldStyles[i].background;
-            docEl.style.pageBreakAfter = oldStyles[i].pageBreakAfter;
-            docEl.style.breakAfter = oldStyles[i].breakAfter;
-            docEl.style.pageBreakInside = oldStyles[i].pageBreakInside;
-            docEl.style.height = oldStyles[i].height;
-            docEl.style.overflow = oldStyles[i].overflow;
             docEl.style.zoom = oldZooms[i];
             docEl.style.width = oldWidths[i];
             docEl.style.minWidth = oldMinWidths[i];
+            docEl.style.height = "";
             docEl.style.maxHeight = "";
             docEl.style.maxWidth = "";
+            docEl.style.overflow = "";
             docEl.style.padding = "";
+            docEl.style.pageBreakAfter = "";
+            docEl.style.pageBreakInside = "";
           });
           if (btn) {
             btn.innerText = oldText;
@@ -1365,17 +1264,13 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
   const docNo = String(deal.ci_no || deal.dealNo || deal.deal_no || "000").replace(/[^A-Z0-9\-\/]/gi, "");
 
   const filename = `SET-${blNo}-${shipper}-${productShort}-${consignee}-${docNo}`;
-  const baseHref = new URL('.', window.location.href).href;
 
   return `
   <!DOCTYPE html>
   <html>
   <head>
-    <base href="${esc(baseHref)}">
     <title>${esc(filename)}</title>
     ${commonStyle()}
-    <script src="html2canvas.min.js"></script>
-    <script src="jspdf.umd.min.js"></script>
     ${previewScript()}
     <style>
       @page { margin: 0; size: A4; }
@@ -1417,13 +1312,7 @@ export function buildDocumentSet(deal, buyer, supplier, company = {}) {
       }
       @media screen {
         .doc { 
-          page-break-after: always; 
-          break-after: page;
           margin: 0;
-        }
-        .doc:last-child { 
-          page-break-after: auto; 
-          break-after: auto; 
         }
       }
     </style>
