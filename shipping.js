@@ -60,7 +60,7 @@ export function shippingInstructionsView() {
             </div>
           </div>
 
-          <div class="grid grid-2 gap-10">
+          <div class="grid grid-3 gap-10">
             <div>
               <label class="form-label">Product</label>
               <select name="product" id="si-product">
@@ -76,6 +76,11 @@ export function shippingInstructionsView() {
             <div>
               <label class="form-label">HSN Code</label>
               <input name="hsn_code" id="si-hsn" placeholder="HSN Code">
+            </div>
+
+            <div>
+              <label class="form-label">POD</label>
+              <input name="pod" id="si-pod" placeholder="Port of Discharge">
             </div>
           </div>
 
@@ -109,7 +114,7 @@ export function shippingInstructionsView() {
             ? state.shippingInstructions.map((si) => `
               <div class="item">
                 <div class="item-title">Deal: ${esc(state.deals.find(d => String(d.id) === String(si.deal_id))?.deal_no || "—")} · Product: ${esc(si.product || "—")}</div>
-                <div class="item-sub">HSN: ${esc(si.hsn_code || "—")}</div>
+                <div class="item-sub">HSN: ${esc(si.hsn_code || "—")} · POD: ${esc(si.pod || "—")}</div>
                 <div class="item-sub">Free Days: ${esc(si.free_days_text || "—")}</div>
                 <div class="item-sub">Detention: ${esc(si.detention_text || "—")}</div>
                 <div class="mt-8 flex gap-8">

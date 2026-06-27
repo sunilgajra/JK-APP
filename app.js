@@ -1656,6 +1656,7 @@ function editShippingInstruction(id) {
   document.getElementById("si-supplier").value = si.supplier_id ?? "";
   document.getElementById("si-product").value = si.product || "";
   document.getElementById("si-hsn").value = si.hsn_code || "";
+  document.getElementById("si-pod").value = si.pod || "";
   document.getElementById("si-free-days").value = si.free_days_text || "";
   document.getElementById("si-detention").value = si.detention_text || "";
   document.getElementById("si-other").value = si.other_instructions || "";
@@ -1681,6 +1682,7 @@ async function saveShippingInstruction(e) {
     supplier_id: getVal("supplier_id"),
     product: fd.get("product"),
     hsn_code: fd.get("hsn_code"),
+    pod: fd.get("pod"),
     free_days_text: fd.get("free_days_text"),
     detention_text: fd.get("detention_text"),
     other_instructions: fd.get("other_instructions")
@@ -1730,11 +1732,11 @@ Email: ${shipper.email || "—"}
 *CONSIGNEE DETAILS:*
 ${b?.name || "—"}
 ${b?.address || "—"}
-GST: ${b?.gst || "—"}
-IEC: ${b?.iec || "—"}
+GST: ${b?.gst || "—"}, IEC: ${b?.iec || "—"}, PAN: ${b?.pan || "—"}
 
 *Product:* ${fd.get("product")}
 *HSN:* ${fd.get("hsn_code")}
+*POD:* ${fd.get("pod")}
 
 ${fd.get("free_days_text")}
 ${fd.get("detention_text")}
@@ -1766,11 +1768,11 @@ Email: ${shipper.email || "—"}
 CONSIGNEE DETAILS:
 ${b?.name || "—"}
 ${b?.address || "—"}
-GST: ${b?.gst || "—"}
-IEC: ${b?.iec || "—"}
+GST: ${b?.gst || "—"}, IEC: ${b?.iec || "—"}, PAN: ${b?.pan || "—"}
 
 Product: ${fd.get("product")}
 HSN: ${fd.get("hsn_code")}
+POD: ${fd.get("pod")}
 
 ${fd.get("free_days_text")}
 ${fd.get("detention_text")}
