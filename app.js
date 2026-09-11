@@ -1688,20 +1688,28 @@ async function saveShippingInstruction(e) {
     other_instructions: fd.get("other_instructions")
   };
 
-  if (id) {
-    const { error } = await supabase.from("shipping_instructions").update(payload).eq("id", id);
-    if (error) alert(error.message);
-    else {
-      alert("Updated!");
+  let { error } = id
+    ? await supabase.from("shipping_instructions").update(payload).eq("id", id)
+    : await supabase.from("shipping_instructions").insert([payload]);
+
+  if (error && error.message && error.message.includes("'pod'")) {
+    const fallbackPayload = { ...payload };
+    delete fallbackPayload.pod;
+    const fallbackRes = id
+      ? await supabase.from("shipping_instructions").update(fallbackPayload).eq("id", id)
+      : await supabase.from("shipping_instructions").insert([fallbackPayload]);
+
+    if (!fallbackRes.error) {
+      alert(id ? "Updated!" : "Saved!");
       await loadSupabaseData();
+      return;
     }
-  } else {
-    const { error } = await supabase.from("shipping_instructions").insert(payload);
-    if (error) alert(error.message);
-    else {
-      alert("Saved!");
-      await loadSupabaseData();
-    }
+  }
+
+  if (error) alert(error.message);
+  else {
+    alert(id ? "Updated!" : "Saved!");
+    await loadSupabaseData();
   }
 }
 
