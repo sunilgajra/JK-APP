@@ -1728,6 +1728,7 @@ function whatsappShippingInstruction() {
   const b = getBuyerById(fd.get("buyer_id"));
   const supplier = state.suppliers.find(s => String(s.id) === String(fd.get("supplier_id")))?.name || "—";
   const deal = getDealById(fd.get("deal_id"))?.deal_no || "—";
+  const cleanField = (val) => String(val || "").replace(/[\s,]+$/g, "").trim();
 
   const text = `*SHIPPING INSTRUCTIONS*
   
@@ -1740,11 +1741,11 @@ Email: ${shipper.email || "—"}
 *CONSIGNEE DETAILS:*
 ${b?.name || "—"}
 ${b?.address || "—"}
-GST: ${b?.gst || ""},
-IEC: ${b?.iec || ""},
-PAN: ${b?.pan || ""}
-Mobile: ${b?.phone || b?.mobile || ""}
-Email: ${b?.email || ""}
+GST: ${cleanField(b?.gst)},
+IEC: ${cleanField(b?.iec)},
+PAN: ${cleanField(b?.pan)},
+Mobile: ${cleanField(b?.phone || b?.mobile)}
+Email: ${cleanField(b?.email)}
 
 *Product:* ${fd.get("product") || ""}
 *HSN:* ${fd.get("hsn_code") || ""}
@@ -1768,6 +1769,7 @@ function downloadShippingInstruction() {
   const b = getBuyerById(fd.get("buyer_id"));
   const supplier = state.suppliers.find(s => String(s.id) === String(fd.get("supplier_id")))?.name || "—";
   const deal = getDealById(fd.get("deal_id"))?.deal_no || "—";
+  const cleanField = (val) => String(val || "").replace(/[\s,]+$/g, "").trim();
 
   const text = `SHIPPING INSTRUCTIONS
 
@@ -1780,11 +1782,11 @@ Email: ${shipper.email || "—"}
 CONSIGNEE DETAILS:
 ${b?.name || "—"}
 ${b?.address || "—"}
-GST: ${b?.gst || ""},
-IEC: ${b?.iec || ""},
-PAN: ${b?.pan || ""}
-Mobile: ${b?.phone || b?.mobile || ""}
-Email: ${b?.email || ""}
+GST: ${cleanField(b?.gst)},
+IEC: ${cleanField(b?.iec)},
+PAN: ${cleanField(b?.pan)},
+Mobile: ${cleanField(b?.phone || b?.mobile)}
+Email: ${cleanField(b?.email)}
 
 Product: ${fd.get("product") || ""}
 HSN: ${fd.get("hsn_code") || ""}
