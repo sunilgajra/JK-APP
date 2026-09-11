@@ -916,7 +916,7 @@ export function buildPI(deal, buyer, supplier, company = {}) {
   const date = deal.invoice_date || deal.created_at || new Date().toISOString();
   const total = Number(deal.totalAmount || 0);
   const roundedTotal = Math.round(total);
-  const roundOff = roundedTotal - total;
+  const roundOff = Math.round((roundedTotal - total) * 100) / 100;
   const currency = docCurrency(deal);
   const filename = suggestFilename("PI", deal, buyer, company);
 
@@ -1007,7 +1007,7 @@ export function buildPI(deal, buyer, supplier, company = {}) {
         <tr><td>Insurance</td><td class="right">-</td></tr>
         <tr><td>Legal/Consular</td><td class="right">-</td></tr>
         <tr><td>Inspection/Cert.</td><td class="right">-</td></tr>
-        <tr><td>Round off (+/-)</td><td class="right">${roundOff !== 0 ? fmt(roundOff) : "0.15"}</td></tr>
+        <tr><td>Round off (+/-)</td><td class="right">${roundOff.toFixed(2)}</td></tr>
         <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(roundedTotal)}</b></td></tr>
         <tr><td>Currency</td><td class="right">${esc(currency)}</td></tr>
       </table>
@@ -1025,7 +1025,7 @@ export function buildPI(deal, buyer, supplier, company = {}) {
 function innerCI(deal, buyer, supplier, company, date, currency) {
   const total = Number(deal.totalAmount || 0);
   const roundedTotal = Math.round(total);
-  const roundOff = roundedTotal - total;
+  const roundOff = Math.round((roundedTotal - total) * 100) / 100;
 
   return `
     <div class="top">
@@ -1106,7 +1106,7 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
         <tr><td>Insurance</td><td class="right">-</td></tr>
         <tr><td>Legal/Consular</td><td class="right">-</td></tr>
         <tr><td>Inspection/Cert.</td><td class="right">-</td></tr>
-        <tr><td>Round off (+/-)</td><td class="right">${roundOff !== 0 ? fmt(roundOff) : "0.15"}</td></tr>
+        <tr><td>Round off (+/-)</td><td class="right">${roundOff.toFixed(2)}</td></tr>
         <tr><td><b>TOTAL</b></td><td class="right"><b>${fmt(roundedTotal)}</b></td></tr>
         <tr><td>Currency</td><td class="right">${esc(currency)}</td></tr>
       </table>
