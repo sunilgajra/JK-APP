@@ -1740,17 +1740,21 @@ Email: ${shipper.email || "—"}
 *CONSIGNEE DETAILS:*
 ${b?.name || "—"}
 ${b?.address || "—"}
-GST: ${b?.gst || "—"}, IEC: ${b?.iec || "—"}, PAN: ${b?.pan || "—"}
+GST: ${b?.gst || ""},
+IEC: ${b?.iec || ""},
+PAN: ${b?.pan || ""}
+Mobile: ${b?.phone || b?.mobile || ""}
+Email: ${b?.email || ""}
 
-*Product:* ${fd.get("product")}
-*HSN:* ${fd.get("hsn_code")}
-*POD:* ${fd.get("pod")}
+*Product:* ${fd.get("product") || ""}
+*HSN:* ${fd.get("hsn_code") || ""}
+*POD:* ${fd.get("pod") || ""}
 
-${fd.get("free_days_text")}
-${fd.get("detention_text")}
+${fd.get("free_days_text") || ""}
+${fd.get("detention_text") || ""}
 
 *Other Instructions:*
-${fd.get("other_instructions")}
+${fd.get("other_instructions") || ""}
 
 Generated via JK Trade Manager`;
 
@@ -1776,11 +1780,15 @@ Email: ${shipper.email || "—"}
 CONSIGNEE DETAILS:
 ${b?.name || "—"}
 ${b?.address || "—"}
-GST: ${b?.gst || "—"}, IEC: ${b?.iec || "—"}, PAN: ${b?.pan || "—"}
+GST: ${b?.gst || ""},
+IEC: ${b?.iec || ""},
+PAN: ${b?.pan || ""}
+Mobile: ${b?.phone || b?.mobile || ""}
+Email: ${b?.email || ""}
 
-Product: ${fd.get("product")}
-HSN: ${fd.get("hsn_code")}
-POD: ${fd.get("pod")}
+Product: ${fd.get("product") || ""}
+HSN: ${fd.get("hsn_code") || ""}
+POD: ${fd.get("pod") || ""}
 
 ${fd.get("free_days_text")}
 ${fd.get("detention_text")}
