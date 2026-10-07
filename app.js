@@ -2148,7 +2148,8 @@ function printMasterStatement(entityType, id, selectedDealIds = []) {
     if (!buyer) return;
     const deals = state.deals.filter(d => selectedDealIds.includes(String(d.id)));
     const allPayments = Object.values(state.paymentsByDeal).flat().filter(p => selectedDealIds.includes(String(p.deal_id)));
-    html = buildBuyerMasterStatement(buyer, deals, allPayments, company);
+    const showShipper = confirm("Do you want to show the 'Shipper Name' instead of the 'Supplier Name' on this statement?");
+    html = buildBuyerMasterStatement(buyer, deals, allPayments, company, showShipper);
   }
 
   if (html) openPrintWindow(html);

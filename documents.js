@@ -1796,7 +1796,7 @@ export function buildSupplierMasterStatement(supplier, deals, allPayments, compa
 }
 
 /* --- LOCKED - DO NOT MODIFY --- */
-export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {}) {
+export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {}, showShipper = false) {
   const date = new Date().toISOString();
 
   let totalDueAed = 0;
@@ -1841,15 +1841,29 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
   const balAed = totalDueAed - totalRecAed;
   const balUsd = totalDueUsd - totalRecUsd;
 
-  const supplierIds = [...new Set(deals.map(d => d.supplier_id).filter(Boolean))];
-  const supplierNames = supplierIds.map(id => state.suppliers.find(s => String(s.id) === String(id))?.name || "UNKNOWN");
-  const supplierStr = supplierNames.length === 1 ? supplierNames[0] : (supplierNames.length > 1 ? "VARIOUS" : "JK");
+  let entityStr = "JK";
+  let label = showShipper ? "SHIPPER" : "SUPPLIER";
+
+  if (showShipper) {
+    const shipperNames = [...new Set(deals.map(d => {
+      const idx = d.shipper_index;
+      if (idx !== null && idx !== undefined && idx !== "" && company.shippers && company.shippers[idx]) {
+        return company.shippers[idx].name;
+      }
+      return company.name;
+    }).filter(Boolean))];
+    entityStr = shipperNames.length === 1 ? shipperNames[0] : (shipperNames.length > 1 ? "VARIOUS" : company.name);
+  } else {
+    const supplierIds = [...new Set(deals.map(d => d.supplier_id).filter(Boolean))];
+    const supplierNames = supplierIds.map(id => state.suppliers.find(s => String(s.id) === String(id))?.name || "UNKNOWN");
+    entityStr = supplierNames.length === 1 ? supplierNames[0] : (supplierNames.length > 1 ? "VARIOUS" : "JK");
+  }
 
   return `
   <!DOCTYPE html>
   <html>
   <head>
-    <title>${esc(suggestFilename("BUYER-MASTER-SETTLEMENT", { dealCount: deals.length }, buyer, company, { partyName: supplierStr }))}</title>
+    <title>${esc(suggestFilename("BUYER-MASTER-SETTLEMENT", { dealCount: deals.length }, buyer, company, { partyName: entityStr }))}</title>
     ${commonStyle("landscape")}
     ${previewScript()}
     <style>
@@ -1868,7 +1882,7 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
         <span style="color:#2a7a7d">MASTER SETTLEMENT REPORT</span>
         <div style="text-align: right">
           <div style="font-size: 14px; color: #666;">BUYER: ${esc(buyer.name)}</div>
-          <div style="font-size: 12px; color: #888; margin-top: 4px;">SUPPLIER: ${esc(supplierStr)}</div>
+          <div style="font-size: 12px; color: #888; margin-top: 4px;">${label}: ${esc(entityStr)}</div>
         </div>
       </div>
 
@@ -1879,7 +1893,7 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
             <th style="width: 8%;">DEAL NO</th>
             <th style="width: 8%;">DATE</th>
             <th style="width: 14%;">BL NO</th>
-            <th style="width: 22%;">SUPPLIER</th>
+            <th style="width: 22%;">${label}</th>
             <th style="width: 13%;">MATERIAL</th>
             <th style="width: 7%;">QTY</th>
             <th style="width: 7%;">RATE</th>
@@ -1888,19 +1902,31 @@ export function buildBuyerMasterStatement(buyer, deals, allPayments, company = {
           </tr>
         </thead>
         <tbody>
-          ${dealRows.map(r => `
+          ${dealRows.map(r => {
+            let rowEntityName = "—";
+            if (showShipper) {
+              const idx = r.shipper_index;
+              if (idx !== null && idx !== undefined && idx !== "" && company.shippers && company.shippers[idx]) {
+                rowEntityName = company.shippers[idx].name;
+              } else {
+                rowEntityName = company.name || "JK";
+              }
+            } else {
+              rowEntityName = (state.suppliers.find(s => String(s.id) === String(r.supplier_id)) || {}).name || "—";
+            }
+            return `
             <tr>
               <td class="center" style="font-weight:bold">${esc(r.deal_no)}</td>
               <td class="center">${new Date(r.invoice_date || r.created_at).toLocaleDateString()}</td>
               <td class="center">${esc(r.bl_no || "—")}</td>
-              <td>${esc((state.suppliers.find(s => String(s.id) === String(r.supplier_id)) || {}).name || "—")}</td>
+              <td>${esc(rowEntityName)}</td>
               <td>${esc(r.product_name)}</td>
               <td class="right">${Number(r.quantity).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
               <td class="right">${Number(r.rate).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
               <td class="right">${Number(r.amtUsd).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
               <td class="right">${Number(r.amtAed).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
             </tr>
-          `).join("")}
+          `}).join("")}
         </tbody>
         <tfoot>
           <tr style="background:#f2f2f2; font-weight:bold">
