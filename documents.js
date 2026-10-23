@@ -963,7 +963,7 @@ export function buildPI(deal, buyer, supplier, company = {}) {
                 HS CODE : ${esc(deal.hsn_code || "—")}
               </div>
               <div style="margin-top:auto">
-                ${esc(currency)} : ${esc(amountWords(total, currency))}
+                ${esc(currency)} : ${esc(amountWords(roundedTotal, currency))}
               </div>
             </div>
           </td>
@@ -1060,7 +1060,7 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
                 HS CODE : ${esc(deal.hsn_code || "—")}
               </div>
               <div style="margin-top:auto">
-                ${esc(currency)} : ${esc(amountWords(total, currency))}
+                ${esc(currency)} : ${esc(amountWords(roundedTotal, currency))}
               </div>
             </div>
           </td>
