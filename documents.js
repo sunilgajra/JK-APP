@@ -669,7 +669,7 @@ function shipperBlock(company = {}) {
 
 function consigneeBlock(buyer = {}) {
   return `
-    <div class="panel" style="height:100%">
+    <div class="panel">
       <div class="bar">Consignee</div>
       <div class="panelBody tight">
         <div><b>${esc(buyer.name || "—")}</b></div>
@@ -685,7 +685,7 @@ function consigneeBlock(buyer = {}) {
 
 function notifyBlock(buyer = {}) {
   return `
-    <div class="panel" style="height:100%">
+    <div class="panel">
       <div class="bar">Notify Party</div>
       <div class="panelBody tight">
         <div><b>${esc(buyer.name || "—")}</b></div>
@@ -759,7 +759,7 @@ function containerBlock(deal = {}) {
 
 function shippingBlock(deal = {}) {
   return `
-    <div class="panel" style="height:100%">
+    <div class="panel">
       <div class="bar">Shipping Details</div>
       <div class="panelBody tight">
         <table class="plainTable">
