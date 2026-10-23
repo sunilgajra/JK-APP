@@ -489,12 +489,12 @@ export function commonStyle(docClass = "") {
     }
 
     .triple {
-      display: grid;
-      grid-template-columns: 1fr .95fr 1fr;
+      display: flex;
       gap: 8px;
       margin-bottom: 8px;
       align-items: stretch;
     }
+    .triple > * { flex: 1; }
 
     table {
       width: 100%;
@@ -747,8 +747,8 @@ function containerBlock(deal = {}) {
       <table class="thin" style="height:calc(100% - 18px); font-size:${fontSize}">
         ${rows.map((r) => `
           <tr style="height:${rowHeight}px">
-            <td class="center" style="word-break:break-all;padding:2px 3px;">${esc(r[0] || "-")}</td>
-            <td class="center" style="word-break:break-all;padding:2px 3px;">${esc(r[1] || "-")}</td>
+            <td class="center" style="white-space:nowrap;overflow:hidden;padding:2px 3px;">${esc(r[0] || "-")}</td>
+            <td class="center" style="white-space:nowrap;overflow:hidden;padding:2px 3px;">${esc(r[1] || "-")}</td>
           </tr>
         `).join("")}
         ${overflow > 0 ? `<tr style="height:auto"><td colspan="2" class="center" style="font-weight:700; color:#3b9da2; padding:2px">... and ${overflow} more</td></tr>` : ""}
