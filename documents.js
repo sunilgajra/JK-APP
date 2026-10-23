@@ -493,7 +493,7 @@ export function commonStyle(docClass = "") {
       grid-template-columns: 1fr .95fr 1fr;
       gap: 8px;
       margin-bottom: 8px;
-      align-items: start;
+      align-items: stretch;
     }
 
     table {
@@ -669,7 +669,7 @@ function shipperBlock(company = {}) {
 
 function consigneeBlock(buyer = {}) {
   return `
-    <div class="panel">
+    <div class="panel" style="height:100%">
       <div class="bar">Consignee</div>
       <div class="panelBody tight">
         <div><b>${esc(buyer.name || "—")}</b></div>
@@ -685,7 +685,7 @@ function consigneeBlock(buyer = {}) {
 
 function notifyBlock(buyer = {}) {
   return `
-    <div class="panel">
+    <div class="panel" style="height:100%">
       <div class="bar">Notify Party</div>
       <div class="panelBody tight">
         <div><b>${esc(buyer.name || "—")}</b></div>
@@ -747,8 +747,8 @@ function containerBlock(deal = {}) {
       <table class="thin" style="height:calc(100% - 18px); font-size:${fontSize}">
         ${rows.map((r) => `
           <tr style="height:${rowHeight}px">
-            <td class="center">${esc(r[0] || "-")}</td>
-            <td class="center">${esc(r[1] || "-")}</td>
+            <td class="center" style="word-break:break-all;padding:2px 3px;">${esc(r[0] || "-")}</td>
+            <td class="center" style="word-break:break-all;padding:2px 3px;">${esc(r[1] || "-")}</td>
           </tr>
         `).join("")}
         ${overflow > 0 ? `<tr style="height:auto"><td colspan="2" class="center" style="font-weight:700; color:#3b9da2; padding:2px">... and ${overflow} more</td></tr>` : ""}
@@ -759,7 +759,7 @@ function containerBlock(deal = {}) {
 
 function shippingBlock(deal = {}) {
   return `
-    <div class="panel">
+    <div class="panel" style="height:100%">
       <div class="bar">Shipping Details</div>
       <div class="panelBody tight">
         <table class="plainTable">
@@ -1073,7 +1073,7 @@ function innerCI(deal, buyer, supplier, company, date, currency) {
       </tbody>
     </table>
 
-    <div style="display:grid; grid-template-columns: 1.15fr .65fr .7fr; gap:8px; margin-top:0;">
+    <div style="display:grid; grid-template-columns: 1fr .9fr .65fr; gap:8px; margin-top:0;">
       <div class="box" style="height:100%">
         <div class="boxHead">Terms of Sale and Other Comments</div>
         <div class="boxBody" style="display:flex; flex-direction:column; justify-content:space-between;">
