@@ -742,9 +742,9 @@ function containerBlock(deal = {}) {
   }
 
   return `
-    <div class="panel" style="height:100%">
+    <div class="panel">
       <div class="bar">Container Nos: (${cleanList.length})</div>
-      <table class="thin" style="height:calc(100% - 18px); font-size:${fontSize}">
+      <table class="thin" style="font-size:${fontSize}">
         ${rows.map((r) => `
           <tr style="height:${rowHeight}px">
             <td class="center" style="white-space:nowrap;overflow:hidden;padding:2px 3px;">${esc(r[0] || "-")}</td>
